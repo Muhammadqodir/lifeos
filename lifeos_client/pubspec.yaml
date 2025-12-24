@@ -45,6 +45,9 @@ dependencies:
   # UI components (shadcn_ui)
   shadcn_ui: ^0.43.0
   
+  # Icons
+  hugeicons: ^1.1.4
+  
   # Local storage
   shared_preferences: ^2.3.3
   

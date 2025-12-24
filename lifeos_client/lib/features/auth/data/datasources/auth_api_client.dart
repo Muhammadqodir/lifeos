@@ -10,7 +10,7 @@ class AuthApiClient {
   Future<AuthResponseDto> login(String email, String password) async {
     try {
       final response = await dio.post(
-        '$baseUrl/api/auth/login',
+        '$baseUrl/auth/login',
         data: {
           'email': email,
           'password': password,
@@ -21,6 +21,7 @@ class AuthApiClient {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuthResponseDto.fromJson(response.data);
       } else {
+        print(response);
         // Handle error responses
         throw DioException(
           requestOptions: response.requestOptions,
@@ -28,6 +29,7 @@ class AuthApiClient {
         );
       }
     } catch (e) {
+      print(e);
       throw _handleError(e);
     }
   }
@@ -43,7 +45,7 @@ class AuthApiClient {
   }) async {
     try {
       final response = await dio.post(
-        '$baseUrl/api/auth/register',
+        '$baseUrl/auth/register',
         data: {
           'first_name': firstName,
           'last_name': lastName,
@@ -56,6 +58,7 @@ class AuthApiClient {
       );
       return AuthResponseDto.fromJson(response.data);
     } catch (e) {
+      print(e);
       throw _handleError(e);
     }
   }
@@ -63,7 +66,7 @@ class AuthApiClient {
   Future<void> logout(String token) async {
     try {
       await dio.post(
-        '$baseUrl/api/auth/logout',
+        '$baseUrl/auth/logout',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),
@@ -76,7 +79,7 @@ class AuthApiClient {
   Future<UserDto> getCurrentUser(String token) async {
     try {
       final response = await dio.get(
-        '$baseUrl/api/auth/me',
+        '$baseUrl/auth/me',
         options: Options(
           headers: {'Authorization': 'Bearer $token'},
         ),

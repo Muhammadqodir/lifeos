@@ -15,11 +15,13 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // User::factory(10)->create();
+        // Seed currencies
+        $this->call(CurrencySeeder::class);
 
-        User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@example.com',
-        ]);
+        // Seed transaction categories
+        $this->call(TransactionCategorySeeder::class);
+
+        // Seed users
+        $this->call(UserSeeder::class);
     }
 }

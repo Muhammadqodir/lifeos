@@ -3,10 +3,12 @@ import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/config/app_config.dart';
 import 'core/network/auth_interceptor.dart';
+import 'core/theme/presentation/bloc/theme_bloc.dart';
 import 'features/auth/data/datasources/auth_api_client.dart';
 import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
+import 'features/navigation/presentation/bloc/navigation_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -56,5 +58,13 @@ Future<void> setupDependencies() async {
   // BLoCs
   getIt.registerFactory<AuthBloc>(
     () => AuthBloc(authRepository: getIt<AuthRepository>()),
+  );
+
+  getIt.registerFactory<NavigationBloc>(
+    () => NavigationBloc(),
+  );
+
+  getIt.registerSingleton<ThemeBloc>(
+    ThemeBloc(getIt<SharedPreferences>()),
   );
 }

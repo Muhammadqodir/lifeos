@@ -44,6 +44,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       emit(AuthAuthenticated(user: result.user));
     } catch (e) {
       final errorMessage = e.toString().replaceAll('Exception: ', '');
+      print(errorMessage);
       emit(AuthError(message: errorMessage));
     }
   }

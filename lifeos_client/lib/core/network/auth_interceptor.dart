@@ -68,7 +68,7 @@ class AuthInterceptor extends Interceptor {
 
       // Make refresh request
       final response = await _dio.post(
-        '${AppConfig.apiBaseUrl}/api/auth/refresh',
+        '${AppConfig.apiBaseUrl}/refresh',
         data: {'refresh_token': refreshToken},
         options: Options(
           headers: {

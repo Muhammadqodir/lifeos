@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:shadcn_ui/shadcn_ui.dart';
+import 'core/theme/presentation/bloc/theme_bloc.dart';
+import 'core/theme/presentation/bloc/theme_state.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
-import 'features/auth/presentation/pages/home_page.dart';
+import 'features/navigation/presentation/pages/main_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'injection.dart';
 
@@ -19,27 +21,43 @@ class MyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => getIt<AuthBloc>()..add(AuthCheckRequested()),
-      child: ShadApp(
-        title: 'LifeOS',
-        theme: ShadThemeData(
-          colorScheme: const ShadSlateColorScheme.light(),
-          brightness: Brightness.light,
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider(
+          create: (_) => getIt<AuthBloc>()..add(AuthCheckRequested()),
         ),
-        debugShowCheckedModeBanner: false,
-        home: ShadToaster(
-          child: BlocBuilder<AuthBloc, AuthState>(
-            builder: (context, state) {
-              if (state is AuthAuthenticated) {
-                return const HomePage();
-              }
+        BlocProvider(
+          create: (_) => getIt<ThemeBloc>(),
+        ),
+      ],
+      child: BlocBuilder<ThemeBloc, ThemeState>(
+        builder: (context, themeState) {
+          return ShadApp(
+            title: 'LifeOS',
+            theme: ShadThemeData(
+              colorScheme: const ShadSlateColorScheme.light(),
+              brightness: Brightness.light,
+            ),
+            darkTheme: ShadThemeData(
+              colorScheme: const ShadSlateColorScheme.dark(),
+              brightness: Brightness.dark,
+            ),
+            themeMode: themeState.isDark ? ThemeMode.dark : ThemeMode.light,
+            debugShowCheckedModeBanner: false,
+            home: ShadToaster(
+              child: BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  if (state is AuthAuthenticated) {
+                    return const MainPage();
+                  }
 
-              // Show LoginPage for all other states (Initial, Unauthenticated, Error, Loading)
-              return const LoginPage();
-            },
-          ),
-        ),
+                  // Show LoginPage for all other states (Initial, Unauthenticated, Error, Loading)
+                  return const LoginPage();
+                },
+              ),
+            ),
+          );
+        },
       ),
     );
   }

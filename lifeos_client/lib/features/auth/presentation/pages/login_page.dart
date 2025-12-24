@@ -4,6 +4,7 @@ import 'package:shadcn_ui/shadcn_ui.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import 'register_page.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -107,6 +108,29 @@ class _LoginPageState extends State<LoginPage> {
                                 : const Text('Sign In'),
                           );
                         },
+                      ),
+                      const SizedBox(height: 16),
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Text(
+                            "Don't have an account? ",
+                            style: TextStyle(color: Colors.black87),
+                          ),
+                          ShadButton.ghost(
+                            onPressed: () {
+                              Navigator.of(context).push(
+                                MaterialPageRoute(
+                                  builder: (_) => BlocProvider.value(
+                                    value: context.read<AuthBloc>(),
+                                    child: const RegisterPage(),
+                                  ),
+                                ),
+                              );
+                            },
+                            child: const Text('Sign Up'),
+                          ),
+                        ],
                       ),
                     ],
                   ),

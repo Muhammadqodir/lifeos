@@ -39,7 +39,7 @@ Backend (lifeos_backend):
 - Future support for AI features (insights, recommendations, summaries).
 
 Client (lifeos_client):
-- Flutter mobile/desktop app.
+- Flutter mobile app.
 - Primary interface for daily interaction.
 - Fast input is critical (minimal friction).
 - UI focuses on clarity, calmness, and productivity.
