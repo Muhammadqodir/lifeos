@@ -1,9 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
 import '../../../../core/theme/presentation/bloc/theme_bloc.dart';
 import '../../../../core/theme/presentation/bloc/theme_event.dart';
 import '../../../../core/theme/presentation/bloc/theme_state.dart';
+import '../../../../injection.dart';
+import '../../../finance/presentation/bloc/finance_home_bloc.dart';
+import '../../../finance/presentation/bloc/finance_home_event.dart';
+import '../../../finance/presentation/pages/finance_main_page.dart';
+import '../../../finance/presentation/providers/amount_visibility_provider.dart';
 import '../bloc/navigation_bloc.dart';
 import '../bloc/navigation_event.dart';
 import '../bloc/navigation_state.dart';
@@ -105,14 +111,14 @@ class _MainPageContent extends StatelessWidget {
             icon: HugeIcons.strokeRoundedAdd01,
             tooltip: 'Add Transaction',
             onTap: () {
-              // TODO: Handle add transaction
+              // TODO: Navigate to AddTransactionPage
             },
           ),
           AppBarAction(
-            icon: HugeIcons.strokeRoundedFilterHorizontal,
-            tooltip: 'Filter',
+            icon: HugeIcons.strokeRoundedDatabaseSetting,
+            tooltip: 'Finance Settings',
             onTap: () {
-              // TODO: Handle filter
+              // TODO: Navigate to FinanceSettingsPage
             },
           ),
         ];
@@ -174,16 +180,26 @@ class _MainPageContent extends StatelessWidget {
 
   /// Builds the body content based on selected tab
   Widget _buildBody(int currentIndex) {
-    return IndexedStack(
-      index: currentIndex,
-      children: const [
-        _PlaceholderPage(title: 'Home'),
-        _PlaceholderPage(title: 'Finances'),
-        _PlaceholderPage(title: 'Gym'),
-        _PlaceholderPage(title: 'Projects'),
-        _PlaceholderPage(title: 'Other'),
-      ],
-    );
+    switch (currentIndex) {
+      case 0:
+        return const _PlaceholderPage(title: 'Home');
+      case 1:
+        return ChangeNotifierProvider(
+          create: (_) => AmountVisibilityProvider(),
+          child: BlocProvider(
+            create: (_) => getIt<FinanceHomeBloc>()..add(const FinanceHomeStarted()),
+            child: const FinanceMainPage(),
+          ),
+        );
+      case 2:
+        return const _PlaceholderPage(title: 'Gym');
+      case 3:
+        return const _PlaceholderPage(title: 'Projects');
+      case 4:
+        return const _PlaceholderPage(title: 'Other');
+      default:
+        return const _PlaceholderPage(title: 'Unknown');
+    }
   }
 
   /// Builds the bottom navigation bar

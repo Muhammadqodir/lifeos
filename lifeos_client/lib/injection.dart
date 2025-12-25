@@ -9,6 +9,11 @@ import 'features/auth/data/repositories/auth_repository_impl.dart';
 import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/navigation/presentation/bloc/navigation_bloc.dart';
+import 'features/finance/data/datasources/finance_api_client.dart';
+import 'features/finance/data/repositories/finance_repository_impl.dart';
+import 'features/finance/domain/repositories/finance_repository.dart';
+import 'features/finance/presentation/bloc/finance_home_bloc.dart';
+import 'features/finance/presentation/bloc/add_wallet_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -47,11 +52,24 @@ Future<void> setupDependencies() async {
     ),
   );
 
+  getIt.registerLazySingleton<FinanceApiClient>(
+    () => FinanceApiClient(
+      dio: getIt<Dio>(),
+      baseUrl: AppConfig.apiBaseUrl,
+    ),
+  );
+
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       apiClient: getIt<AuthApiClient>(),
       prefs: getIt<SharedPreferences>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<FinanceRepository>(
+    () => FinanceRepositoryImpl(
+      apiClient: getIt<FinanceApiClient>(),
     ),
   );
 
@@ -62,6 +80,14 @@ Future<void> setupDependencies() async {
 
   getIt.registerFactory<NavigationBloc>(
     () => NavigationBloc(),
+  );
+
+  getIt.registerFactory<FinanceHomeBloc>(
+    () => FinanceHomeBloc(financeRepository: getIt<FinanceRepository>()),
+  );
+
+  getIt.registerFactory<AddWalletBloc>(
+    () => AddWalletBloc(financeRepository: getIt<FinanceRepository>()),
   );
 
   getIt.registerSingleton<ThemeBloc>(

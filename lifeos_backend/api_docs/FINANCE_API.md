@@ -107,6 +107,174 @@ Authorization: Bearer {token}
 
 ---
 
+## User Settings
+
+### Get User Currencies
+```http
+GET /api/v1/user/currencies
+Authorization: Bearer {token}
+```
+
+Returns the authenticated user's owned currencies (not system currencies).
+
+**Response:** `200 OK`
+```json
+{
+  "data": [
+    {
+      "id": 5,
+      "user_id": 1,
+      "code": "EUR",
+      "name": "Euro",
+      "color": "#8B5CF6",
+      "icon": "€",
+      "is_active": true,
+      "created_at": "2025-12-24T10:00:00.000000Z",
+      "updated_at": "2025-12-24T10:00:00.000000Z"
+    },
+    {
+      "id": 6,
+      "user_id": 1,
+      "code": "RUB",
+      "name": "Russian Ruble",
+      "color": "#F59E0B",
+      "icon": "₽",
+      "is_active": true,
+      "created_at": "2025-12-24T10:00:00.000000Z",
+      "updated_at": "2025-12-24T10:00:00.000000Z"
+    },
+    {
+      "id": 7,
+      "user_id": 1,
+      "code": "USD",
+      "name": "US Dollar",
+      "color": "#06B6D4",
+      "icon": "$",
+      "is_active": true,
+      "created_at": "2025-12-24T10:00:00.000000Z",
+      "updated_at": "2025-12-24T10:00:00.000000Z"
+    },
+    {
+      "id": 8,
+      "user_id": 1,
+      "code": "UZS",
+      "name": "Uzbek Sum",
+      "color": "#3B82F6",
+      "icon": "uzs",
+      "is_active": true,
+      "created_at": "2025-12-24T10:00:00.000000Z",
+      "updated_at": "2025-12-24T10:00:00.000000Z"
+    }
+  ]
+}
+```
+
+**Notes:**
+- Returns only currencies owned by the authenticated user (where `user_id` matches the authenticated user's ID)
+- These are cloned from system currencies during user registration
+- Sorted alphabetically by currency code
+
+---
+
+### Get User Finance Settings
+```http
+GET /api/v1/user/finance-settings
+Authorization: Bearer {token}
+```
+
+Returns the authenticated user's finance settings, including their base (favorite) currency.
+
+**Response:** `200 OK`
+```json
+{
+  "data": {
+    "id": 1,
+    "user_id": 1,
+    "base_currency_id": 8,
+    "base_currency": {
+      "id": 8,
+      "user_id": 1,
+      "code": "UZS",
+      "name": "Uzbek Sum",
+      "color": "#3B82F6",
+      "icon": "uzs",
+      "is_active": true,
+      "created_at": "2025-12-24T10:00:00.000000Z",
+      "updated_at": "2025-12-24T10:00:00.000000Z"
+    },
+    "created_at": "2025-12-24T10:00:00.000000Z",
+    "updated_at": "2025-12-24T10:00:00.000000Z"
+  }
+}
+```
+
+**Notes:**
+- Returns the user's base currency preference
+- The `base_currency` object is fully loaded with all currency details
+
+---
+
+### Update User Finance Settings
+```http
+PATCH /api/v1/user/finance-settings
+Authorization: Bearer {token}
+Content-Type: application/json
+```
+
+Updates the authenticated user's base (favorite) currency.
+
+**Request Body:**
+```json
+{
+  "base_currency_id": 7
+}
+```
+
+**Response:** `200 OK`
+```json
+{
+  "data": {
+    "id": 1,
+    "user_id": 1,
+    "base_currency_id": 7,
+    "base_currency": {
+      "id": 7,
+      "user_id": 1,
+      "code": "USD",
+      "name": "US Dollar",
+      "color": "#06B6D4",
+      "icon": "$",
+      "is_active": true,
+      "created_at": "2025-12-24T10:00:00.000000Z",
+      "updated_at": "2025-12-24T10:00:00.000000Z"
+    },
+    "created_at": "2025-12-24T10:00:00.000000Z",
+    "updated_at": "2025-12-24T10:05:30.000000Z"
+  }
+}
+```
+
+**Validation Rules:**
+- `base_currency_id`: Required, must be an integer, must exist in the user's own currencies
+
+**Error Response:** `422 Unprocessable Entity`
+```json
+{
+  "message": "The selected base currency must be one of your own currencies.",
+  "errors": {
+    "base_currency_id": [
+      "The selected base currency must be one of your own currencies."
+    ]
+  }
+}
+```
+
+**Notes:**
+- The `base_currency_id` must belong to one of the user's owned currencies
+- Cannot select a system currency or another user's currency
+
+---
+
 ## Currencies
 
 ### List Currencies

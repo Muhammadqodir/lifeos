@@ -1,8 +1,11 @@
 <?php
 
 use App\Http\Controllers\Api\V1\CurrencyController;
+use App\Http\Controllers\Api\V1\FxRatesController;
 use App\Http\Controllers\Api\V1\TransactionCategoryController;
 use App\Http\Controllers\Api\V1\TransactionController;
+use App\Http\Controllers\Api\V1\UserCurrencyController;
+use App\Http\Controllers\Api\V1\UserFinanceSettingsController;
 use App\Http\Controllers\Api\V1\WalletController;
 use App\Http\Controllers\Auth\AuthController;
 use Illuminate\Support\Facades\Route;
@@ -20,8 +23,18 @@ Route::prefix('v1')->group(function () {
         });
     });
 
+    // FX Rates (public)
+    Route::get('fx/rates', [FxRatesController::class, 'index']);
+
     // Finance routes (protected)
     Route::middleware('auth:sanctum')->group(function () {
+        // User-specific routes
+        Route::prefix('user')->group(function () {
+            Route::get('currencies', [UserCurrencyController::class, 'index']);
+            Route::get('finance-settings', [UserFinanceSettingsController::class, 'show']);
+            Route::patch('finance-settings', [UserFinanceSettingsController::class, 'update']);
+        });
+
         // Currencies (read-only)
         Route::get('currencies', [CurrencyController::class, 'index']);
         Route::get('currencies/{currency}', [CurrencyController::class, 'show']);
