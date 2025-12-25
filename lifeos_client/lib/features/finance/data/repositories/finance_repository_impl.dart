@@ -4,6 +4,8 @@ import '../models/wallet_dto.dart';
 import '../models/transaction_dto.dart';
 import '../models/finance_summary_dto.dart';
 import '../models/currency_dto.dart';
+import '../models/transaction_category_dto.dart';
+import '../models/create_transaction_dto.dart';
 
 class FinanceRepositoryImpl implements FinanceRepository {
   final FinanceApiClient apiClient;
@@ -87,5 +89,19 @@ class FinanceRepositoryImpl implements FinanceRepository {
       type: type,
       isActive: isActive,
     );
+  }
+
+  @override
+  Future<List<TransactionCategoryDto>> getTransactionCategories({
+    String? type,
+  }) async {
+    return await apiClient.getTransactionCategories(type: type);
+  }
+
+  @override
+  Future<TransactionDto> createTransaction(
+    CreateTransactionRequestDto request,
+  ) async {
+    return await apiClient.createTransaction(request);
   }
 }

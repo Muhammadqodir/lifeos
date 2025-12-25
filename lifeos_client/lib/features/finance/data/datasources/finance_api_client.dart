@@ -3,6 +3,8 @@ import '../models/wallet_dto.dart';
 import '../models/transaction_dto.dart';
 import '../models/finance_summary_dto.dart';
 import '../models/currency_dto.dart';
+import '../models/transaction_category_dto.dart';
+import '../models/create_transaction_dto.dart';
 
 class FinanceApiClient {
   final Dio dio;
@@ -166,6 +168,57 @@ class FinanceApiClient {
       if (response.statusCode == 200 || response.statusCode == 201) {
         final data = response.data['data'];
         return WalletDto.fromJson(data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get transaction categories
+  Future<List<TransactionCategoryDto>> getTransactionCategories({
+    String? type,
+  }) async {
+    try {
+      final queryParameters = <String, dynamic>{};
+      if (type != null) queryParameters['type'] = type;
+
+      final response = await dio.get(
+        '$baseUrl/transaction-categories',
+        queryParameters: queryParameters,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List;
+        return data.map((json) => TransactionCategoryDto.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Create a new transaction
+  Future<TransactionDto> createTransaction(
+    CreateTransactionRequestDto request,
+  ) async {
+    try {
+      final response = await dio.post(
+        '$baseUrl/transactions',
+        data: request.toJson(),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'];
+        return TransactionDto.fromJson(data);
       } else {
         throw DioException(
           requestOptions: response.requestOptions,

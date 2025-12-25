@@ -14,6 +14,7 @@ import 'features/finance/data/repositories/finance_repository_impl.dart';
 import 'features/finance/domain/repositories/finance_repository.dart';
 import 'features/finance/presentation/bloc/finance_home_bloc.dart';
 import 'features/finance/presentation/bloc/add_wallet_bloc.dart';
+import 'features/finance/presentation/bloc/add_transaction_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -88,6 +89,10 @@ Future<void> setupDependencies() async {
 
   getIt.registerFactory<AddWalletBloc>(
     () => AddWalletBloc(financeRepository: getIt<FinanceRepository>()),
+  );
+
+  getIt.registerFactory<AddTransactionBloc>(
+    () => AddTransactionBloc(financeRepository: getIt<FinanceRepository>()),
   );
 
   getIt.registerSingleton<ThemeBloc>(

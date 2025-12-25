@@ -2,6 +2,8 @@ import '../../data/models/wallet_dto.dart';
 import '../../data/models/transaction_dto.dart';
 import '../../data/models/finance_summary_dto.dart';
 import '../../data/models/currency_dto.dart';
+import '../../data/models/transaction_category_dto.dart';
+import '../../data/models/create_transaction_dto.dart';
 
 abstract class FinanceRepository {
   Future<List<WalletDto>> getWallets();
@@ -25,4 +27,10 @@ abstract class FinanceRepository {
     required String type,
     bool isActive = true,
   });
+  Future<List<TransactionCategoryDto>> getTransactionCategories({
+    String? type,
+  });
+  Future<TransactionDto> createTransaction(
+    CreateTransactionRequestDto request,
+  );
 }

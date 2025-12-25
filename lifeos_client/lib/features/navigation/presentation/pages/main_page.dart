@@ -9,6 +9,7 @@ import '../../../../injection.dart';
 import '../../../finance/presentation/bloc/finance_home_bloc.dart';
 import '../../../finance/presentation/bloc/finance_home_event.dart';
 import '../../../finance/presentation/pages/finance_main_page.dart';
+import '../../../finance/presentation/pages/add_transaction_page.dart';
 import '../../../finance/presentation/providers/amount_visibility_provider.dart';
 import '../bloc/navigation_bloc.dart';
 import '../bloc/navigation_event.dart';
@@ -111,7 +112,7 @@ class _MainPageContent extends StatelessWidget {
             icon: HugeIcons.strokeRoundedAdd01,
             tooltip: 'Add Transaction',
             onTap: () {
-              // TODO: Navigate to AddTransactionPage
+              _navigateToAddTransaction(context);
             },
           ),
           AppBarAction(
@@ -211,6 +212,20 @@ class _MainPageContent extends StatelessWidget {
       },
       items: _navigationItems,
     );
+  }
+
+  /// Navigate to Add Transaction page
+  Future<void> _navigateToAddTransaction(BuildContext context) async {
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(
+        builder: (_) => const AddTransactionPage(),
+      ),
+    );
+
+    // If transaction was created successfully, refresh the finance page
+    if (result == true && context.mounted) {
+      context.read<FinanceHomeBloc>().add(const FinanceHomeRefreshed());
+    }
   }
 }
 
