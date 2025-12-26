@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+
 import '../../data/models/transaction_dto.dart';
 
 class TransactionTile extends StatelessWidget {
@@ -11,7 +11,7 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     // Get first entry for amount display
@@ -23,7 +23,7 @@ class TransactionTile extends StatelessWidget {
     final currencyCode = entry?.currency.code ?? '';
     final isPositive = amount.startsWith('-') == false;
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),

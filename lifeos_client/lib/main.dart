@@ -1,6 +1,5 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 import 'core/theme/presentation/bloc/theme_bloc.dart';
 import 'core/theme/presentation/bloc/theme_state.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -26,35 +25,31 @@ class MyApp extends StatelessWidget {
         BlocProvider(
           create: (_) => getIt<AuthBloc>()..add(AuthCheckRequested()),
         ),
-        BlocProvider(
-          create: (_) => getIt<ThemeBloc>(),
-        ),
+        BlocProvider(create: (_) => getIt<ThemeBloc>()),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {
-          return ShadApp(
+          return ShadcnApp(
             title: 'LifeOS',
-            theme: ShadThemeData(
-              colorScheme: const ShadSlateColorScheme.light(),
-              brightness: Brightness.light,
+            theme: ThemeData(
+              colorScheme: ColorSchemes.lightDefaultColor,
+              radius: 0.7,
             ),
-            darkTheme: ShadThemeData(
-              colorScheme: const ShadSlateColorScheme.dark(),
-              brightness: Brightness.dark,
+            darkTheme: ThemeData(
+              colorScheme: ColorSchemes.darkDefaultColor,
+              radius: 0.7,
             ),
             themeMode: themeState.isDark ? ThemeMode.dark : ThemeMode.light,
             debugShowCheckedModeBanner: false,
-            home: ShadToaster(
-              child: BlocBuilder<AuthBloc, AuthState>(
-                builder: (context, state) {
-                  if (state is AuthAuthenticated) {
-                    return const MainPage();
-                  }
+            home: BlocBuilder<AuthBloc, AuthState>(
+              builder: (context, state) {
+                if (state is AuthAuthenticated) {
+                  return const MainPage();
+                }
 
-                  // Show LoginPage for all other states (Initial, Unauthenticated, Error, Loading)
-                  return const LoginPage();
-                },
-              ),
+                // Show LoginPage for all other states (Initial, Unauthenticated, Error, Loading)
+                return const LoginPage();
+              },
             ),
           );
         },

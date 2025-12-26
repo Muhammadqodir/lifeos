@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:lifeos_client/utils/toast.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../../../injection.dart';
 import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../data/models/transaction_dto.dart';
@@ -31,40 +31,49 @@ class _AddTransactionPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return BlocListener<AddTransactionBloc, AddTransactionState>(
       listener: (context, state) {
         if (state is AddTransactionSuccess) {
-          ShadToaster.of(context).show(
-            const ShadToast(
-              title: Text('Success'),
-              description: Text('Transaction created successfully'),
-            ),
+          showToast(
+            context: context,
+            builder: (context, overlay) {
+              return Utils.buildToast(
+                context,
+                overlay,
+                'Success',
+                'Transaction created successfully',
+              );
+            },
+            location: ToastLocation.bottomCenter,
           );
           Navigator.of(context).pop(true);
         } else if (state is AddTransactionError) {
-          ShadToaster.of(context).show(
-            ShadToast.destructive(
-              title: const Text('Error'),
-              description: Text(state.message),
-            ),
+          showToast(
+            context: context,
+            builder: (context, overlay) {
+              return Utils.buildToast(context, overlay, 'Error', state.message);
+            },
+            location: ToastLocation.bottomCenter,
           );
         }
       },
       child: Scaffold(
-        appBar: CustomAppBar(
-          title: 'Add Transaction',
-          leftActions: [
-            AppBarAction(
-              icon: HugeIcons.strokeRoundedArrowLeft01,
-              tooltip: 'Back',
-              onTap: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-        body: BlocBuilder<AddTransactionBloc, AddTransactionState>(
+        headers: [
+          CustomAppBar(
+            title: 'Add Transaction',
+            leftActions: [
+              AppBarAction(
+                icon: HugeIcons.strokeRoundedArrowLeft01,
+                tooltip: 'Back',
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+        ],
+        child: BlocBuilder<AddTransactionBloc, AddTransactionState>(
           builder: (context, state) {
             if (state is AddTransactionLoadingData) {
               return const Center(child: CircularProgressIndicator());
@@ -102,7 +111,7 @@ class _AddTransactionPageContent extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 24),
-                    ShadButton(
+                    PrimaryButton(
                       onPressed: () {
                         context.read<AddTransactionBloc>().add(
                           const AddTransactionLoadData(),
@@ -140,8 +149,9 @@ class _AddTransactionPageContent extends StatelessWidget {
     if (state == null) {
       return const Center(child: CircularProgressIndicator());
     }
+    DateTime _value = state.occurredAt;
 
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isSubmitting =
         context.read<AddTransactionBloc>().state is AddTransactionSubmitting;
@@ -203,7 +213,7 @@ class _AddTransactionPageContent extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ShadInput(
+                    TextField(
                       initialValue: state.description,
                       placeholder: const Text('Add a note...'),
                       maxLines: 3,
@@ -218,57 +228,28 @@ class _AddTransactionPageContent extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // Date/Time
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Date & Time',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () => _selectDateTime(context, state.occurredAt),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: colorScheme.border),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          children: [
-                            HugeIcon(
-                              icon: HugeIcons.strokeRoundedCalendar03,
-                              size: 20,
-                              color: colorScheme.mutedForeground,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              _formatDateTime(state.occurredAt),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: colorScheme.foreground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                DatePicker(
+                  value: _value,
+                  mode: PromptMode.dialog,
+                  // Title shown at the top of the dialog variant.
+                  dialogTitle: const Text('Select Date'),
+                  stateBuilder: (date) {
+                    if (date.isAfter(DateTime.now())) {
+                      return DateState.disabled;
+                    }
+                    return DateState.enabled;
+                  },
+                  onChanged: (value) {
+                    context.read<AddTransactionBloc>().add(
+                      AddTransactionOccurredAtChanged(value!),
+                    );
+                  },
                 ),
 
                 const SizedBox(height: 150), // Space for bottom button
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ShadButton(
-                    width: double.infinity,
+                  child: PrimaryButton(
                     onPressed: state.isValid && !isSubmitting
                         ? () {
                             context.read<AddTransactionBloc>().add(
@@ -446,35 +427,6 @@ class _AddTransactionPageContent extends StatelessWidget {
             ),
           ],
         );
-    }
-  }
-
-  Future<void> _selectDateTime(BuildContext context, DateTime initial) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-
-    if (date != null && context.mounted) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(initial),
-      );
-
-      if (time != null && context.mounted) {
-        final dateTime = DateTime(
-          date.year,
-          date.month,
-          date.day,
-          time.hour,
-          time.minute,
-        );
-        context.read<AddTransactionBloc>().add(
-          AddTransactionOccurredAtChanged(dateTime),
-        );
-      }
     }
   }
 

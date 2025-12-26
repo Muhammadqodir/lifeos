@@ -43,9 +43,6 @@ dependencies:
   equatable: ^2.0.7
   provider: ^6.1.2
   
-  # UI components (shadcn_ui)
-  shadcn_ui: ^0.43.0
-  
   # Icons
   hugeicons: ^1.1.4
   
@@ -54,6 +51,7 @@ dependencies:
   
   # Service locator
   get_it: ^8.0.2
+  shadcn_flutter: ^0.0.47
 
 dev_dependencies:
   flutter_test:

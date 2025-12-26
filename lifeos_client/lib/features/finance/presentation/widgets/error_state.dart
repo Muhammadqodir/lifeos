@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+
 
 class ErrorState extends StatelessWidget {
   final String message;
@@ -14,7 +14,7 @@ class ErrorState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Center(
@@ -49,7 +49,7 @@ class ErrorState extends StatelessWidget {
             ),
             if (onRetry != null) ...[
               const SizedBox(height: 24),
-              ShadButton(
+              PrimaryButton(
                 onPressed: onRetry,
                 child: const Text('Try Again'),
               ),

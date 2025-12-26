@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+
 import '../../data/models/wallet_dto.dart';
 
 class WalletCard extends StatelessWidget {
@@ -25,13 +25,12 @@ class WalletCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return ShadCard(
-      child: InkWell(
+    return Card(
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
         child: SizedBox(
           width: 200,
           child: Column(

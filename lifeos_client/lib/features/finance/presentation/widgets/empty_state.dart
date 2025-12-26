@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
+
 
 class EmptyState extends StatelessWidget {
   final String title;
@@ -17,7 +17,7 @@ class EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Center(

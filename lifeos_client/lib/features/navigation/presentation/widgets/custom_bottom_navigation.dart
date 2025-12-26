@@ -1,12 +1,11 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 
 /// Custom bottom navigation bar following shadcn design principles
 class CustomBottomNavigation extends StatelessWidget {
   final int currentIndex;
   final Function(int) onTap;
-  final List<NavigationItem> items;
+  final List<NavigationItemData> items;
 
   const CustomBottomNavigation({
     super.key,
@@ -17,7 +16,7 @@ class CustomBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Container(
@@ -26,6 +25,7 @@ class CustomBottomNavigation extends StatelessWidget {
         border: Border(top: BorderSide(color: colorScheme.border, width: 1)),
       ),
       child: SafeArea(
+        top: false,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 8),
           child: Row(
@@ -48,10 +48,10 @@ class CustomBottomNavigation extends StatelessWidget {
 
 /// Individual navigation button
 class _NavigationButton extends StatefulWidget {
-  final NavigationItem item;
+  final NavigationItemData item;
   final bool isSelected;
   final VoidCallback onTap;
-  final ShadColorScheme colorScheme;
+  final ColorScheme colorScheme;
 
   const _NavigationButton({
     required this.item,
@@ -136,9 +136,9 @@ class _NavigationButtonState extends State<_NavigationButton> {
 }
 
 /// Navigation item data class
-class NavigationItem {
+class NavigationItemData {
   final String label;
   final dynamic icon;
 
-  const NavigationItem({required this.label, required this.icon});
+  const NavigationItemData({required this.label, required this.icon});
 }

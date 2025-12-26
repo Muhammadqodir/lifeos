@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
+
 import '../../data/models/wallet_dto.dart';
 
-class WalletSelector extends StatelessWidget {
+class WalletSelector extends StatefulWidget {
   final String label;
   final List<WalletDto> wallets;
   final int? selectedWalletId;
@@ -19,15 +19,28 @@ class WalletSelector extends StatelessWidget {
   });
 
   @override
+  State<WalletSelector> createState() => _WalletSelectorState();
+}
+
+class _WalletSelectorState extends State<WalletSelector> {
+  int? _selectedValue;
+
+  @override
+  void initState() {
+    super.initState();
+    _selectedValue = widget.selectedWalletId;
+  }
+
+  @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          label,
+          widget.label,
           style: TextStyle(
             fontSize: 14,
             fontWeight: FontWeight.w500,
@@ -37,28 +50,10 @@ class WalletSelector extends StatelessWidget {
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
-          child: ShadSelect<int>(
-            placeholder: Text(placeholder ?? 'Select wallet'),
-            options: wallets.map((wallet) {
-              return ShadOption(
-                value: wallet.id,
-                child: Row(
-                  children: [
-                    Text(wallet.name),
-                    const SizedBox(width: 8),
-                    Text(
-                      '(${wallet.currency.code})',
-                      style: TextStyle(
-                        fontSize: 12,
-                        color: colorScheme.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            }).toList(),
-            selectedOptionBuilder: (context, value) {
-              final wallet = wallets.firstWhere((w) => w.id == value);
+          child: Select<int?>(
+            itemBuilder: (context, item) {
+              if (item == null) return Text(widget.placeholder ?? 'Select wallet');
+              final wallet = widget.wallets.firstWhere((w) => w.id == item);
               return Row(
                 children: [
                   Text(wallet.name),
@@ -73,8 +68,36 @@ class WalletSelector extends StatelessWidget {
                 ],
               );
             },
-            onChanged: onChanged,
-            initialValue: selectedWalletId,
+            onChanged: (value) {
+              setState(() {
+                _selectedValue = value;
+              });
+              widget.onChanged(value);
+            },
+            value: _selectedValue,
+            placeholder: Text(widget.placeholder ?? 'Select wallet'),
+            popup: SelectPopup(
+              items: SelectItemList(
+                children: widget.wallets.map((wallet) {
+                  return SelectItemButton(
+                    value: wallet.id,
+                    child: Row(
+                      children: [
+                        Text(wallet.name),
+                        const SizedBox(width: 8),
+                        Text(
+                          '(${wallet.currency.code})',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: colorScheme.mutedForeground,
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
           ),
         ),
       ],

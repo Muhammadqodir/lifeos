@@ -1,6 +1,5 @@
-import 'package:flutter/widgets.dart';
 import 'package:provider/provider.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../providers/amount_visibility_provider.dart';
 
 class MoneyText extends StatelessWidget {
@@ -14,7 +13,7 @@ class MoneyText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final isVisible = context.watch<AmountVisibilityProvider>().isVisible;
 

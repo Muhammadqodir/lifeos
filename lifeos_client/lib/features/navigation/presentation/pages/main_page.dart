@@ -1,4 +1,4 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
@@ -34,24 +34,24 @@ class _MainPageContent extends StatelessWidget {
   const _MainPageContent();
 
   /// List of navigation items
-  static final List<NavigationItem> _navigationItems = [
-    const NavigationItem(
+  static final List<NavigationItemData> _navigationItems = [
+    const NavigationItemData(
       label: 'Home',
       icon: HugeIcons.strokeRoundedHome01,
     ),
-    const NavigationItem(
+    const NavigationItemData(
       label: 'Finances',
       icon: HugeIcons.strokeRoundedWallet03,
     ),
-    const NavigationItem(
+    const NavigationItemData(
       label: 'Gym',
       icon: HugeIcons.strokeRoundedDumbbell03,
     ),
-    const NavigationItem(
+    const NavigationItemData(
       label: 'Projects',
       icon: HugeIcons.strokeRoundedFolder01,
     ),
-    const NavigationItem(
+    const NavigationItemData(
       label: 'Other',
       icon: HugeIcons.strokeRoundedDashboardCircle,
     ),
@@ -71,9 +71,9 @@ class _MainPageContent extends StatelessWidget {
     return BlocBuilder<NavigationBloc, NavigationState>(
       builder: (context, state) {
         return Scaffold(
-          appBar: _buildAppBar(context, state),
-          body: _buildBody(state.currentIndex),
-          bottomNavigationBar: _buildBottomNavigationBar(context, state),
+          headers: [_buildAppBar(context, state)],
+          footers: [_buildBottomNavigationBar(context, state)],
+          child: _buildBody(state.currentIndex),
         );
       },
     );
@@ -242,7 +242,7 @@ class _PlaceholderPage extends StatelessWidget {
     return Center(
       child: Text(
         title,
-        style: Theme.of(context).textTheme.headlineLarge,
+        style: Theme.of(context).typography.h2,
       ),
     );
   }

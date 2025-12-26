@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:lifeos_client/utils/toast.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -14,7 +14,6 @@ class LoginPage extends StatefulWidget {
 }
 
 class _LoginPageState extends State<LoginPage> {
-  final _formKey = GlobalKey<ShadFormState>();
   final _emailController = TextEditingController();
   final _passwordController = TextEditingController();
 
@@ -26,31 +25,34 @@ class _LoginPageState extends State<LoginPage> {
   }
 
   void _handleLogin() {
-    if (_formKey.currentState!.saveAndValidate()) {
-      context.read<AuthBloc>().add(
-            AuthLoginRequested(
-              email: _emailController.text,
-              password: _passwordController.text,
-            ),
-          );
-    }
+    context.read<AuthBloc>().add(
+      AuthLoginRequested(
+        email: _emailController.text,
+        password: _passwordController.text,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: BlocListener<AuthBloc, AuthState>(
+      child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            // Show toast
-            ShadToaster.of(context).show(
-              ShadToast.destructive(
-                title: const Text('Error'),
-                description: Text(state.message),
-              ),
+            showToast(
+              context: context,
+              builder: (context, overlay) {
+                return Utils.buildToast(
+                  context,
+                  overlay,
+                  'Error',
+                  state.message,
+                );
+              },
+              location: ToastLocation.bottomCenter,
             );
-            
+
             // Clear password but keep email when error occurs
             _passwordController.clear();
           }
@@ -60,30 +62,20 @@ class _LoginPageState extends State<LoginPage> {
             padding: const EdgeInsets.all(24),
             child: SizedBox(
               width: 400,
-              child: ShadCard(
-                title: const Text(
-                  'Sign In',
-                  style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                ),
-                description: const Text('Enter your credentials to continue'),
-                child: ShadForm(
-                  key: _formKey,
+              child: Card(
+                child: Form(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       const SizedBox(height: 24),
-                      ShadInputFormField(
-                        id: 'email',
-                        label: const Text('Email'),
+                      TextField(
                         controller: _emailController,
                         placeholder: const Text('email@example.com'),
                         keyboardType: TextInputType.emailAddress,
                       ),
                       const SizedBox(height: 16),
-                      ShadInputFormField(
-                        id: 'password',
-                        label: const Text('Password'),
+                      TextField(
                         controller: _passwordController,
                         placeholder: const Text('Enter your password'),
                         obscureText: true,
@@ -92,7 +84,7 @@ class _LoginPageState extends State<LoginPage> {
                       BlocBuilder<AuthBloc, AuthState>(
                         builder: (context, state) {
                           final isLoading = state is AuthLoading;
-                          return ShadButton(
+                          return PrimaryButton(
                             onPressed: isLoading ? null : _handleLogin,
                             child: isLoading
                                 ? const SizedBox(
@@ -100,9 +92,7 @@ class _LoginPageState extends State<LoginPage> {
                                     width: 16,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation(
-                                        Colors.white,
-                                      ),
+                                      color: Colors.white,
                                     ),
                                   )
                                 : const Text('Sign In'),
@@ -115,9 +105,8 @@ class _LoginPageState extends State<LoginPage> {
                         children: [
                           const Text(
                             "Don't have an account? ",
-                            style: TextStyle(color: Colors.black87),
                           ),
-                          ShadButton.ghost(
+                          Button.ghost(
                             onPressed: () {
                               Navigator.of(context).push(
                                 MaterialPageRoute(

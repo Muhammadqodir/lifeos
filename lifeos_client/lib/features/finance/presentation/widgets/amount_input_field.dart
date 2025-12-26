@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter/services.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+
 
 class AmountInputField extends StatelessWidget {
   final String label;
@@ -20,7 +20,7 @@ class AmountInputField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
     final controller = TextEditingController(text: value);
     controller.selection = TextSelection.fromPosition(
@@ -39,7 +39,7 @@ class AmountInputField extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        ShadInput(
+        TextField(
           controller: controller,
           placeholder: Text(placeholder ?? 'Enter amount'),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),

@@ -1,8 +1,8 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
 import 'package:provider/provider.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+
 import '../providers/amount_visibility_provider.dart';
 
 class TotalCard extends StatelessWidget {
@@ -19,7 +19,7 @@ class TotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Padding(
@@ -58,7 +58,7 @@ class TotalCard extends StatelessWidget {
                     currencyFontSize: 16,
                   ),
                 ),
-                ShadIconButton(
+                IconButton.primary(
                   icon: HugeIcon(
                     icon: context.watch<AmountVisibilityProvider>().isVisible
                         ? HugeIcons.strokeRoundedView

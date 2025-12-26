@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:lifeos_client/utils/toast.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 import '../bloc/finance_home_bloc.dart';
 import '../bloc/finance_home_event.dart';
 import '../bloc/finance_home_state.dart';
@@ -13,8 +13,16 @@ import '../widgets/error_state.dart';
 import '../widgets/loading_skeleton.dart';
 import 'add_wallet_page.dart';
 
-class FinanceMainPage extends StatelessWidget {
+class FinanceMainPage extends StatefulWidget {
   const FinanceMainPage({super.key});
+
+  @override
+  State<FinanceMainPage> createState() => _FinanceMainPageState();
+}
+
+class _FinanceMainPageState extends State<FinanceMainPage> {
+  final GlobalKey<RefreshTriggerState> _refreshTriggerKey =
+      GlobalKey<RefreshTriggerState>();
 
   @override
   Widget build(BuildContext context) {
@@ -41,7 +49,7 @@ class FinanceMainPage extends StatelessWidget {
               icon: HugeIcons.strokeRoundedWallet03,
               size: 24,
             ),
-            action: ShadButton(
+            action: PrimaryButton(
               onPressed: () => _navigateToAddWallet(context),
               child: const Text('Add Wallet'),
             ),
@@ -49,7 +57,8 @@ class FinanceMainPage extends StatelessWidget {
         }
 
         if (state is FinanceHomeSuccess) {
-          return RefreshIndicator(
+          return RefreshTrigger(
+            key: _refreshTriggerKey,
             onRefresh: () async {
               context.read<FinanceHomeBloc>().add(const FinanceHomeRefreshed());
               // Wait a bit for the refresh to complete
@@ -65,7 +74,7 @@ class FinanceMainPage extends StatelessWidget {
   }
 
   Widget _buildSuccessContent(BuildContext context, FinanceHomeSuccess state) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return CustomScrollView(
@@ -112,13 +121,13 @@ class FinanceMainPage extends StatelessWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: ShadCard(
+              child: Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: EmptyState(
                     title: 'No Wallets',
                     description: 'Add your first wallet to start tracking',
-                    action: ShadButton.ghost(
+                    action: Button.ghost(
                       onPressed: () => _navigateToAddWallet(context),
                       child: const Text('Add Wallet'),
                     ),
@@ -167,7 +176,7 @@ class FinanceMainPage extends StatelessWidget {
                     child: state.isLoadingMore
                         ? const CircularProgressIndicator()
                         : state.hasMoreTransactions
-                        ? ShadButton.outline(
+                        ? Button.outline(
                             onPressed: () {
                               context.read<FinanceHomeBloc>().add(
                                 const FinanceHomeLoadMoreHistory(),
@@ -190,7 +199,7 @@ class FinanceMainPage extends StatelessWidget {
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.all(16),
-              child: ShadCard(
+              child: Card(
                 child: Padding(
                   padding: const EdgeInsets.all(16),
                   child: EmptyState(
@@ -224,11 +233,15 @@ class FinanceMainPage extends StatelessWidget {
   }
 
   void _showComingSoonToast(BuildContext context, String feature) {
-    ShadToaster.of(context).show(
-      ShadToast(
-        title: const Text('Coming Soon'),
-        description: Text('$feature feature is not yet implemented'),
+    showToast(
+      context: context,
+      builder: (context, overlay) => Utils.buildToast(
+        context,
+        overlay,
+        'Coming Soon',
+        '$feature feature is not yet implemented',
       ),
+      location: ToastLocation.bottomCenter,
     );
   }
 }

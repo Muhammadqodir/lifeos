@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:lifeos_client/utils/toast.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../../../injection.dart';
 import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../data/models/wallet_dto.dart';
@@ -30,78 +30,93 @@ class _AddWalletPageContent extends StatefulWidget {
 }
 
 class _AddWalletPageContentState extends State<_AddWalletPageContent> {
-  final _formKey = GlobalKey<ShadFormState>();
-  final _nameController = TextEditingController();
+  // Form field keys using shadcn_flutter structure
+  final _walletNameKey = const TextFieldKey(#walletName);
+  final _currencyKey = const TextFieldKey(#currency);
+  final _walletTypeKey = const TextFieldKey(#walletType);
+  final _isActiveKey = const CheckboxKey(#isActive);
 
+  CheckboxState _isActiveState = CheckboxState.checked;
   int? _selectedCurrencyId;
   WalletType _selectedWalletType = WalletType.cash;
-  bool _isActive = true;
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
-  }
+  void _handleFormSubmit(BuildContext context, Map<FormKey, dynamic> values) {
+    // Extract form values
+    String? walletName = _walletNameKey[values];
+    CheckboxState? isActive = _isActiveKey[values];
 
-  void _handleSubmit() {
-    if (_formKey.currentState!.saveAndValidate()) {
-      if (_selectedCurrencyId == null) {
-        ShadToaster.of(context).show(
-          const ShadToast.destructive(
-            title: Text('Validation Error'),
-            description: Text('Please select a currency'),
-          ),
-        );
-        return;
-      }
-
-      context.read<AddWalletBloc>().add(
-        AddWalletSubmitted(
-          name: _nameController.text,
-          currencyId: _selectedCurrencyId!,
-          type: _selectedWalletType.toJson(),
-          isActive: _isActive,
-        ),
+    // Validate currency selection
+    if (_selectedCurrencyId == null) {
+      showToast(
+        context: context,
+        builder: (context, overlay) {
+          return Utils.buildToast(
+            context,
+            overlay,
+            'Validation Error',
+            'Please select a currency',
+          );
+        },
+        location: ToastLocation.bottomCenter,
       );
+      return;
     }
+
+    // Submit to BLoC
+    context.read<AddWalletBloc>().add(
+      AddWalletSubmitted(
+        name: walletName ?? '',
+        currencyId: _selectedCurrencyId!,
+        type: _selectedWalletType.toJson(),
+        isActive: isActive == CheckboxState.checked,
+      ),
+    );
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return BlocListener<AddWalletBloc, AddWalletState>(
       listener: (context, state) {
         if (state is AddWalletSuccess) {
-          ShadToaster.of(context).show(
-            const ShadToast(
-              title: Text('Success'),
-              description: Text('Wallet created successfully'),
-            ),
+          showToast(
+            context: context,
+            builder: (context, overlay) {
+              return Utils.buildToast(
+                context,
+                overlay,
+                'Success',
+                'Wallet created successfully',
+              );
+            },
+            location: ToastLocation.bottomCenter,
           );
           Navigator.of(context).pop(true); // Return true to indicate success
         } else if (state is AddWalletError) {
-          ShadToaster.of(context).show(
-            ShadToast.destructive(
-              title: const Text('Error'),
-              description: Text(state.message),
-            ),
+          showToast(
+            context: context,
+            builder: (context, overlay) {
+              return Utils.buildToast(context, overlay, 'Error', state.message);
+            },
+            location: ToastLocation.bottomCenter,
           );
         }
       },
       child: Scaffold(
-        appBar: CustomAppBar(
-          title: 'Add Wallet',
-          leftActions: [
-            AppBarAction(
-              icon: HugeIcons.strokeRoundedArrowLeft01,
-              tooltip: 'Back',
-              onTap: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-        body: BlocBuilder<AddWalletBloc, AddWalletState>(
+        headers: [
+          CustomAppBar(
+            title: 'Add Wallet',
+            leftActions: [
+              AppBarAction(
+                icon: HugeIcons.strokeRoundedArrowLeft01,
+                tooltip: 'Back',
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+        ],
+        child: BlocBuilder<AddWalletBloc, AddWalletState>(
           builder: (context, state) {
             if (state is AddWalletLoadingCurrencies) {
               return const Center(child: CircularProgressIndicator());
@@ -136,7 +151,7 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 24),
-                    ShadButton(
+                    PrimaryButton(
                       onPressed: () {
                         context.read<AddWalletBloc>().add(
                           const AddWalletLoadCurrencies(),
@@ -151,171 +166,196 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
 
             final currencies = state is AddWalletReady ? state.currencies : [];
 
-            return Column(
-              children: [
-                Expanded(
-                  child: SingleChildScrollView(
-                    padding: const EdgeInsets.all(16),
-                    child: ShadForm(
-                      key: _formKey,
-                      child: Column(
+            return SingleChildScrollView(
+              padding: const EdgeInsets.all(16),
+              child: Form(
+                onSubmit: (context, values) => _handleFormSubmit(context, values),
+                child: SizedBox(
+                  width: double.infinity,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.end,
+                    children: [
+                      Column(
                         crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          ShadInputFormField(
-                            id: 'name',
+                          // Wallet Name Field
+                          FormField(
+                            key: _walletNameKey,
                             label: const Text('Wallet Name'),
-                            controller: _nameController,
-                            placeholder: const Text('e.g., My Cash Wallet'),
-                            validator: (value) {
-                              if (value.isEmpty) {
-                                return 'Please enter a wallet name';
-                              }
-                              return null;
+                            hint: const Text('e.g., My Cash Wallet'),
+                            validator: const LengthValidator(min: 1),
+                            showErrors: const {
+                              FormValidationMode.changed,
+                              FormValidationMode.submitted
                             },
+                            child: const TextField(),
                           ),
-                          const SizedBox(height: 16),
+                          const Gap(24),
 
                           // Currency Selection
-                          Text(
-                            'Currency',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: colorScheme.foreground,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          if (currencies.isEmpty)
-                            Container(
-                              padding: const EdgeInsets.all(12),
-                              decoration: BoxDecoration(
-                                color: colorScheme.muted,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                'No currencies available',
-                                style: TextStyle(
-                                  color: colorScheme.mutedForeground,
-                                ),
-                              ),
-                            )
-                          else
-                            Wrap(
-                              spacing: 8,
-                              runSpacing: 8,
-                              children: currencies.map((currency) {
-                                final isSelected =
-                                    _selectedCurrencyId == currency.id;
-                                return _CurrencyChip(
-                                  currency: currency,
-                                  isSelected: isSelected,
-                                  onTap: () {
-                                    setState(() {
-                                      _selectedCurrencyId = currency.id;
-                                    });
-                                  },
-                                );
-                              }).toList(),
-                            ),
-                          const SizedBox(height: 20),
-
-                          // Wallet Type
-                          Text(
-                            'Wallet Type',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w500,
-                              color: colorScheme.foreground,
-                            ),
-                          ),
-                          const SizedBox(height: 8),
-                          Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: WalletType.values.map((type) {
-                              final isSelected = _selectedWalletType == type;
-                              return _WalletTypeChip(
-                                type: type,
-                                isSelected: isSelected,
-                                onTap: () {
-                                  setState(() {
-                                    _selectedWalletType = type;
-                                  });
-                                },
-                              );
-                            }).toList(),
-                          ),
-                          const SizedBox(height: 20),
-
-                          // Active Toggle
-                          Row(
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      'Active',
-                                      style: TextStyle(
-                                        fontSize: 14,
-                                        fontWeight: FontWeight.w500,
-                                        color: colorScheme.foreground,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Inactive wallets won\'t show in transactions',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color: colorScheme.mutedForeground,
-                                      ),
-                                    ),
-                                  ],
+                              const Text(
+                                'Currency',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
                                 ),
                               ),
-                              ShadSwitch(
-                                value: _isActive,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _isActive = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Padding(
-                  padding: const EdgeInsets.all(12),
-                  child: SafeArea(
-                    top: false,
-                    child: BlocBuilder<AddWalletBloc, AddWalletState>(
-                      builder: (context, state) {
-                        final isSubmitting = state is AddWalletSubmitting;
-                        return ShadButton(
-                          onPressed: isSubmitting ? null : _handleSubmit,
-                          width: double.infinity,
-                          child: isSubmitting
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation(
-                                      Colors.white,
+                              const Gap(8),
+                              if (currencies.isEmpty)
+                                Container(
+                                  padding: const EdgeInsets.all(12),
+                                  decoration: BoxDecoration(
+                                    color: colorScheme.muted,
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: Text(
+                                    'No currencies available',
+                                    style: TextStyle(
+                                      color: colorScheme.mutedForeground,
                                     ),
                                   ),
                                 )
-                              : const Text('Create Wallet'),
-                        );
-                      },
-                    ),
+                              else
+                                FormField(
+                                  key: _currencyKey,
+                                  label: const Text('Select Currency'),
+                                  child: Wrap(
+                                    spacing: 8,
+                                    runSpacing: 8,
+                                    children: currencies.map((currency) {
+                                      final isSelected =
+                                          _selectedCurrencyId == currency.id;
+                                      return _CurrencyChip(
+                                        currency: currency,
+                                        isSelected: isSelected,
+                                        onTap: () {
+                                          setState(() {
+                                            _selectedCurrencyId = currency.id;
+                                          });
+                                        },
+                                      );
+                                    }).toList(),
+                                  ),
+                                ),
+                            ],
+                          ),
+                          const Gap(24),
+
+                          // Wallet Type
+                          Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              const Text(
+                                'Wallet Type',
+                                style: TextStyle(
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w500,
+                                ),
+                              ),
+                              const Gap(8),
+                              FormField(
+                                key: _walletTypeKey,
+                                label: const Text('Select Type'),
+                                child: Wrap(
+                                  spacing: 8,
+                                  runSpacing: 8,
+                                  children: WalletType.values.map((type) {
+                                    final isSelected =
+                                        _selectedWalletType == type;
+                                    return _WalletTypeChip(
+                                      type: type,
+                                      isSelected: isSelected,
+                                      onTap: () {
+                                        setState(() {
+                                          _selectedWalletType = type;
+                                        });
+                                      },
+                                    );
+                                  }).toList(),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const Gap(24),
+
+                          // Active Toggle
+                          FormInline(
+                            key: _isActiveKey,
+                            label: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'Active',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                                const Gap(4),
+                                Text(
+                                  'Inactive wallets won\'t show in transactions',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colorScheme.mutedForeground,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            showErrors: const {
+                              FormValidationMode.changed,
+                              FormValidationMode.submitted
+                            },
+                            child: Align(
+                              alignment: AlignmentDirectional.centerEnd,
+                              child: Checkbox(
+                                state: _isActiveState,
+                                onChanged: (value) {
+                                  setState(() {
+                                    _isActiveState = value;
+                                  });
+                                },
+                              ),
+                            ),
+                          ),
+                        ],
+                      ).gap(24),
+                      const Gap(24),
+
+                      // Submit Button with Error Builder
+                      BlocBuilder<AddWalletBloc, AddWalletState>(
+                        builder: (context, state) {
+                          final isSubmitting = state is AddWalletSubmitting;
+                          return FormErrorBuilder(
+                            builder: (context, errors, child) {
+                              return SizedBox(
+                                width: double.infinity,
+                                child: PrimaryButton(
+                                  onPressed: errors.isEmpty && !isSubmitting
+                                      ? () => context.submitForm()
+                                      : null,
+                                  child: isSubmitting
+                                      ? const SizedBox(
+                                          height: 16,
+                                        width: 16,
+                                        child: CircularProgressIndicator(
+                                          strokeWidth: 2,
+                                        ),
+                                      )
+                                    : const Text('Create Wallet'),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                    ],
                   ),
                 ),
-              ],
+              ),
             );
           },
         ),
@@ -338,12 +378,10 @@ class _CurrencyChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(
@@ -424,12 +462,10 @@ class _WalletTypeChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colorScheme = Theme.of(context).colorScheme;
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         decoration: BoxDecoration(

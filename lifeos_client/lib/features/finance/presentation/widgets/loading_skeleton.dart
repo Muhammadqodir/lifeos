@@ -1,12 +1,12 @@
-import 'package:flutter/material.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
+
 
 class LoadingSkeleton extends StatelessWidget {
   const LoadingSkeleton({super.key});
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
@@ -15,7 +15,7 @@ class LoadingSkeleton extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           // Total card skeleton
-          ShadCard(
+          Card(
             child: Padding(
               padding: const EdgeInsets.all(20),
               child: Column(
@@ -52,7 +52,7 @@ class LoadingSkeleton extends StatelessWidget {
               itemCount: 3,
               separatorBuilder: (context, index) => const SizedBox(width: 12),
               itemBuilder: (context, index) {
-                return ShadCard(
+                return Card(
                   child: Container(
                     width: 200,
                     padding: const EdgeInsets.all(16),
