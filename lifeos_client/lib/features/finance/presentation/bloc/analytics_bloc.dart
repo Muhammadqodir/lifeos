@@ -10,6 +10,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
       : super(const AnalyticsInitial()) {
     on<AnalyticsLoadData>(_onLoadData);
     on<AnalyticsDateRangeChanged>(_onDateRangeChanged);
+    on<AnalyticsCurrencyChanged>(_onCurrencyChanged);
     on<AnalyticsRefreshed>(_onRefreshed);
     on<AnalyticsRetried>(_onRetried);
   }
@@ -20,24 +21,45 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
   ) async {
     final dateFrom = event.dateFrom ?? _getFirstDayOfCurrentMonth();
     final dateTo = event.dateTo ?? _getLastDayOfCurrentMonth();
+    int? currencyId = event.currencyId;
 
-    emit(AnalyticsLoading(dateFrom: dateFrom, dateTo: dateTo));
+    // If currencyId not provided, get default from finance settings
+    if (currencyId == null) {
+      try {
+        final settings = await financeRepository.getFinanceSettings();
+        currencyId = settings['base_currency_id'] as int?;
+      } catch (e) {
+        // Continue without currency filter if settings fail
+      }
+    }
+
+    emit(AnalyticsLoading(
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      currencyId: currencyId,
+    ));
 
     try {
       final analytics = await financeRepository.getAnalytics(
         dateFrom: dateFrom,
         dateTo: dateTo,
+        currencyId: currencyId,
       );
 
       if (analytics.incomeByCategory.isEmpty &&
           analytics.expenseByCategory.isEmpty) {
-        emit(AnalyticsEmpty(dateFrom: dateFrom, dateTo: dateTo));
+        emit(AnalyticsEmpty(
+          dateFrom: dateFrom,
+          dateTo: dateTo,
+          currencyId: currencyId,
+        ));
       } else {
         emit(
           AnalyticsSuccess(
             analytics: analytics,
             dateFrom: dateFrom,
             dateTo: dateTo,
+            currencyId: currencyId,
           ),
         );
       }
@@ -47,6 +69,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
           message: e.toString().replaceAll('Exception: ', ''),
           dateFrom: dateFrom,
           dateTo: dateTo,
+          currencyId: currencyId,
         ),
       );
     }
@@ -56,23 +79,33 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
     AnalyticsDateRangeChanged event,
     Emitter<AnalyticsState> emit,
   ) async {
-    emit(AnalyticsLoading(dateFrom: event.dateFrom, dateTo: event.dateTo));
+    emit(AnalyticsLoading(
+      dateFrom: event.dateFrom,
+      dateTo: event.dateTo,
+      currencyId: event.currencyId,
+    ));
 
     try {
       final analytics = await financeRepository.getAnalytics(
         dateFrom: event.dateFrom,
         dateTo: event.dateTo,
+        currencyId: event.currencyId,
       );
 
       if (analytics.incomeByCategory.isEmpty &&
           analytics.expenseByCategory.isEmpty) {
-        emit(AnalyticsEmpty(dateFrom: event.dateFrom, dateTo: event.dateTo));
+        emit(AnalyticsEmpty(
+          dateFrom: event.dateFrom,
+          dateTo: event.dateTo,
+          currencyId: event.currencyId,
+        ));
       } else {
         emit(
           AnalyticsSuccess(
             analytics: analytics,
             dateFrom: event.dateFrom,
             dateTo: event.dateTo,
+            currencyId: event.currencyId,
           ),
         );
       }
@@ -82,9 +115,38 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
           message: e.toString().replaceAll('Exception: ', ''),
           dateFrom: event.dateFrom,
           dateTo: event.dateTo,
+          currencyId: event.currencyId,
         ),
       );
     }
+  }
+
+  Future<void> _onCurrencyChanged(
+    AnalyticsCurrencyChanged event,
+    Emitter<AnalyticsState> emit,
+  ) async {
+    final currentState = state;
+    DateTime dateFrom = _getFirstDayOfCurrentMonth();
+    DateTime dateTo = _getLastDayOfCurrentMonth();
+
+    if (currentState is AnalyticsSuccess) {
+      dateFrom = currentState.dateFrom;
+      dateTo = currentState.dateTo;
+    } else if (currentState is AnalyticsEmpty) {
+      dateFrom = currentState.dateFrom;
+      dateTo = currentState.dateTo;
+    } else if (currentState is AnalyticsFailure) {
+      dateFrom = currentState.dateFrom ?? dateFrom;
+      dateTo = currentState.dateTo ?? dateTo;
+    }
+
+    add(
+      AnalyticsDateRangeChanged(
+        dateFrom: dateFrom,
+        dateTo: dateTo,
+        currencyId: event.currencyId,
+      ),
+    );
   }
 
   Future<void> _onRefreshed(
@@ -97,6 +159,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
         AnalyticsDateRangeChanged(
           dateFrom: currentState.dateFrom,
           dateTo: currentState.dateTo,
+          currencyId: currentState.currencyId,
         ),
       );
     } else if (currentState is AnalyticsFailure) {
@@ -104,6 +167,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
         AnalyticsLoadData(
           dateFrom: currentState.dateFrom,
           dateTo: currentState.dateTo,
+          currencyId: currentState.currencyId,
         ),
       );
     } else if (currentState is AnalyticsEmpty) {
@@ -111,6 +175,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
         AnalyticsLoadData(
           dateFrom: currentState.dateFrom,
           dateTo: currentState.dateTo,
+          currencyId: currentState.currencyId,
         ),
       );
     } else {
@@ -128,6 +193,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
         AnalyticsLoadData(
           dateFrom: currentState.dateFrom,
           dateTo: currentState.dateTo,
+          currencyId: currentState.currencyId,
         ),
       );
     } else {

@@ -37,5 +37,7 @@ abstract class FinanceRepository {
   Future<AnalyticsSummaryDto> getAnalytics({
     DateTime? dateFrom,
     DateTime? dateTo,
+    int? currencyId,
   });
+  Future<Map<String, dynamic>> getFinanceSettings();
 }

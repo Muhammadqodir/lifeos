@@ -276,6 +276,7 @@ class FinanceApiClient {
   Future<AnalyticsSummaryDto> getAnalytics({
     DateTime? dateFrom,
     DateTime? dateTo,
+    int? currencyId,
   }) async {
     try {
       final queryParameters = <String, dynamic>{};
@@ -285,6 +286,9 @@ class FinanceApiClient {
       }
       if (dateTo != null) {
         queryParameters['date_to'] = dateTo.toIso8601String().split('T')[0];
+      }
+      if (currencyId != null) {
+        queryParameters['currency_id'] = currencyId;
       }
 
       final response = await dio.get(
@@ -309,6 +313,24 @@ class FinanceApiClient {
         print("Response status: ${e.response!.statusCode}");
         print("Response data: ${e.response!.data}");
       }
+      throw _handleError(e);
+    }
+  }
+
+  /// Get user's finance settings including default currency
+  Future<Map<String, dynamic>> getFinanceSettings() async {
+    try {
+      final response = await dio.get('$baseUrl/user/finance-settings');
+
+      if (response.statusCode == 200) {
+        return response.data['data'] as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
       throw _handleError(e);
     }
   }

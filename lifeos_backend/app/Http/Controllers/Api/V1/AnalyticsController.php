@@ -20,6 +20,7 @@ class AnalyticsController extends Controller
         $request->validate([
             'date_from' => 'nullable|date',
             'date_to' => 'nullable|date|after_or_equal:date_from',
+            'currency_id' => 'nullable|integer|exists:currencies,id',
         ]);
 
         $userId = auth()->id();
@@ -29,11 +30,23 @@ class AnalyticsController extends Controller
             ->where('user_id', $userId)
             ->first();
 
+        // Determine which currency to use
+        $currencyId = $request->currency_id ?? $financeSettings?->base_currency_id;
         $currencyIcon = $financeSettings?->baseCurrency?->icon ?? '$';
+
+        // If currency_id is provided, get the currency icon
+        if ($request->filled('currency_id')) {
+            $currency = \App\Models\Currency::find($request->currency_id);
+            $currencyIcon = $currency?->icon ?? $currencyIcon;
+        }
 
         // Build base query for transactions
         $query = Transaction::where('user_id', $userId)
-            ->with(['category', 'entries']);
+            ->with(['category', 'entries' => function ($query) use ($currencyId) {
+                if ($currencyId) {
+                    $query->where('currency_id', $currencyId);
+                }
+            }]);
 
         // Apply date filters
         if ($request->filled('date_from')) {

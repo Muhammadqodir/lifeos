@@ -110,10 +110,17 @@ class FinanceRepositoryImpl implements FinanceRepository {
   Future<AnalyticsSummaryDto> getAnalytics({
     DateTime? dateFrom,
     DateTime? dateTo,
+    int? currencyId,
   }) async {
     return await apiClient.getAnalytics(
       dateFrom: dateFrom,
       dateTo: dateTo,
+      currencyId: currencyId,
     );
+  }
+
+  @override
+  Future<Map<String, dynamic>> getFinanceSettings() async {
+    return await apiClient.getFinanceSettings();
   }
 }

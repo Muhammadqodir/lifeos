@@ -10,27 +10,40 @@ abstract class AnalyticsEvent extends Equatable {
 class AnalyticsLoadData extends AnalyticsEvent {
   final DateTime? dateFrom;
   final DateTime? dateTo;
+  final int? currencyId;
 
   const AnalyticsLoadData({
     this.dateFrom,
     this.dateTo,
+    this.currencyId,
   });
 
   @override
-  List<Object?> get props => [dateFrom, dateTo];
+  List<Object?> get props => [dateFrom, dateTo, currencyId];
 }
 
 class AnalyticsDateRangeChanged extends AnalyticsEvent {
   final DateTime dateFrom;
   final DateTime dateTo;
+  final int? currencyId;
 
   const AnalyticsDateRangeChanged({
     required this.dateFrom,
     required this.dateTo,
+    this.currencyId,
   });
 
   @override
-  List<Object?> get props => [dateFrom, dateTo];
+  List<Object?> get props => [dateFrom, dateTo, currencyId];
+}
+
+class AnalyticsCurrencyChanged extends AnalyticsEvent {
+  final int? currencyId;
+
+  const AnalyticsCurrencyChanged({this.currencyId});
+
+  @override
+  List<Object?> get props => [currencyId];
 }
 
 class AnalyticsRefreshed extends AnalyticsEvent {

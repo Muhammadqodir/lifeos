@@ -16,11 +16,13 @@ Requires Bearer token authentication via Laravel Sanctum.
 |-----------|------|----------|-------------|
 | `date_from` | date | No | Start date for analytics period (format: YYYY-MM-DD) |
 | `date_to` | date | No | End date for analytics period (format: YYYY-MM-DD) |
+| `currency_id` | integer | No | Filter analytics by specific currency ID. If not provided, uses user's default base currency |
 
 ### Validation Rules
 
 - `date_from` must be a valid date
 - `date_to` must be a valid date and after or equal to `date_from`
+- `currency_id` must be a valid integer and exist in the currencies table
 
 ## Response
 
@@ -95,6 +97,22 @@ curl -X GET "https://api.example.com/api/v1/analytics" \
 
 ```bash
 curl -X GET "https://api.example.com/api/v1/analytics?date_from=2024-01-01&date_to=2024-01-31" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Accept: application/json"
+```
+
+### Get analytics for a specific currency
+
+```bash
+curl -X GET "https://api.example.com/api/v1/analytics?currency_id=1" \
+  -H "Authorization: Bearer YOUR_TOKEN" \
+  -H "Accept: application/json"
+```
+
+### Get analytics with both date range and currency filter
+
+```bash
+curl -X GET "https://api.example.com/api/v1/analytics?date_from=2024-01-01&date_to=2024-01-31&currency_id=2" \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Accept: application/json"
 ```
