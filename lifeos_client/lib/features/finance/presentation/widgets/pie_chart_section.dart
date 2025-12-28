@@ -23,13 +23,13 @@ class PieChartSection extends StatefulWidget {
 }
 
 class _PieChartSectionState extends State<PieChartSection> {
-  int? selectedIndex;
+  int? selectedIndexSorted;
 
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
 
-    if (double.parse(widget.totalAmount) <= 0 || widget.categories.isEmpty) {
+    if (widget.categories.isEmpty) {
       return Card(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -74,6 +74,8 @@ class _PieChartSectionState extends State<PieChartSection> {
       );
     }
 
+    final sorted = _sortedCategories();
+
     return Card(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -86,7 +88,7 @@ class _PieChartSectionState extends State<PieChartSection> {
           // Pie Chart Visualization
           SizedBox(
             height: 200,
-            child: Center(child: _buildSimplePieChart(context)),
+            child: Center(child: _buildSimplePieChart(context, sorted)),
           ),
           const SizedBox(height: 20),
 
@@ -96,24 +98,23 @@ class _PieChartSectionState extends State<PieChartSection> {
             style: theme.typography.small.copyWith(fontWeight: FontWeight.w600),
           ),
           const SizedBox(height: 12),
-          ...widget.categories.asMap().entries.map((entry) {
+          ...sorted.asMap().entries.map((entry) {
             final index = entry.key;
             final category = entry.value;
             final percentage =
-                (double.parse(category.totalAmount) /
-                double.parse(widget.totalAmount) *
+                (double.parse(category.totalAmount).abs() /
+                sorted.fold<double>(0, (a, b) => a + double.parse(b.totalAmount).abs()) *
                 100);
-
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
               child: _CategoryLegendItem(
                 category: category,
                 percentage: percentage,
                 currencyIcon: widget.currencyIcon,
-                isSelected: selectedIndex == index,
+                isSelected: selectedIndexSorted == index,
                 onTap: () {
                   setState(() {
-                    selectedIndex = selectedIndex == index ? null : index;
+                    selectedIndexSorted = selectedIndexSorted == index ? null : index;
                   });
                 },
               ),
@@ -124,31 +125,32 @@ class _PieChartSectionState extends State<PieChartSection> {
     );
   }
 
-  Widget _buildSimplePieChart(BuildContext context) {
+  List<CategorySummaryDto> _sortedCategories() {
+    final List<CategorySummaryDto> sorted = List.from(widget.categories);
+    sorted.sort((a, b) => double.parse(b.totalAmount).abs().compareTo(double.parse(a.totalAmount).abs()));
+    return sorted;
+  }
+
+  Widget _buildSimplePieChart(BuildContext context, List<CategorySummaryDto> sorted) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final theme = Theme.of(context);
-        // Compute totals from category amounts to avoid division by zero
-        final values = widget.categories
-            .map((c) => double.tryParse(c.totalAmount) ?? 0)
+        final values = sorted
+            .map((c) => (double.tryParse(c.totalAmount) ?? 0).abs())
             .toList();
         final sum = values.fold<double>(0, (a, b) => a + b);
-
-        // Parse colors from category hex, fallback palette when needed
         Color parseHex(String hex) {
           final clean = hex.replaceFirst('#', '');
           return Color(int.parse('0xFF$clean'));
         }
-
         List<PieChartSectionData> sections = List.generate(
-          widget.categories.length,
+          sorted.length,
           (i) {
             final value = values[i];
-            final color = parseHex(widget.categories[i].categoryColor);
-            final category = widget.categories[i];
+            final color = parseHex(sorted[i].categoryColor);
+            final category = sorted[i];
             final percent = sum > 0 ? (value / sum * 100) : 0.0;
-            final isSelected = selectedIndex == i;
-
+            final isSelected = selectedIndexSorted == i;
             return PieChartSectionData(
               color: color,
               value: value,
@@ -161,7 +163,6 @@ class _PieChartSectionState extends State<PieChartSection> {
             );
           },
         );
-
         return Stack(
           alignment: Alignment.center,
           children: [
@@ -177,10 +178,10 @@ class _PieChartSectionState extends State<PieChartSection> {
                       if (!event.isInterestedForInteractions ||
                           pieTouchResponse == null ||
                           pieTouchResponse.touchedSection == null) {
-                        selectedIndex = null;
+                        selectedIndexSorted = null;
                         return;
                       }
-                      selectedIndex =
+                      selectedIndexSorted =
                           pieTouchResponse.touchedSection!.touchedSectionIndex;
                     });
                   },
