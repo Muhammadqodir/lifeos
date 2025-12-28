@@ -49,24 +49,10 @@ class TransactionTypeSelector extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _TypeButton(
-                label: 'Transfer',
-                isSelected: selectedType == TransactionType.transfer,
-                onTap: () => onChanged(TransactionType.transfer),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _TypeButton(
-                label: 'Exchange',
-                isSelected: selectedType == TransactionType.exchange,
-                onTap: () => onChanged(TransactionType.exchange),
-              ),
-            ),
-          ],
+        _TypeButton(
+          label: 'Transfer',
+          isSelected: selectedType == TransactionType.transfer,
+          onTap: () => onChanged(TransactionType.transfer),
         ),
       ],
     );
@@ -91,7 +77,8 @@ class _TypeButton extends StatelessWidget {
 
     return GestureDetector(
       onTap: onTap,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           color: isSelected ? colorScheme.primary : colorScheme.muted,
@@ -104,12 +91,9 @@ class _TypeButton extends StatelessWidget {
         child: Center(
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: isSelected
-                  ? colorScheme.primaryForeground
-                  : colorScheme.foreground,
+            style: Theme.of(context).typography.small.copyWith(
+              color: isSelected ? colorScheme.accent : colorScheme.foreground,
+              
             ),
           ),
         ),

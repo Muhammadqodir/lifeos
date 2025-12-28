@@ -50,7 +50,7 @@ class _LoginPageState extends State<LoginPage> {
                   state.message,
                 );
               },
-              location: ToastLocation.bottomCenter,
+              location: ToastLocation.topCenter,
             );
 
             // Clear password but keep email when error occurs

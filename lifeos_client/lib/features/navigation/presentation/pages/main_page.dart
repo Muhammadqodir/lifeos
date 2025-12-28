@@ -71,111 +71,10 @@ class _MainPageContent extends StatelessWidget {
     return BlocBuilder<NavigationBloc, NavigationState>(
       builder: (context, state) {
         return Scaffold(
-          headers: [_buildAppBar(context, state)],
           footers: [_buildBottomNavigationBar(context, state)],
           child: _buildBody(state.currentIndex),
         );
       },
-    );
-  }
-
-  /// Builds the app bar with page-specific title and actions
-  PreferredSizeWidget _buildAppBar(BuildContext context, NavigationState state) {
-    final pageTitle = _pageTitles[state.currentIndex];
-
-    // Customize actions based on current page
-    List<Widget>? leftActions;
-    List<Widget>? rightActions;
-
-    switch (state.currentIndex) {
-      case 0: // Home
-        rightActions = [
-          AppBarAction(
-            icon: HugeIcons.strokeRoundedNotification02,
-            tooltip: 'Notifications',
-            onTap: () {
-              // TODO: Handle notifications
-            },
-          ),
-          AppBarAction(
-            icon: HugeIcons.strokeRoundedSettings02,
-            tooltip: 'Settings',
-            onTap: () {
-              // TODO: Handle settings
-            },
-          ),
-        ];
-        break;
-      case 1: // Finances
-        rightActions = [
-          AppBarAction(
-            icon: HugeIcons.strokeRoundedAdd01,
-            tooltip: 'Add Transaction',
-            onTap: () {
-              _navigateToAddTransaction(context);
-            },
-          ),
-          AppBarAction(
-            icon: HugeIcons.strokeRoundedDatabaseSetting,
-            tooltip: 'Finance Settings',
-            onTap: () {
-              // TODO: Navigate to FinanceSettingsPage
-            },
-          ),
-        ];
-        break;
-      case 2: // Gym
-        rightActions = [
-          AppBarAction(
-            icon: HugeIcons.strokeRoundedAdd01,
-            tooltip: 'Add Workout',
-            onTap: () {
-              // TODO: Handle add workout
-            },
-          ),
-        ];
-        break;
-      case 3: // Projects
-        rightActions = [
-          AppBarAction(
-            icon: HugeIcons.strokeRoundedAdd01,
-            tooltip: 'Add Project',
-            onTap: () {
-              // TODO: Handle add project
-            },
-          ),
-          AppBarAction(
-            icon: HugeIcons.strokeRoundedSearch01,
-            tooltip: 'Search',
-            onTap: () {
-              // TODO: Handle search
-            },
-          ),
-        ];
-        break;
-      case 4: // Other
-        rightActions = [
-          BlocBuilder<ThemeBloc, ThemeState>(
-            builder: (context, themeState) {
-              return AppBarAction(
-                icon: themeState.isDark 
-                    ? HugeIcons.strokeRoundedSun03 
-                    : HugeIcons.strokeRoundedMoon02,
-                tooltip: themeState.isDark ? 'Light Mode' : 'Dark Mode',
-                onTap: () {
-                  context.read<ThemeBloc>().add(const ThemeToggled());
-                },
-              );
-            },
-          ),
-        ];
-        break;
-    }
-
-    return CustomAppBar(
-      title: pageTitle,
-      leftActions: leftActions,
-      rightActions: rightActions,
     );
   }
 
@@ -188,7 +87,8 @@ class _MainPageContent extends StatelessWidget {
         return ChangeNotifierProvider(
           create: (_) => AmountVisibilityProvider(),
           child: BlocProvider(
-            create: (_) => getIt<FinanceHomeBloc>()..add(const FinanceHomeStarted()),
+            create: (_) =>
+                getIt<FinanceHomeBloc>()..add(const FinanceHomeStarted()),
             child: const FinanceMainPage(),
           ),
         );
@@ -204,7 +104,10 @@ class _MainPageContent extends StatelessWidget {
   }
 
   /// Builds the bottom navigation bar
-  Widget _buildBottomNavigationBar(BuildContext context, NavigationState state) {
+  Widget _buildBottomNavigationBar(
+    BuildContext context,
+    NavigationState state,
+  ) {
     return CustomBottomNavigation(
       currentIndex: state.currentIndex,
       onTap: (index) {
@@ -213,37 +116,16 @@ class _MainPageContent extends StatelessWidget {
       items: _navigationItems,
     );
   }
-
-  /// Navigate to Add Transaction page
-  Future<void> _navigateToAddTransaction(BuildContext context) async {
-    final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(
-        builder: (_) => const AddTransactionPage(),
-      ),
-    );
-
-    // If transaction was created successfully, refresh the finance page
-    if (result == true && context.mounted) {
-      context.read<FinanceHomeBloc>().add(const FinanceHomeRefreshed());
-    }
-  }
 }
 
 /// Placeholder page for testing navigation
 class _PlaceholderPage extends StatelessWidget {
   final String title;
 
-  const _PlaceholderPage({
-    required this.title,
-  });
+  const _PlaceholderPage({required this.title});
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        title,
-        style: Theme.of(context).typography.h2,
-      ),
-    );
+    return Center(child: Text(title, style: Theme.of(context).typography.p));
   }
 }

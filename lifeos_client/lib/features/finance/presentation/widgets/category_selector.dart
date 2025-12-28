@@ -27,6 +27,19 @@ class _CategorySelectorState extends State<CategorySelector> {
   }
 
   @override
+  void didUpdateWidget(CategorySelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset selection if the selected category is not in the new list
+    if (_selectedValue != null && 
+        !widget.categories.any((c) => c.id == _selectedValue)) {
+      setState(() {
+        _selectedValue = null;
+      });
+      widget.onChanged(null);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
@@ -37,8 +50,7 @@ class _CategorySelectorState extends State<CategorySelector> {
         children: [
           Text(
             'Category',
-            style: TextStyle(
-              fontSize: 14,
+            style: Theme.of(context).typography.small.copyWith(
               fontWeight: FontWeight.w500,
               color: colorScheme.foreground,
             ),
@@ -52,10 +64,7 @@ class _CategorySelectorState extends State<CategorySelector> {
             ),
             child: Text(
               'No categories available',
-              style: TextStyle(
-                fontSize: 14,
-                color: colorScheme.mutedForeground,
-              ),
+              style: Theme.of(context).typography.xSmall,
             ),
           ),
         ],
@@ -67,8 +76,7 @@ class _CategorySelectorState extends State<CategorySelector> {
       children: [
         Text(
           'Category',
-          style: TextStyle(
-            fontSize: 14,
+          style: Theme.of(context).typography.small.copyWith(
             fontWeight: FontWeight.w500,
             color: colorScheme.foreground,
           ),
@@ -79,14 +87,22 @@ class _CategorySelectorState extends State<CategorySelector> {
           child: Select<int?>(
             itemBuilder: (context, item) {
               if (item == null) return const Text('Select category');
-              final category = widget.categories.firstWhere((c) => c.id == item);
-              return Row(
-                children: [
-                  Text(category.icon),
-                  const SizedBox(width: 8),
-                  Text(category.title),
-                ],
-              );
+              try {
+                final category = widget.categories.firstWhere(
+                  (c) => c.id == item,
+                  orElse: () => throw StateError('Category not found'),
+                );
+                return Row(
+                  children: [
+                    Text(category.icon),
+                    const SizedBox(width: 8),
+                    Text(category.title),
+                  ],
+                );
+              } catch (e) {
+                // Category not in current list (e.g., after type switch)
+                return const Text('Select category');
+              }
             },
             onChanged: (value) {
               setState(() {

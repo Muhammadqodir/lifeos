@@ -31,6 +31,7 @@ class Currency extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
             'is_active' => 'boolean',
         ];
     }

@@ -18,6 +18,19 @@ class UserFinanceSettings extends Model
     ];
 
     /**
+     * Get the attributes that should be cast.
+     *
+     * @return array<string, string>
+     */
+    protected function casts(): array
+    {
+        return [
+            'user_id' => 'integer',
+            'base_currency_id' => 'integer',
+        ];
+    }
+
+    /**
      * Get the user that owns these finance settings.
      */
     public function user(): BelongsTo

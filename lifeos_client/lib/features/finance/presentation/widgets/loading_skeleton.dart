@@ -46,7 +46,7 @@ class LoadingSkeleton extends StatelessWidget {
           
           // Wallets section skeleton
           SizedBox(
-            height: 130,
+            height: 150,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               itemCount: 3,

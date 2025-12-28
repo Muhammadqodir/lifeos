@@ -37,12 +37,11 @@ class AddTransactionReady extends AddTransactionState {
   final List<TransactionCategoryDto> expenseCategories;
   final TransactionType type;
   final int? walletId; // For income/expense
-  final int? fromWalletId; // For transfer/exchange
-  final int? toWalletId; // For transfer/exchange
+  final int? fromWalletId; // For transfer
+  final int? toWalletId; // For transfer
   final String amount; // For income/expense/transfer
-  final String fromAmount; // For exchange
-  final String toAmount; // For exchange
-  final String? rate; // For exchange
+  final double? feePercentage; // For transfer fee (0, 0.5, 1.0, or custom)
+  final String customFeeValue; // For custom fee percentage input
   final int? categoryId;
   final String description;
   final DateTime occurredAt;
@@ -57,9 +56,8 @@ class AddTransactionReady extends AddTransactionState {
     this.fromWalletId,
     this.toWalletId,
     this.amount = '',
-    this.fromAmount = '',
-    this.toAmount = '',
-    this.rate,
+    this.feePercentage,
+    this.customFeeValue = '',
     this.categoryId,
     this.description = '',
     required this.occurredAt,
@@ -78,10 +76,9 @@ class AddTransactionReady extends AddTransactionState {
     int? toWalletId,
     bool clearToWalletId = false,
     String? amount,
-    String? fromAmount,
-    String? toAmount,
-    String? rate,
-    bool clearRate = false,
+    double? feePercentage,
+    bool clearFeePercentage = false,
+    String? customFeeValue,
     int? categoryId,
     bool clearCategoryId = false,
     String? description,
@@ -97,9 +94,8 @@ class AddTransactionReady extends AddTransactionState {
       fromWalletId: clearFromWalletId ? null : (fromWalletId ?? this.fromWalletId),
       toWalletId: clearToWalletId ? null : (toWalletId ?? this.toWalletId),
       amount: amount ?? this.amount,
-      fromAmount: fromAmount ?? this.fromAmount,
-      toAmount: toAmount ?? this.toAmount,
-      rate: clearRate ? null : (rate ?? this.rate),
+      feePercentage: clearFeePercentage ? null : (feePercentage ?? this.feePercentage),
+      customFeeValue: customFeeValue ?? this.customFeeValue,
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
       description: description ?? this.description,
       occurredAt: occurredAt ?? this.occurredAt,
@@ -117,9 +113,8 @@ class AddTransactionReady extends AddTransactionState {
         fromWalletId,
         toWalletId,
         amount,
-        fromAmount,
-        toAmount,
-        rate,
+        feePercentage,
+        customFeeValue,
         categoryId,
         description,
         occurredAt,

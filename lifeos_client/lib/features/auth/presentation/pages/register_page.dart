@@ -63,7 +63,7 @@ class _RegisterPageState extends State<RegisterPage> {
                   state.message,
                 );
               },
-              location: ToastLocation.bottomCenter,
+              location: ToastLocation.topCenter,
             );
           }
         },

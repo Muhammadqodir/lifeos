@@ -1,5 +1,6 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'core/theme/custom_theme.dart';
 import 'core/theme/presentation/bloc/theme_bloc.dart';
 import 'core/theme/presentation/bloc/theme_state.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
@@ -31,14 +32,8 @@ class MyApp extends StatelessWidget {
         builder: (context, themeState) {
           return ShadcnApp(
             title: 'LifeOS',
-            theme: ThemeData(
-              colorScheme: ColorSchemes.lightDefaultColor,
-              radius: 0.7,
-            ),
-            darkTheme: ThemeData(
-              colorScheme: ColorSchemes.darkDefaultColor,
-              radius: 0.7,
-            ),
+            theme: CustomTheme.lightTheme(),
+            darkTheme: CustomTheme.darkTheme(),
             themeMode: themeState.isDark ? ThemeMode.dark : ThemeMode.light,
             debugShowCheckedModeBanner: false,
             home: BlocBuilder<AuthBloc, AuthState>(

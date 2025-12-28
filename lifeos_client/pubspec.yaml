@@ -52,6 +52,7 @@ dependencies:
   # Service locator
   get_it: ^8.0.2
   shadcn_flutter: ^0.0.47
+  fl_chart: ^1.1.1
 
 dev_dependencies:
   flutter_test:

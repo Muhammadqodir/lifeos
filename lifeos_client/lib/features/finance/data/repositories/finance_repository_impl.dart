@@ -6,6 +6,7 @@ import '../models/finance_summary_dto.dart';
 import '../models/currency_dto.dart';
 import '../models/transaction_category_dto.dart';
 import '../models/create_transaction_dto.dart';
+import '../models/analytics_summary_dto.dart';
 
 class FinanceRepositoryImpl implements FinanceRepository {
   final FinanceApiClient apiClient;
@@ -103,5 +104,16 @@ class FinanceRepositoryImpl implements FinanceRepository {
     CreateTransactionRequestDto request,
   ) async {
     return await apiClient.createTransaction(request);
+  }
+
+  @override
+  Future<AnalyticsSummaryDto> getAnalytics({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  }) async {
+    return await apiClient.getAnalytics(
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+    );
   }
 }

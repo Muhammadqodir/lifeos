@@ -30,6 +30,8 @@ class Wallet extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'currency_id' => 'integer',
             'is_active' => 'boolean',
         ];
     }

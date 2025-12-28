@@ -1,3 +1,4 @@
+import 'package:hugeicons/hugeicons.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import '../../data/models/wallet_dto.dart';
@@ -25,10 +26,31 @@ class WalletSelector extends StatefulWidget {
 class _WalletSelectorState extends State<WalletSelector> {
   int? _selectedValue;
 
+  dynamic _getWalletTypeIcon(WalletType type) {
+    switch (type) {
+      case WalletType.card:
+        return HugeIcons.strokeRoundedCreditCard;
+      case WalletType.bankAccount:
+        return HugeIcons.strokeRoundedBank;
+      case WalletType.cash:
+        return HugeIcons.strokeRoundedMoneyBag01;
+      case WalletType.other:
+        return HugeIcons.strokeRoundedWallet03;
+    }
+  }
+
   @override
   void initState() {
     super.initState();
     _selectedValue = widget.selectedWalletId;
+  }
+
+  @override
+  void didUpdateWidget(WalletSelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.selectedWalletId != oldWidget.selectedWalletId) {
+      _selectedValue = widget.selectedWalletId;
+    }
   }
 
   @override
@@ -52,10 +74,18 @@ class _WalletSelectorState extends State<WalletSelector> {
           width: double.infinity,
           child: Select<int?>(
             itemBuilder: (context, item) {
-              if (item == null) return Text(widget.placeholder ?? 'Select wallet');
+              if (item == null) {
+                return Text(
+                  widget.placeholder ?? 'Select wallet',
+                  style: Theme.of(context).typography.small,
+                );
+              }
               final wallet = widget.wallets.firstWhere((w) => w.id == item);
               return Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
+                  HugeIcon(icon: _getWalletTypeIcon(wallet.type), size: 18),
+                  const SizedBox(width: 8),
                   Text(wallet.name),
                   const SizedBox(width: 8),
                   Text(
@@ -83,6 +113,11 @@ class _WalletSelectorState extends State<WalletSelector> {
                     value: wallet.id,
                     child: Row(
                       children: [
+                        HugeIcon(
+                          icon: _getWalletTypeIcon(wallet.type),
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
                         Text(wallet.name),
                         const SizedBox(width: 8),
                         Text(
@@ -97,7 +132,7 @@ class _WalletSelectorState extends State<WalletSelector> {
                   );
                 }).toList(),
               ),
-            ),
+            ).call,
           ),
         ),
       ],

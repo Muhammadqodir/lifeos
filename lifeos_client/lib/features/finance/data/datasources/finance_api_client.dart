@@ -5,6 +5,7 @@ import '../models/finance_summary_dto.dart';
 import '../models/currency_dto.dart';
 import '../models/transaction_category_dto.dart';
 import '../models/create_transaction_dto.dart';
+import '../models/analytics_summary_dto.dart';
 
 class FinanceApiClient {
   final Dio dio;
@@ -225,7 +226,12 @@ class FinanceApiClient {
           response: response,
         );
       }
-    } catch (e) {
+    } catch (e, s) {
+      print('Exception in createTransaction: $e'); // Debug log
+      print(s);
+      if (e is! DioException) {
+        print('Stack trace: ${StackTrace.current}'); // Debug log
+      }
       throw _handleError(e);
     }
   }
@@ -264,5 +270,46 @@ class FinanceApiClient {
       }
     }
     return Exception('An unexpected error occurred');
+  }
+
+  /// Get analytics data grouped by category for a given period
+  Future<AnalyticsSummaryDto> getAnalytics({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+  }) async {
+    try {
+      final queryParameters = <String, dynamic>{};
+
+      if (dateFrom != null) {
+        queryParameters['date_from'] = dateFrom.toIso8601String().split('T')[0];
+      }
+      if (dateTo != null) {
+        queryParameters['date_to'] = dateTo.toIso8601String().split('T')[0];
+      }
+
+      final response = await dio.get(
+        '$baseUrl/analytics',
+        queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        print(data);
+        return AnalyticsSummaryDto.fromJson(data as Map<String, dynamic>);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e ,s) {
+      print("Analytics API error: $e");
+      print("Stack trace: $s");
+      if (e is DioException && e.response != null) {
+        print("Response status: ${e.response!.statusCode}");
+        print("Response data: ${e.response!.data}");
+      }
+      throw _handleError(e);
+    }
   }
 }

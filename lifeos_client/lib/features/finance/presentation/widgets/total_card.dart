@@ -29,8 +29,7 @@ class TotalCard extends StatelessWidget {
         children: [
           Text(
             'Total:',
-            style: TextStyle(
-              fontSize: 16,
+            style: theme.typography.normal.copyWith(
               fontWeight: FontWeight.w600,
               color: colorScheme.foreground,
             ),
@@ -54,8 +53,10 @@ class TotalCard extends StatelessWidget {
                   child: MoneyText(
                     amount: amount,
                     currencyCode: currencyCode,
-                    fontSize: 32,
-                    currencyFontSize: 16,
+                    isVisible: context
+                        .watch<AmountVisibilityProvider>()
+                        .isVisible,
+                    size: MoneyTextSize.xLarge,
                   ),
                 ),
                 IconButton.primary(

@@ -42,7 +42,7 @@ class TransactionTile extends StatelessWidget {
               child: Center(
                 child: Text(
                   transaction.category?.icon ?? _getTypeIcon(transaction.type),
-                  style: const TextStyle(fontSize: 20),
+                  style: theme.typography.normal,
                 ),
               ),
             ),
@@ -56,8 +56,7 @@ class TransactionTile extends StatelessWidget {
                     transaction.category?.title ??
                         transaction.description ??
                         _getTypeLabel(transaction.type),
-                    style: TextStyle(
-                      fontSize: 14,
+                    style: theme.typography.small.copyWith(
                       fontWeight: FontWeight.w500,
                       color: colorScheme.foreground,
                     ),
@@ -67,8 +66,7 @@ class TransactionTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _formatDate(transaction.occurredAt),
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: theme.typography.xSmall.copyWith(
                       color: colorScheme.mutedForeground,
                     ),
                   ),
@@ -83,8 +81,7 @@ class TransactionTile extends StatelessWidget {
                 MoneyText(
                   amount: amount,
                   currencyCode: currencyCode,
-                  fontSize: 16,
-                  currencyFontSize: 10,
+                  size: MoneyTextSize.small,
                   color: isPositive
                       ? Colors.green.shade600
                       : Colors.red.shade600,

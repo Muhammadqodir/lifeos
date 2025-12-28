@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\V1\AnalyticsController;
 use App\Http\Controllers\Api\V1\CurrencyController;
 use App\Http\Controllers\Api\V1\FxRatesController;
 use App\Http\Controllers\Api\V1\TransactionCategoryController;
@@ -48,5 +49,8 @@ Route::prefix('v1')->group(function () {
 
         // Transactions
         Route::apiResource('transactions', TransactionController::class);
+
+        // Analytics
+        Route::get('analytics', [AnalyticsController::class, 'index']);
     });
 });

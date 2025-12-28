@@ -30,8 +30,7 @@ class EmptyState extends StatelessWidget {
             if (icon != null) const SizedBox(height: 16),
             Text(
               title,
-              style: TextStyle(
-                fontSize: 18,
+              style: theme.typography.normal.copyWith(
                 fontWeight: FontWeight.w600,
                 color: colorScheme.foreground,
               ),
@@ -40,8 +39,7 @@ class EmptyState extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               description,
-              style: TextStyle(
-                fontSize: 14,
+              style: theme.typography.xSmall.copyWith(
                 color: colorScheme.mutedForeground,
               ),
               textAlign: TextAlign.center,

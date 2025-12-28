@@ -37,6 +37,9 @@ class TransactionEntry extends Model
     protected function casts(): array
     {
         return [
+            'transaction_id' => 'integer',
+            'wallet_id' => 'integer',
+            'currency_id' => 'integer',
             'amount' => 'decimal:6',
             'rate' => 'decimal:8',
             'created_at' => 'datetime',

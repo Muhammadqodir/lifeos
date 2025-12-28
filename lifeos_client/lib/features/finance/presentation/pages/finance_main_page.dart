@@ -1,3 +1,7 @@
+import 'package:flutter/cupertino.dart';
+import 'package:lifeos_client/features/finance/presentation/pages/add_transaction_page.dart';
+import 'package:lifeos_client/features/finance/presentation/pages/analytics_page.dart';
+import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -45,10 +49,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
           return EmptyState(
             title: 'No Finance Data',
             description: 'Start by adding your first wallet and transaction',
-            icon: HugeIcon(
-              icon: HugeIcons.strokeRoundedWallet03,
-              size: 24,
-            ),
+            icon: HugeIcon(icon: HugeIcons.strokeRoundedWallet03, size: 24),
             action: PrimaryButton(
               onPressed: () => _navigateToAddWallet(context),
               child: const Text('Add Wallet'),
@@ -57,14 +58,48 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
         }
 
         if (state is FinanceHomeSuccess) {
-          return RefreshTrigger(
-            key: _refreshTriggerKey,
-            onRefresh: () async {
-              context.read<FinanceHomeBloc>().add(const FinanceHomeRefreshed());
-              // Wait a bit for the refresh to complete
-              await Future.delayed(const Duration(milliseconds: 500));
-            },
-            child: _buildSuccessContent(context, state),
+          return Column(
+            children: [
+              CustomAppBar(
+                title: "Finances",
+                rightActions: [
+                  AppBarAction(
+                    icon: HugeIcons.strokeRoundedAdd01,
+                    tooltip: 'Add Transaction',
+                    onTap: () {
+                      _navigateToAddTransaction(context);
+                    },
+                  ),
+                  AppBarAction(
+                    icon: HugeIcons.strokeRoundedPieChart,
+                    tooltip: 'Analytics',
+                    onTap: () {
+                      _navigateToAnalytics(context);
+                    },
+                  ),
+                  AppBarAction(
+                    icon: HugeIcons.strokeRoundedDatabaseSetting,
+                    tooltip: 'Finance Settings',
+                    onTap: () {
+                      // TODO: Navigate to FinanceSettingsPage
+                    },
+                  ),
+                ],
+              ),
+              Expanded(
+                child: RefreshTrigger(
+                  key: _refreshTriggerKey,
+                  onRefresh: () async {
+                    context.read<FinanceHomeBloc>().add(
+                      const FinanceHomeRefreshed(),
+                    );
+                    // Wait a bit for the refresh to complete
+                    await Future.delayed(const Duration(milliseconds: 500));
+                  },
+                  child: _buildSuccessContent(context, state),
+                ),
+              ),
+            ],
           );
         }
 
@@ -97,8 +132,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
               child: Text(
                 'Wallets',
-                style: TextStyle(
-                  fontSize: 16,
+                style: theme.typography.normal.copyWith(
                   fontWeight: FontWeight.w600,
                   color: colorScheme.foreground,
                 ),
@@ -110,6 +144,9 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
               padding: const EdgeInsets.only(bottom: 16),
               child: WalletCarousel(
                 wallets: state.wallets,
+                onAddWallet: () {
+                  _navigateToAddWallet(context);
+                },
                 onWalletTap: (walletId) {
                   // TODO: Navigate to wallet details
                   _showComingSoonToast(context, 'Wallet Details #$walletId');
@@ -143,8 +180,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
             child: Text(
               'History',
-              style: TextStyle(
-                fontSize: 16,
+              style: theme.typography.normal.copyWith(
                 fontWeight: FontWeight.w600,
                 color: colorScheme.foreground,
               ),
@@ -221,6 +257,18 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
     );
   }
 
+  /// Navigate to Add Transaction page
+  Future<void> _navigateToAddTransaction(BuildContext context) async {
+    final result = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const AddTransactionPage()));
+
+    // If wallet was created successfully, refresh the page
+    if (result == true && context.mounted) {
+      context.read<FinanceHomeBloc>().add(const FinanceHomeRefreshed());
+    }
+  }
+
   Future<void> _navigateToAddWallet(BuildContext context) async {
     final result = await Navigator.of(
       context,
@@ -232,6 +280,15 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
     }
   }
 
+  void _navigateToAnalytics(BuildContext context) {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => const AnalyticsPage(),
+      ),
+    );
+  }
+
   void _showComingSoonToast(BuildContext context, String feature) {
     showToast(
       context: context,
@@ -241,7 +298,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
         'Coming Soon',
         '$feature feature is not yet implemented',
       ),
-      location: ToastLocation.bottomCenter,
+      location: ToastLocation.topCenter,
     );
   }
 }
