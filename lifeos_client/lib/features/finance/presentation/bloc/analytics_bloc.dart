@@ -69,7 +69,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
           message: e.toString().replaceAll('Exception: ', ''),
           dateFrom: dateFrom,
           dateTo: dateTo,
-          currencyId: currencyId,
+          currencyId: currencyId!,
         ),
       );
     }
@@ -115,7 +115,7 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
           message: e.toString().replaceAll('Exception: ', ''),
           dateFrom: event.dateFrom,
           dateTo: event.dateTo,
-          currencyId: event.currencyId,
+          currencyId: event.currencyId!,
         ),
       );
     }

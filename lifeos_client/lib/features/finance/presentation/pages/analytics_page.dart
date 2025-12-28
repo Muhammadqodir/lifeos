@@ -57,10 +57,74 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
     }
   }
 
-  void _onCurrencyChanged(int? value) {
+  void _onCurrencyChanged(int? value, BuildContext context) {
     setState(() {
       _selectedCurrencyId = value;
     });
+    context.read<AnalyticsBloc>().add(
+      AnalyticsCurrencyChanged(currencyId: value),
+    );
+  }
+
+  Widget _buildCurrencyDropdown(BuildContext context) {
+    return Select<int>(
+      value: _selectedCurrencyId,
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      itemBuilder: (context, item) {
+        final currency = _currencies.firstWhere((c) => c.id == item);
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(currency.icon, style: const TextStyle(fontSize: 16)),
+            const SizedBox(width: 8),
+            Text(currency.code, style: const TextStyle(fontSize: 14)),
+          ],
+        );
+      },
+      onChanged: (value) {
+        _onCurrencyChanged(value, context);
+      },
+      placeholder: const Text('Currency'),
+      popup: SelectPopup(
+        items: SelectItemList(
+          children: _currencies
+              .map(
+                (currency) => SelectItemButton<int>(
+                  value: currency.id,
+                  child: Row(
+                    children: [
+                      Text(currency.icon, style: const TextStyle(fontSize: 18)),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              currency.code,
+                              style: const TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                            Text(
+                              currency.name,
+                              style: const TextStyle(
+                                fontSize: 12,
+                                color: Color(0xFF6B7280),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              )
+              .toList(),
+        ),
+      ).call,
+    );
   }
 
   @override
@@ -98,89 +162,45 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                     ),
                   )
                 else
-                  Select<int>(
-                    value: _selectedCurrencyId,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 6,
-                    ),
-                    itemBuilder: (context, item) {
-                      final currency = _currencies.firstWhere(
-                        (c) => c.id == item,
-                      );
-                      return Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Text(
-                            currency.icon,
-                            style: const TextStyle(fontSize: 16),
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            currency.code,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ],
-                      );
-                    },
-                    onChanged: (value) {
-                      _onCurrencyChanged(value);
-                      context.read<AnalyticsBloc>().add(
-                        AnalyticsCurrencyChanged(currencyId: value),
-                      );
-                    },
-                  placeholder: const Text('Currency'),
-                  popup: SelectPopup(
-                    items: SelectItemList(
-                      children: _currencies
-                          .map(
-                            (currency) => SelectItemButton<int>(
-                              value: currency.id,
-                              child: Row(
-                                children: [
-                                  Text(
-                                    currency.icon,
-                                    style: const TextStyle(fontSize: 18),
-                                  ),
-                                  const SizedBox(width: 12),
-                                  Expanded(
-                                    child: Column(
-                                      crossAxisAlignment:
-                                          CrossAxisAlignment.start,
-                                      mainAxisSize: MainAxisSize.min,
-                                      children: [
-                                        Text(
-                                          currency.code,
-                                          style: const TextStyle(
-                                            fontSize: 14,
-                                            fontWeight: FontWeight.w600,
-                                          ),
-                                        ),
-                                        Text(
-                                          currency.name,
-                                          style: const TextStyle(
-                                            fontSize: 12,
-                                            color: Color(0xFF6B7280),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                          )
-                          .toList(),
-                    ),
-                  ).call,
-                ),
+                  _buildCurrencyDropdown(context),
               ],
             ),
           ],
-          child: _AnalyticsPageContent(onDateRangeChanged: _onDateRangeChanged),
+          child: _AnalyticsPageContent(
+            initialDateFrom: _dateFrom,
+            initialDateTo: _dateTo,
+            selectedCurrencyId: _selectedCurrencyId,
+          ),
         ),
       ),
     );
+  }
+}
+
+class _AnalyticsPageContent extends StatefulWidget {
+  final DateTime initialDateFrom;
+  final DateTime initialDateTo;
+  final int? selectedCurrencyId;
+
+  const _AnalyticsPageContent({
+    required this.initialDateFrom,
+    required this.initialDateTo,
+    required this.selectedCurrencyId,
+  });
+
+  @override
+  State<_AnalyticsPageContent> createState() => _AnalyticsPageContentState();
+}
+
+class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
+  late DateTime _dateFrom;
+  late DateTime _dateTo;
+
+  @override
+  void initState() {
+    super.initState();
+    _dateFrom = widget.initialDateFrom;
+    _dateTo = widget.initialDateTo;
   }
 
   void _onDateRangeChanged(DateTime from, DateTime to) {
@@ -192,16 +212,10 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       AnalyticsDateRangeChanged(
         dateFrom: from,
         dateTo: to,
-        currencyId: _selectedCurrencyId,
+        currencyId: widget.selectedCurrencyId,
       ),
     );
   }
-}
-
-class _AnalyticsPageContent extends StatelessWidget {
-  final Function(DateTime, DateTime) onDateRangeChanged;
-
-  const _AnalyticsPageContent({required this.onDateRangeChanged});
 
   @override
   Widget build(BuildContext context) {
@@ -220,7 +234,7 @@ class _AnalyticsPageContent extends StatelessWidget {
           }
 
           if (state is AnalyticsEmpty) {
-            return _buildEmptyState(context);
+            return _buildEmptyState(context, state);
           }
 
           if (state is AnalyticsSuccess) {
@@ -234,7 +248,7 @@ class _AnalyticsPageContent extends StatelessWidget {
                     AnalyticsDatePicker(
                       dateFrom: state.dateFrom,
                       dateTo: state.dateTo,
-                      onDateRangeChanged: onDateRangeChanged,
+                      onDateRangeChanged: _onDateRangeChanged,
                     ),
                     const SizedBox(height: 20),
 
@@ -309,28 +323,39 @@ class _AnalyticsPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildEmptyState(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const HugeIcon(icon: HugeIcons.strokeRoundedPieChart, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              'No data available',
-              style: Theme.of(context).typography.large,
-              textAlign: TextAlign.center,
+  Widget _buildEmptyState(BuildContext context, AnalyticsEmpty state) {
+    return Padding(
+      padding: const EdgeInsets.all(16),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          AnalyticsDatePicker(
+            dateFrom: state.dateFrom,
+            dateTo: state.dateTo,
+            onDateRangeChanged: _onDateRangeChanged,
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const HugeIcon(icon: HugeIcons.strokeRoundedPieChart, size: 48),
+                const SizedBox(height: 16),
+                Text(
+                  'No data available',
+                  style: Theme.of(context).typography.large,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Add some transactions to see analytics',
+                  style: Theme.of(context).typography.base,
+                  textAlign: TextAlign.center,
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Add some transactions to see analytics',
-              style: Theme.of(context).typography.base,
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }

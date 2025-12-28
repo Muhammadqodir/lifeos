@@ -46,15 +46,15 @@ class AnalyticsSuccess extends AnalyticsState {
 
 class AnalyticsFailure extends AnalyticsState {
   final String message;
-  final DateTime? dateFrom;
-  final DateTime? dateTo;
-  final int? currencyId;
+  final DateTime dateFrom;
+  final DateTime dateTo;
+  final int currencyId;
 
   const AnalyticsFailure({
     required this.message,
-    this.dateFrom,
-    this.dateTo,
-    this.currencyId,
+    required this.dateFrom,
+    required this.dateTo,
+    required this.currencyId,
   });
 
   @override
