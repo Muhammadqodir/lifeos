@@ -40,4 +40,17 @@ abstract class FinanceRepository {
     int? currencyId,
   });
   Future<Map<String, dynamic>> getFinanceSettings();
+  Future<Map<String, dynamic>> updateFinanceSettings({
+    required int baseCurrencyId,
+  });
+  Future<List<CurrencyDto>> getAllCurrencies();
+  Future<CurrencyDto> addUserCurrency(int currencyId);
+  Future<void> removeUserCurrency(int currencyId);
+  Future<TransactionCategoryDto> createCategory({
+    required String title,
+    required String type,
+    required String icon,
+    required String color,
+  });
+  Future<void> deleteCategory(int categoryId);
 }

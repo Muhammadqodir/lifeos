@@ -32,6 +32,8 @@ Route::prefix('v1')->group(function () {
         // User-specific routes
         Route::prefix('user')->group(function () {
             Route::get('currencies', [UserCurrencyController::class, 'index']);
+            Route::post('currencies', [UserCurrencyController::class, 'store']);
+            Route::delete('currencies/{currency}', [UserCurrencyController::class, 'destroy']);
             Route::get('finance-settings', [UserFinanceSettingsController::class, 'show']);
             Route::patch('finance-settings', [UserFinanceSettingsController::class, 'update']);
         });

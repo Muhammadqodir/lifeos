@@ -1,6 +1,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/add_transaction_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/analytics_page.dart';
+import 'package:lifeos_client/features/finance/presentation/pages/finance_settings_page.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -81,7 +82,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
                     icon: HugeIcons.strokeRoundedDatabaseSetting,
                     tooltip: 'Finance Settings',
                     onTap: () {
-                      // TODO: Navigate to FinanceSettingsPage
+                      _navigateToFinanceSettings(context);
                     },
                   ),
                 ],
@@ -285,6 +286,15 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
       context,
       CupertinoPageRoute(
         builder: (context) => const AnalyticsPage(),
+      ),
+    );
+  }
+
+  void _navigateToFinanceSettings(BuildContext context) {
+    Navigator.push(
+      context,
+      CupertinoPageRoute(
+        builder: (context) => const FinanceSettingsPage(),
       ),
     );
   }
