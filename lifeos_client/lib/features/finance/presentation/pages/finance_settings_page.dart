@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lifeos_client/features/finance/presentation/widgets/category_icon.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
@@ -425,24 +426,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
             child: Row(
               children: [
-                Container(
-                  padding: EdgeInsets.only(bottom: 3, left: 3),
-                  width: 34,
-                  height: 34,
-                  decoration: BoxDecoration(
-                    color: Color(
-                      int.parse('0xFF${category.color.replaceAll("#", "")}'),
-                    ).withAlpha(51),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Center(
-                    child: Text(
-                      category.icon,
-                      textAlign: TextAlign.center,
-                      style: theme.typography.normal,
-                    ),
-                  ),
-                ),
+                CategoryIcon(icon: category.icon, color: category.color),
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -672,10 +656,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                   onChanged: (value) => selectedIcon = value,
                 ),
                 const SizedBox(height: 16),
-                Text(
-                  'Color:',
-                  style: Theme.of(dialogContext).typography.small,
-                ),
+                Text('Color:', style: Theme.of(dialogContext).typography.small),
                 const SizedBox(height: 8),
                 ColorSelector(
                   initialColor: selectedColor,

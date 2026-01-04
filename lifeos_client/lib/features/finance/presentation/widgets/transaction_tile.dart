@@ -1,3 +1,4 @@
+import 'package:lifeos_client/features/finance/presentation/widgets/category_icon.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
 
@@ -30,21 +31,9 @@ class TransactionTile extends StatelessWidget {
         child: Row(
           children: [
             // Category icon
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: transaction.category != null
-                    ? _hexToColor(transaction.category!.color).withOpacity(0.1)
-                    : colorScheme.muted,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Text(
-                  transaction.category?.icon ?? _getTypeIcon(transaction.type),
-                  style: theme.typography.normal,
-                ),
-              ),
+            CategoryIcon(
+              icon: transaction.category?.icon ?? '⭕️',
+              color: transaction.category?.color ?? '#000000',
             ),
             const SizedBox(width: 12),
             // Transaction details

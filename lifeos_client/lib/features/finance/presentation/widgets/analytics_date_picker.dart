@@ -34,27 +34,27 @@ class _AnalyticsDatePickerState extends State<AnalyticsDatePicker> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Select Period',
-          style: Theme.of(context).typography.xSmall,
-        ),
+        Text('Select Period', style: Theme.of(context).typography.xSmall),
         const SizedBox(height: 8),
-        DateRangePicker(
-          value: _value,
-          mode: PromptMode.dialog,
-          dialogTitle: const Text('Select Date Range'),
-          onChanged: (value) {
-            setState(() {
-              _value = value;
+        SizedBox(
+          width: double.infinity,
+          child: DateRangePicker(
+            value: _value,
+            mode: PromptMode.dialog,
+            dialogTitle: const Text('Select Date Range'),
+            onChanged: (value) {
+              setState(() {
+                _value = value;
+                if (value != null) {
+                  _dateFrom = value.start;
+                  _dateTo = value.end;
+                }
+              });
               if (value != null) {
-                _dateFrom = value.start;
-                _dateTo = value.end;
+                widget.onDateRangeChanged(_dateFrom, _dateTo);
               }
-            });
-            if (value != null) {
-              widget.onDateRangeChanged(_dateFrom, _dateTo);
-            }
-          },
+            },
+          ),
         ),
       ],
     );
