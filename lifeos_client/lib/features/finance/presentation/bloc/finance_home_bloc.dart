@@ -9,7 +9,7 @@ class FinanceHomeBloc extends Bloc<FinanceHomeEvent, FinanceHomeState> {
   static const int _perPage = 20;
 
   FinanceHomeBloc({required this.financeRepository})
-      : super(const FinanceHomeInitial()) {
+    : super(const FinanceHomeInitial()) {
     on<FinanceHomeStarted>(_onStarted);
     on<FinanceHomeRefreshed>(_onRefreshed);
     on<FinanceHomeRetried>(_onRetried);
@@ -63,11 +63,13 @@ class FinanceHomeBloc extends Bloc<FinanceHomeEvent, FinanceHomeState> {
         ...transactionsResponse.data,
       ];
 
-      emit(currentState.copyWith(
-        transactions: updatedTransactions,
-        hasMoreTransactions: transactionsResponse.meta.hasMore,
-        isLoadingMore: false,
-      ));
+      emit(
+        currentState.copyWith(
+          transactions: updatedTransactions,
+          hasMoreTransactions: transactionsResponse.meta.hasMore,
+          isLoadingMore: false,
+        ),
+      );
     } catch (e) {
       // On error, just stop loading more but keep current state
       emit(currentState.copyWith(isLoadingMore: false));
@@ -93,12 +95,14 @@ class FinanceHomeBloc extends Bloc<FinanceHomeEvent, FinanceHomeState> {
         return;
       }
 
-      emit(FinanceHomeSuccess(
-        summary: summary,
-        wallets: wallets,
-        transactions: transactionsResponse.data,
-        hasMoreTransactions: transactionsResponse.meta.hasMore,
-      ));
+      emit(
+        FinanceHomeSuccess(
+          summary: summary,
+          wallets: wallets,
+          transactions: transactionsResponse.data,
+          hasMoreTransactions: transactionsResponse.meta.hasMore,
+        ),
+      );
     } catch (e) {
       emit(FinanceHomeFailure(message: e.toString()));
     }

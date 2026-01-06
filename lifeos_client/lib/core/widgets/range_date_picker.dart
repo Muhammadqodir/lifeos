@@ -1,11 +1,11 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
-class AnalyticsDatePicker extends StatefulWidget {
+class RangeDatePicker extends StatefulWidget {
   final DateTime dateFrom;
   final DateTime dateTo;
   final Function(DateTime, DateTime) onDateRangeChanged;
 
-  const AnalyticsDatePicker({
+  const RangeDatePicker({
     super.key,
     required this.dateFrom,
     required this.dateTo,
@@ -13,10 +13,10 @@ class AnalyticsDatePicker extends StatefulWidget {
   });
 
   @override
-  State<AnalyticsDatePicker> createState() => _AnalyticsDatePickerState();
+  State<RangeDatePicker> createState() => _RangeDatePickerState();
 }
 
-class _AnalyticsDatePickerState extends State<AnalyticsDatePicker> {
+class _RangeDatePickerState extends State<RangeDatePicker> {
   late DateTime _dateFrom;
   late DateTime _dateTo;
   DateTimeRange? _value;

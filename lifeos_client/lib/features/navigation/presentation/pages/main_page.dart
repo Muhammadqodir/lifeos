@@ -1,21 +1,18 @@
+import 'package:lifeos_client/features/health/presentation/pages/health_main_page.dart';
+import 'package:lifeos_client/features/navigation/presentation/widgets/fade_indexed_stack.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
-import '../../../../core/theme/presentation/bloc/theme_bloc.dart';
-import '../../../../core/theme/presentation/bloc/theme_event.dart';
-import '../../../../core/theme/presentation/bloc/theme_state.dart';
 import '../../../../injection.dart';
 import '../../../finance/presentation/bloc/finance_home_bloc.dart';
 import '../../../finance/presentation/bloc/finance_home_event.dart';
 import '../../../finance/presentation/pages/finance_main_page.dart';
-import '../../../finance/presentation/pages/add_transaction_page.dart';
 import '../../../finance/presentation/providers/amount_visibility_provider.dart';
 import '../bloc/navigation_bloc.dart';
 import '../bloc/navigation_event.dart';
 import '../bloc/navigation_state.dart';
 import '../widgets/custom_bottom_navigation.dart';
-import '../widgets/custom_app_bar.dart';
 
 /// Main page with bottom navigation bar
 class MainPage extends StatelessWidget {
@@ -44,8 +41,8 @@ class _MainPageContent extends StatelessWidget {
       icon: HugeIcons.strokeRoundedWallet03,
     ),
     const NavigationItemData(
-      label: 'Gym',
-      icon: HugeIcons.strokeRoundedDumbbell03,
+      label: 'Health',
+      icon: HugeIcons.strokeRoundedBodyPartMuscle,
     ),
     const NavigationItemData(
       label: 'Projects',
@@ -61,7 +58,7 @@ class _MainPageContent extends StatelessWidget {
   static const List<String> _pageTitles = [
     'Home',
     'Finances',
-    'Gym',
+    'Health',
     'Projects',
     'Other',
   ];
@@ -72,35 +69,31 @@ class _MainPageContent extends StatelessWidget {
       builder: (context, state) {
         return Scaffold(
           footers: [_buildBottomNavigationBar(context, state)],
-          child: _buildBody(state.currentIndex),
+          child: FadeIndexedStack(
+            index: state.currentIndex,
+            children: _buildPages(),
+          ),
         );
       },
     );
   }
 
-  /// Builds the body content based on selected tab
-  Widget _buildBody(int currentIndex) {
-    switch (currentIndex) {
-      case 0:
-        return const _PlaceholderPage(title: 'Home');
-      case 1:
-        return ChangeNotifierProvider(
-          create: (_) => AmountVisibilityProvider(),
-          child: BlocProvider(
-            create: (_) =>
-                getIt<FinanceHomeBloc>()..add(const FinanceHomeStarted()),
-            child: const FinanceMainPage(),
-          ),
-        );
-      case 2:
-        return const _PlaceholderPage(title: 'Gym');
-      case 3:
-        return const _PlaceholderPage(title: 'Projects');
-      case 4:
-        return const _PlaceholderPage(title: 'Other');
-      default:
-        return const _PlaceholderPage(title: 'Unknown');
-    }
+  /// Builds all pages once and maintains their state
+  List<Widget> _buildPages() {
+    return [
+      const _PlaceholderPage(title: 'Home'),
+      ChangeNotifierProvider(
+        create: (_) => AmountVisibilityProvider(),
+        child: BlocProvider(
+          create: (_) =>
+              getIt<FinanceHomeBloc>()..add(const FinanceHomeStarted()),
+          child: const FinanceMainPage(),
+        ),
+      ),
+      const GymMainPage(),
+      const _PlaceholderPage(title: 'Projects'),
+      const _PlaceholderPage(title: 'Other'),
+    ];
   }
 
   /// Builds the bottom navigation bar

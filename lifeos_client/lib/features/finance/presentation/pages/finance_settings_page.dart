@@ -1,5 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lifeos_client/features/finance/presentation/widgets/category_icon.dart';
+import 'package:lifeos_client/core/widgets/category_icon.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
@@ -10,8 +10,8 @@ import '../bloc/finance_settings_event.dart';
 import '../bloc/finance_settings_state.dart';
 import '../../data/models/currency_dto.dart';
 import '../../data/models/transaction_category_dto.dart';
-import '../widgets/selectable_group.dart';
-import '../widgets/color_selector.dart';
+import '../../../../core/widgets/selectable_group.dart';
+import '../../../../core/widgets/color_selector.dart';
 
 class FinanceSettingsPage extends StatelessWidget {
   const FinanceSettingsPage({super.key});
@@ -622,18 +622,34 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                   options: [
                     SelectableGroupOption(
                       value: 'expense',
-                      label: 'Expense',
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowDown01,
-                        size: 18,
+                      widget: Row(
+                        children: [
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedArrowDown01,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Expense',
+                            style: Theme.of(dialogContext).typography.small,
+                          ),
+                        ],
                       ),
                     ),
                     SelectableGroupOption(
                       value: 'income',
-                      label: 'Income',
-                      icon: HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowUp01,
-                        size: 18,
+                      widget: Row(
+                        children: [
+                          HugeIcon(
+                            icon: HugeIcons.strokeRoundedArrowUp01,
+                            size: 18,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Income',
+                            style: Theme.of(dialogContext).typography.small,
+                          ),
+                        ],
                       ),
                     ),
                   ],

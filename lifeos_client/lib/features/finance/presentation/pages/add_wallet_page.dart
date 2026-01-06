@@ -1,10 +1,10 @@
+import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
 import '../../../navigation/presentation/widgets/custom_app_bar.dart';
-import '../widgets/selectable_chip.dart';
 import '../../data/models/wallet_dto.dart';
 import '../bloc/add_wallet_bloc.dart';
 import '../bloc/add_wallet_event.dart';
@@ -33,7 +33,7 @@ class _AddWalletPageContent extends StatefulWidget {
 class _AddWalletPageContentState extends State<_AddWalletPageContent> {
   String _walletName = '';
   int? _selectedCurrencyId;
-  WalletType _selectedWalletType = WalletType.cash;
+  WalletType _selectedWalletType = WalletType.card;
   bool _isActive = true;
 
   String _getWalletTypeName(WalletType type) {
@@ -203,6 +203,9 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
 
             return SingleChildScrollView(
               padding: const EdgeInsets.all(16),
+              physics: AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -252,26 +255,31 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                           ),
                         )
                       else
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: currencies.map((currency) {
-                            final isSelected =
-                                _selectedCurrencyId == currency.id;
-                            return SelectableChip(
-                              icon: Text(
-                                currency.icon,
-                                style: Theme.of(context).typography.xSmall,
+                        SelectableGroup(
+                          initialValue: _selectedCurrencyId,
+                          options: currencies.map((item) {
+                            return SelectableGroupOption(
+                              value: item.id,
+                              widget: Row(
+                                children: [
+                                  Text(
+                                    item.icon,
+                                    style: Theme.of(context).typography.xSmall,
+                                  ),
+                                  const SizedBox(width: 4),
+                                  Text(
+                                    item.code,
+                                    style: Theme.of(context).typography.small,
+                                  ),
+                                ],
                               ),
-                              label: currency.code,
-                              isSelected: isSelected,
-                              onTap: () {
-                                setState(() {
-                                  _selectedCurrencyId = currency.id;
-                                });
-                              },
                             );
                           }).toList(),
+                          onChanged: (v) {
+                            setState(() {
+                              _selectedCurrencyId = v;
+                            });
+                          },
                         ),
                     ],
                   ),
@@ -286,25 +294,31 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                         style: Theme.of(context).typography.small,
                       ),
                       const SizedBox(height: 8),
-                      Wrap(
-                        spacing: 8,
-                        runSpacing: 8,
-                        children: WalletType.values.map((type) {
-                          final isSelected = _selectedWalletType == type;
-                          return SelectableChip(
-                            icon: HugeIcon(
-                              icon: _getWalletTypeIcon(type),
-                              size: 18,
+                      SelectableGroup(
+                        initialValue: _selectedWalletType,
+                        options: WalletType.values.map((type) {
+                          return SelectableGroupOption(
+                            value: type,
+                            widget: Row(
+                              children: [
+                                HugeIcon(
+                                  icon: _getWalletTypeIcon(type),
+                                  size: 18,
+                                ),
+                                const SizedBox(width: 4),
+                                Text(
+                                  _getWalletTypeName(type),
+                                  style: Theme.of(context).typography.small,
+                                ),
+                              ],
                             ),
-                            label: _getWalletTypeName(type),
-                            isSelected: isSelected,
-                            onTap: () {
-                              setState(() {
-                                _selectedWalletType = type;
-                              });
-                            },
                           );
                         }).toList(),
+                        onChanged: (WalletType v) {
+                          setState(() {
+                            _selectedWalletType = v;
+                          });
+                        },
                       ),
                     ],
                   ),

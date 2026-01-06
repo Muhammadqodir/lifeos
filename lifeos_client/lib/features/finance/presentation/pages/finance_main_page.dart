@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/add_transaction_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/analytics_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/finance_settings_page.dart';
+import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -13,9 +14,8 @@ import '../bloc/finance_home_state.dart';
 import '../widgets/total_card.dart';
 import '../widgets/wallet_carousel.dart';
 import '../widgets/transaction_tile.dart';
-import '../widgets/empty_state.dart';
-import '../widgets/error_state.dart';
-import '../widgets/loading_skeleton.dart';
+import '../../../../core/widgets/empty_state.dart';
+import '../../../../core/widgets/error_state.dart';
 import 'add_wallet_page.dart';
 
 class FinanceMainPage extends StatefulWidget {
@@ -33,86 +33,83 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
   Widget build(BuildContext context) {
     return BlocBuilder<FinanceHomeBloc, FinanceHomeState>(
       builder: (context, state) {
-        if (state is FinanceHomeLoading || state is FinanceHomeInitial) {
-          return const LoadingSkeleton();
-        }
-
-        if (state is FinanceHomeFailure) {
-          return ErrorState(
-            message: state.message,
-            onRetry: () {
-              context.read<FinanceHomeBloc>().add(const FinanceHomeRetried());
-            },
-          );
-        }
-
-        if (state is FinanceHomeEmpty) {
-          return EmptyState(
-            title: 'No Finance Data',
-            description: 'Start by adding your first wallet and transaction',
-            icon: HugeIcon(icon: HugeIcons.strokeRoundedWallet03, size: 24),
-            action: PrimaryButton(
-              onPressed: () => _navigateToAddWallet(context),
-              child: const Text('Add Wallet'),
-            ),
-          );
-        }
-
-        if (state is FinanceHomeSuccess) {
-          return Column(
-            children: [
-              CustomAppBar(
-                title: "Finances",
-                rightActions: [
-                  AppBarAction(
-                    icon: HugeIcons.strokeRoundedAdd01,
-                    tooltip: 'Add Transaction',
-                    onTap: () {
-                      _navigateToAddTransaction(context);
-                    },
-                  ),
-                  AppBarAction(
-                    icon: HugeIcons.strokeRoundedPieChart,
-                    tooltip: 'Analytics',
-                    onTap: () {
-                      _navigateToAnalytics(context);
-                    },
-                  ),
-                  AppBarAction(
-                    icon: HugeIcons.strokeRoundedDatabaseSetting,
-                    tooltip: 'Finance Settings',
-                    onTap: () {
-                      _navigateToFinanceSettings(context);
-                    },
-                  ),
-                ],
-              ),
-              Expanded(
-                child: RefreshTrigger(
-                  key: _refreshTriggerKey,
-                  onRefresh: () async {
-                    context.read<FinanceHomeBloc>().add(
-                      const FinanceHomeRefreshed(),
-                    );
-                    // Wait a bit for the refresh to complete
-                    await Future.delayed(const Duration(milliseconds: 500));
+        return Column(
+          children: [
+            CustomAppBar(
+              title: "Finances",
+              rightActions: [
+                AppBarAction(
+                  icon: HugeIcons.strokeRoundedAdd01,
+                  tooltip: 'Add Transaction',
+                  onTap: () {
+                    _navigateToAddTransaction(context);
                   },
-                  child: _buildSuccessContent(context, state),
                 ),
+                AppBarAction(
+                  icon: HugeIcons.strokeRoundedPieChart,
+                  tooltip: 'Analytics',
+                  onTap: () {
+                    _navigateToAnalytics(context);
+                  },
+                ),
+                AppBarAction(
+                  icon: HugeIcons.strokeRoundedDatabaseSetting,
+                  tooltip: 'Finance Settings',
+                  onTap: () {
+                    _navigateToFinanceSettings(context);
+                  },
+                ),
+              ],
+            ),
+            Expanded(
+              child: RefreshTrigger(
+                key: _refreshTriggerKey,
+                onRefresh: () async {
+                  context.read<FinanceHomeBloc>().add(
+                    const FinanceHomeRefreshed(),
+                  );
+                  // Wait a bit for the refresh to complete
+                  await Future.delayed(const Duration(milliseconds: 500));
+                },
+                child: _buildBody(context, state),
               ),
-            ],
-          );
-        }
-
-        return const SizedBox.shrink();
+            ),
+          ],
+        );
       },
     );
   }
 
-  Widget _buildSuccessContent(BuildContext context, FinanceHomeSuccess state) {
+  Widget _buildBody(BuildContext context, FinanceHomeState state) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
+    if (state is FinanceHomeLoading || state is FinanceHomeInitial) {
+      return const LoadingState(message: "Loading...");
+    }
+
+    if (state is FinanceHomeFailure) {
+      return ErrorState(
+        message: state.message,
+        onRetry: () {
+          context.read<FinanceHomeBloc>().add(const FinanceHomeRetried());
+        },
+      );
+    }
+
+    if (state is FinanceHomeEmpty) {
+      return EmptyState(
+        title: 'No Finance Data',
+        description: 'Start by adding your first wallet and transaction',
+        icon: HugeIcon(icon: HugeIcons.strokeRoundedWallet03, size: 24),
+        action: PrimaryButton(
+          onPressed: () => _navigateToAddWallet(context),
+          child: const Text('Add Wallet'),
+        ),
+      );
+    }
+
+    FinanceHomeSuccess successState = state as FinanceHomeSuccess;
     return CustomScrollView(
       slivers: [
         // Total card
@@ -120,14 +117,14 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
           child: Padding(
             padding: const EdgeInsets.only(top: 12),
             child: TotalCard(
-              amount: state.summary.totalBalance,
-              currencyCode: state.summary.currencyCode,
+              amount: successState.summary.totalBalance,
+              currencyCode: successState.summary.currencyCode,
             ),
           ),
         ),
 
         // Wallets section
-        if (state.wallets.isNotEmpty) ...[
+        if (successState.wallets.isNotEmpty) ...[
           SliverToBoxAdapter(
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -144,7 +141,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
             child: Padding(
               padding: const EdgeInsets.only(bottom: 16),
               child: WalletCarousel(
-                wallets: state.wallets,
+                wallets: successState.wallets,
                 onAddWallet: () {
                   _navigateToAddWallet(context);
                 },
@@ -190,11 +187,11 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
         ),
 
         // Transactions list
-        if (state.transactions.isNotEmpty)
+        if (successState.transactions.isNotEmpty)
           SliverList(
             delegate: SliverChildBuilderDelegate((context, index) {
-              if (index < state.transactions.length) {
-                final transaction = state.transactions[index];
+              if (index < successState.transactions.length) {
+                final transaction = successState.transactions[index];
                 return TransactionTile(
                   transaction: transaction,
                   onTap: () {
@@ -210,9 +207,9 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
                 return Padding(
                   padding: const EdgeInsets.all(16),
                   child: Center(
-                    child: state.isLoadingMore
+                    child: successState.isLoadingMore
                         ? const CircularProgressIndicator()
-                        : state.hasMoreTransactions
+                        : successState.hasMoreTransactions
                         ? Button.outline(
                             onPressed: () {
                               context.read<FinanceHomeBloc>().add(
@@ -230,7 +227,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
                   ),
                 );
               }
-            }, childCount: state.transactions.length + 1),
+            }, childCount: successState.transactions.length + 1),
           )
         else
           SliverToBoxAdapter(
@@ -284,18 +281,14 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
   void _navigateToAnalytics(BuildContext context) {
     Navigator.push(
       context,
-      CupertinoPageRoute(
-        builder: (context) => const AnalyticsPage(),
-      ),
+      CupertinoPageRoute(builder: (context) => const AnalyticsPage()),
     );
   }
 
   void _navigateToFinanceSettings(BuildContext context) {
     Navigator.push(
       context,
-      CupertinoPageRoute(
-        builder: (context) => const FinanceSettingsPage(),
-      ),
+      CupertinoPageRoute(builder: (context) => const FinanceSettingsPage()),
     );
   }
 

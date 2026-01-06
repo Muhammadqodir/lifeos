@@ -9,7 +9,7 @@ import '../bloc/analytics_bloc.dart';
 import '../bloc/analytics_event.dart';
 import '../bloc/analytics_state.dart';
 import '../widgets/pie_chart_section.dart';
-import '../widgets/analytics_date_picker.dart';
+import '../../../../core/widgets/range_date_picker.dart';
 import '../widgets/analytics_summary_card.dart';
 import '../widgets/analytics_loading_skeleton.dart';
 
@@ -245,7 +245,7 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Date Range Selector
-                    AnalyticsDatePicker(
+                    RangeDatePicker(
                       dateFrom: state.dateFrom,
                       dateTo: state.dateTo,
                       onDateRangeChanged: _onDateRangeChanged,
@@ -329,7 +329,7 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          AnalyticsDatePicker(
+          RangeDatePicker(
             dateFrom: state.dateFrom,
             dateTo: state.dateTo,
             onDateRangeChanged: _onDateRangeChanged,

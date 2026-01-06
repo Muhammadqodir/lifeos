@@ -1,4 +1,4 @@
-import 'package:lifeos_client/features/finance/presentation/widgets/category_icon.dart';
+import 'package:lifeos_client/core/widgets/category_icon.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
 

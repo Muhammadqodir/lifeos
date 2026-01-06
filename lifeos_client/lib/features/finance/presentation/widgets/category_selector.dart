@@ -127,7 +127,7 @@ class _CategorySelectorState extends State<CategorySelector> {
                   );
                 }).toList(),
               ),
-            ),
+            ).call,
           ),
         ),
       ],
