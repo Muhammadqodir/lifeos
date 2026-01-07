@@ -17,12 +17,45 @@ class _WorkoutPageState extends State<WorkoutPage> {
     return Scaffold(
       headers: [
         CustomAppBar(
-          title: 'Workout',
+          title: 'Start workout',
           leftActions: [
             AppBarAction(
               icon: HugeIcons.strokeRoundedArrowLeft01,
               tooltip: 'Back',
-              onTap: () => Navigator.of(context).pop(),
+              onTap: () async {
+                final bool? confirmed = await showDialog<bool>(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: const Text('Confirm Exit'),
+                      content: const Text(
+                        'Are you sure you want to exit the workout? Your progress will not be saved.',
+                      ),
+                      actions: [
+                        // Secondary action to cancel/dismiss.
+                        OutlineButton(
+                          child: const Text('Cancel'),
+                          onPressed: () {
+                            Navigator.pop(context, false);
+                          },
+                        ),
+                        // Primary action to accept/confirm.
+                        PrimaryButton(
+                          child: const Text('Exit'),
+                          onPressed: () {
+                            Navigator.pop(context, true);
+                          },
+                        ),
+                      ],
+                    );
+                  },
+                );
+                if (mounted) {
+                  if (confirmed ?? false) {
+                    Navigator.of(context).pop();
+                  }
+                }
+              },
             ),
           ],
         ),
@@ -114,7 +147,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    'Start Workout',
+                    'Start',
                     style: Theme.of(
                       context,
                     ).typography.small.copyWith(fontWeight: FontWeight.w600),
@@ -124,11 +157,26 @@ class _WorkoutPageState extends State<WorkoutPage> {
               onPressed: () {},
             ),
             SizedBox(height: 24),
-            Text(
-              'Programms:',
-              style: Theme.of(
-                context,
-              ).typography.small.copyWith(fontWeight: FontWeight.w600),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'Exercises:',
+                    style: Theme.of(
+                      context,
+                    ).typography.small.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                ),
+                IconButton.primary(
+                  size: ButtonSize.normal,
+                  onPressed: () {},
+                  icon: HugeIcon(
+                    icon: HugeIcons.strokeRoundedAdd01,
+                    size: 16,
+                    strokeWidth: 3,
+                  ),
+                ),
+              ],
             ),
           ],
         ),

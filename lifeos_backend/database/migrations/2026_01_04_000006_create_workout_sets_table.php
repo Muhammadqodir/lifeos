@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->foreignId('workout_exercise_id')->constrained('workout_exercises')->cascadeOnDelete();
             $table->integer('set_index');
-            $table->decimal('weight_kg', 6, 2)->default(0);
-            $table->unsignedSmallInteger('reps');
+            $table->decimal('weight_kg', 6, 2)->nullable();
+            $table->unsignedSmallInteger('reps')->nullable();
             $table->unsignedTinyInteger('rpe')->nullable(); // 1-10
             $table->boolean('is_done')->default(true);
             $table->timestamps();

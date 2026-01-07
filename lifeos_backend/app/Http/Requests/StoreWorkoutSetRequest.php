@@ -15,8 +15,10 @@ class StoreWorkoutSetRequest extends FormRequest
     {
         return [
             'set_index' => ['required', 'integer', 'min:0'],
-            'weight_kg' => ['required', 'numeric', 'min:0'],
-            'reps' => ['required', 'integer', 'min:1', 'max:200'],
+            'weight_kg' => ['nullable', 'numeric', 'min:0'],
+            'reps' => ['nullable', 'integer', 'min:1', 'max:500'],
+            'duration_seconds' => ['nullable', 'integer', 'min:1'],
+            'distance_meters' => ['nullable', 'numeric', 'min:0'],
             'rpe' => ['nullable', 'integer', 'min:1', 'max:10'],
             'is_done' => ['sometimes', 'boolean'],
         ];
