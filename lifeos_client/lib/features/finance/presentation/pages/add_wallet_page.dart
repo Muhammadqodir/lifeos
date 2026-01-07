@@ -111,6 +111,7 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
+    final outerContext = context;
 
     return BlocListener<AddWalletBloc, AddWalletState>(
       listener: (context, state) {
@@ -364,7 +365,7 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                     width: double.infinity,
                     child: PrimaryButton(
                       onPressed: !isSubmitting
-                          ? () => _handleFormSubmit(context)
+                          ? () => _handleFormSubmit(outerContext)
                           : null,
                       child: isSubmitting
                           ? const Row(

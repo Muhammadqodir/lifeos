@@ -1,6 +1,7 @@
 import 'package:flutter/widgets.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
+import '../theme/app_colors.dart';
 
 class ColorSelector extends StatefulWidget {
   final String initialColor;
@@ -18,28 +19,6 @@ class ColorSelector extends StatefulWidget {
 
 class _ColorSelectorState extends State<ColorSelector> {
   late String selectedColor;
-
-  // Default color palette (hex values without #)
-  static const List<String> defaultColors = [
-    'FF6B7280', // Gray
-    'FFEF4444', // Red
-    'FFF97316', // Orange
-    'FFF59E0B', // Amber
-    'FFEAB308', // Yellow
-    'FF84CC16', // Lime
-    'FF22C55E', // Green
-    'FF10B981', // Emerald
-    'FF14B8A6', // Teal
-    'FF06B6D4', // Cyan
-    'FF0EA5E9', // Sky
-    'FF3B82F6', // Blue
-    'FF6366F1', // Indigo
-    'FF8B5CF6', // Violet
-    'FFA855F7', // Purple
-    'FFD946EF', // Fuchsia
-    'FFEC4899', // Pink
-    'FFF43F5E', // Rose
-  ];
 
   @override
   void initState() {
@@ -68,7 +47,7 @@ class _ColorSelectorState extends State<ColorSelector> {
           spacing: 8,
           runSpacing: 8,
           children: [
-            ...defaultColors.map((hexColor) {
+            ...AppColors.palette.map((hexColor) {
               final isSelected = selectedColor == hexColor;
               final displayColor = Color(int.parse('0xFF$hexColor'));
 

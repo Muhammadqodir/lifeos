@@ -77,6 +77,9 @@ Route::prefix('v1')->group(function () {
             Route::put('wellbeing/{wellbeingEntry}', [WellbeingEntryController::class, 'update']);
             Route::delete('wellbeing/{wellbeingEntry}', [WellbeingEntryController::class, 'destroy']);
             Route::get('wellbeing/summary', [WellbeingEntryController::class, 'summary']);
+
+            // Workout tracking
+            Route::get('workout/summary', [WorkoutSessionController::class, 'summary']);
         });
 
         // Gym routes

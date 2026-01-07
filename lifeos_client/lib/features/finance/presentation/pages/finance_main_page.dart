@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/add_transaction_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/analytics_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/finance_settings_page.dart';
@@ -281,14 +280,14 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
   void _navigateToAnalytics(BuildContext context) {
     Navigator.push(
       context,
-      CupertinoPageRoute(builder: (context) => const AnalyticsPage()),
+      MaterialPageRoute(builder: (context) => const AnalyticsPage()),
     );
   }
 
   void _navigateToFinanceSettings(BuildContext context) {
     Navigator.push(
       context,
-      CupertinoPageRoute(builder: (context) => const FinanceSettingsPage()),
+      MaterialPageRoute(builder: (context) => const FinanceSettingsPage()),
     );
   }
 

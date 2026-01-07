@@ -17,6 +17,10 @@ import 'features/finance/presentation/bloc/add_wallet_bloc.dart';
 import 'features/finance/presentation/bloc/add_transaction_bloc.dart';
 import 'features/finance/presentation/bloc/analytics_bloc.dart';
 import 'features/finance/presentation/bloc/finance_settings_bloc.dart';
+import 'features/health/data/datasources/health_api_client.dart';
+import 'features/health/data/repositories/health_repository_impl.dart';
+import 'features/health/domain/repositories/health_repository.dart';
+import 'features/health/presentation/bloc/health_home_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -62,6 +66,13 @@ Future<void> setupDependencies() async {
     ),
   );
 
+  getIt.registerLazySingleton<HealthApiClient>(
+    () => HealthApiClient(
+      dio: getIt<Dio>(),
+      baseUrl: AppConfig.apiBaseUrl,
+    ),
+  );
+
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
@@ -73,6 +84,12 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<FinanceRepository>(
     () => FinanceRepositoryImpl(
       apiClient: getIt<FinanceApiClient>(),
+    ),
+  );
+
+  getIt.registerLazySingleton<HealthRepository>(
+    () => HealthRepositoryImpl(
+      apiClient: getIt<HealthApiClient>(),
     ),
   );
 
@@ -103,6 +120,10 @@ Future<void> setupDependencies() async {
 
   getIt.registerFactory<FinanceSettingsBloc>(
     () => FinanceSettingsBloc(financeRepository: getIt<FinanceRepository>()),
+  );
+
+  getIt.registerFactory<HealthHomeBloc>(
+    () => HealthHomeBloc(healthRepository: getIt<HealthRepository>()),
   );
 
   getIt.registerSingleton<ThemeBloc>(

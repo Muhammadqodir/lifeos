@@ -32,6 +32,7 @@ class _AddTransactionPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final outerContext = context;
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
@@ -127,7 +128,7 @@ class _AddTransactionPageContent extends StatelessWidget {
             }
 
             if (state is AddTransactionReady) {
-              return _buildForm(context, state, isSubmitting: false);
+              return _buildForm(outerContext, state, isSubmitting: false);
             }
 
             return const SizedBox.shrink();

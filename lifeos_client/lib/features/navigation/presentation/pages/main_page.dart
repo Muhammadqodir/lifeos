@@ -9,6 +9,8 @@ import '../../../finance/presentation/bloc/finance_home_bloc.dart';
 import '../../../finance/presentation/bloc/finance_home_event.dart';
 import '../../../finance/presentation/pages/finance_main_page.dart';
 import '../../../finance/presentation/providers/amount_visibility_provider.dart';
+import '../../../health/presentation/bloc/health_home_bloc.dart';
+import '../../../health/presentation/bloc/health_home_event.dart';
 import '../bloc/navigation_bloc.dart';
 import '../bloc/navigation_event.dart';
 import '../bloc/navigation_state.dart';
@@ -90,7 +92,11 @@ class _MainPageContent extends StatelessWidget {
           child: const FinanceMainPage(),
         ),
       ),
-      const GymMainPage(),
+      BlocProvider(
+        create: (_) =>
+            getIt<HealthHomeBloc>()..add(const HealthHomeStarted()),
+        child: const GymMainPage(),
+      ),
       const _PlaceholderPage(title: 'Projects'),
       const _PlaceholderPage(title: 'Other'),
     ];
