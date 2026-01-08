@@ -1,10 +1,14 @@
 import 'package:flutter/cupertino.dart';
-import 'package:lifeos_client/features/health/presentation/pages/workout_page.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
-import 'package:lifeos_client/utils/toast.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:lifeos_client/features/health/presentation/bloc/exercise_bloc.dart';
+import 'package:lifeos_client/features/health/presentation/bloc/workout_bloc.dart';
+import 'package:lifeos_client/features/health/presentation/pages/exercises_page.dart';
+import 'package:lifeos_client/features/health/presentation/pages/workout_page.dart';
+import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
+import 'package:lifeos_client/injection.dart';
+import 'package:lifeos_client/utils/toast.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_state.dart';
@@ -51,9 +55,22 @@ class _GymMainPageState extends State<GymMainPage> {
                 ),
                 AppBarAction(
                   icon: HugeIcons.strokeRoundedDatabaseSetting,
-                  tooltip: 'Health Settings',
+                  tooltip: 'Workout Settings',
                   onTap: () {
-                    _showComingSoonToast(context, 'Health Settings');
+                    Navigator.of(context).push(
+                      CupertinoPageRoute(
+                        builder: (context) {
+                          return MultiBlocProvider(
+                            providers: [
+                              BlocProvider<ExerciseBloc>(
+                                create: (context) => getIt<ExerciseBloc>(),
+                              ),
+                            ],
+                            child: const ExercisesPage(),
+                          );
+                        },
+                      ),
+                    );
                   },
                 ),
               ],
@@ -78,8 +95,6 @@ class _GymMainPageState extends State<GymMainPage> {
   }
 
   Widget _buildBody(BuildContext context, HealthHomeState state) {
-    final theme = Theme.of(context);
-
     if (state is HealthHomeLoading || state is HealthHomeInitial) {
       return const LoadingState(message: "Loading health data...");
     }
@@ -120,15 +135,6 @@ class _GymMainPageState extends State<GymMainPage> {
             padding: const EdgeInsets.only(top: 16, left: 12, right: 12),
             child: WorkoutStreakCard(
               workoutSummary: successState.workoutSummary,
-              onStartWorkout: () {
-                Navigator.of(context).push(
-                  CupertinoPageRoute(
-                    builder: (context) {
-                      return WorkoutPage();
-                    },
-                  ),
-                );
-              },
             ),
           ),
         ),

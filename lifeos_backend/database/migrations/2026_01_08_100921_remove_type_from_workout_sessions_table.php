@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('exercises', function (Blueprint $table) {
-            $table->enum('type', ['strength', 'distance', 'time'])->default('strength')->after('name');
+        Schema::table('workout_sessions', function (Blueprint $table) {
+            $table->dropColumn('type');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('exercises', function (Blueprint $table) {
-            $table->dropColumn('type');
+        Schema::table('workout_sessions', function (Blueprint $table) {
+            $table->enum('type', ['strength', 'cardio', 'mixed'])->default('strength');
         });
     }
 };

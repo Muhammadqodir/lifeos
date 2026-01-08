@@ -157,7 +157,7 @@ All under `/api/v1` with `auth:sanctum` middleware:
 - Summary with averages and daily points
 
 ### Gym Tracking - Workouts
-- Create workout sessions with type (strength/cardio/mixed)
+- Create workout sessions 
 - Time-based tracking (started_at, ended_at)
 - Add multiple exercises to each workout
 - Ordered exercises (sort_order)

@@ -56,6 +56,8 @@ dependencies:
   rename_app: ^1.6.5
   flutter_launcher_icons: ^0.14.4
   intl: ^0.20.2
+  modal_bottom_sheet: ^3.0.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:

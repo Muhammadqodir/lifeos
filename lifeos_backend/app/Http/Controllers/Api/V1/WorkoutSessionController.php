@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api\V1;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCompleteWorkoutRequest;
 use App\Http\Requests\StoreWorkoutSessionRequest;
 use App\Http\Requests\UpdateWorkoutSessionRequest;
 use App\Http\Resources\WorkoutSessionResource;
@@ -10,6 +11,7 @@ use App\Models\WorkoutSession;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
+use Illuminate\Support\Facades\DB;
 
 class WorkoutSessionController extends Controller
 {
@@ -39,6 +41,56 @@ class WorkoutSessionController extends Controller
         ]);
 
         return new WorkoutSessionResource($session);
+    }
+
+    /**
+     * Store a complete workout with exercises and sets in one request
+     */
+    public function storeComplete(StoreCompleteWorkoutRequest $request): WorkoutSessionResource
+    {
+        DB::beginTransaction();
+
+        try {
+            // Create workout session
+            $session = WorkoutSession::create([
+                'user_id' => auth()->id(),
+                'started_at' => $request->started_at,
+                'ended_at' => $request->ended_at,
+                'note' => $request->note,
+            ]);
+
+            // Create exercises and sets
+            foreach ($request->exercises as $exerciseData) {
+                $workoutExercise = $session->workoutExercises()->create([
+                    'exercise_id' => $exerciseData['exercise_id'],
+                    'order_index' => $exerciseData['order_index'],
+                    'note' => $exerciseData['note'] ?? null,
+                ]);
+
+                // Create sets for this exercise
+                foreach ($exerciseData['sets'] as $setData) {
+                    $workoutExercise->sets()->create([
+                        'set_index' => $setData['set_index'],
+                        'weight_kg' => $setData['weight_kg'] ?? null,
+                        'reps' => $setData['reps'] ?? null,
+                        'duration_seconds' => $setData['duration_seconds'] ?? null,
+                        'distance_meters' => $setData['distance_meters'] ?? null,
+                        'rpe' => $setData['rpe'] ?? null,
+                        'is_done' => $setData['is_done'] ?? true,
+                    ]);
+                }
+            }
+
+            DB::commit();
+
+            // Load relationships and return
+            $session->load(['workoutExercises.exercise', 'workoutExercises.sets']);
+
+            return new WorkoutSessionResource($session);
+        } catch (\Exception $e) {
+            DB::rollBack();
+            throw $e;
+        }
     }
 
     public function show(WorkoutSession $workout): WorkoutSessionResource

@@ -48,9 +48,9 @@ class WorkoutSet extends Model
     }
 
     /**
-     * Check if this is a cardio/time-based set
+     * Check if this is a distance/time-based set
      */
-    public function isCardio(): bool
+    public function isDistance(): bool
     {
         return $this->duration_seconds !== null || $this->distance_meters !== null;
     }

@@ -15,8 +15,9 @@ class StoreExerciseRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:120'],
-            'muscle_group' => ['required', 'string', 'max:255'],
-            'image' => ['nullable', 'string'],
+            'type' => ['required', 'string', 'in:strength,distance,time'],
+            'muscle_group' => ['nullable', 'string', 'max:255'],
+            'image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:2048'], // 2MB max
         ];
     }
 }

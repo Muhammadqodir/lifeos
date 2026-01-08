@@ -63,8 +63,7 @@ class _WalletSelectorState extends State<WalletSelector> {
       children: [
         Text(
           widget.label,
-          style: TextStyle(
-            fontSize: 14,
+          style: theme.typography.small.copyWith(
             fontWeight: FontWeight.w500,
             color: colorScheme.foreground,
           ),

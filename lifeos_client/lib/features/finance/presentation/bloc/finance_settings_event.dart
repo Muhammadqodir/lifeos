@@ -1,6 +1,4 @@
 import 'package:equatable/equatable.dart';
-import '../../data/models/currency_dto.dart';
-import '../../data/models/transaction_category_dto.dart';
 
 abstract class FinanceSettingsEvent extends Equatable {
   const FinanceSettingsEvent();

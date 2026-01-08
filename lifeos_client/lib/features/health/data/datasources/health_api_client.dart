@@ -1,8 +1,10 @@
 import 'package:dio/dio.dart';
+import '../models/exercise_dto.dart';
 import '../models/sleep_entry_dto.dart';
 import '../models/sleep_summary_dto.dart';
 import '../models/wellbeing_entry_dto.dart';
 import '../models/wellbeing_summary_dto.dart';
+import '../models/workout_session_dto.dart';
 import '../models/workout_summary_dto.dart';
 
 class HealthApiClient {
@@ -173,6 +175,100 @@ class HealthApiClient {
       }
     } catch (e, s) {
       throw _handleError(e.toString() + s.toString());
+    }
+  }
+
+  // Workout endpoints
+  Future<List<ExerciseDto>> getExercises() async {
+    try {
+      final response = await dio.get('$baseUrl/gym/exercises');
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List;
+        return data.map((json) => ExerciseDto.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<ExerciseDto> createExercise(
+    Map<String, dynamic> exerciseData,
+    String? imagePath,
+  ) async {
+    try {
+      FormData formData;
+
+      if (imagePath != null) {
+        // Create multipart form data with image
+        formData = FormData.fromMap({
+          ...exerciseData,
+          'image': await MultipartFile.fromFile(
+            imagePath,
+            filename: imagePath.split('/').last,
+          ),
+        });
+      } else {
+        // Send as regular JSON without image
+        formData = FormData.fromMap(exerciseData);
+      }
+
+      final response = await dio.post('$baseUrl/gym/exercises', data: formData);
+
+      if (response.statusCode == 201) {
+        return ExerciseDto.fromJson(response.data['data']);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<void> deleteExercise(int exerciseId) async {
+    try {
+      final response = await dio.delete('$baseUrl/gym/exercises/$exerciseId');
+
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  Future<WorkoutSessionDto> saveCompleteWorkout(
+    Map<String, dynamic> workoutData,
+  ) async {
+    try {
+      final response = await dio.post(
+        '$baseUrl/gym/workouts/complete',
+        data: workoutData,
+      );
+
+      if (response.statusCode == 201) {
+        print(response.data);
+        return WorkoutSessionDto.fromJson(response.data['data']);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e, s) {
+      print('Error: $e\nStack trace: $s');
+      throw _handleError(e);
     }
   }
 

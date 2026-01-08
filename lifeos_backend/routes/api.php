@@ -87,6 +87,7 @@ Route::prefix('v1')->group(function () {
             // Workout sessions
             Route::get('workouts', [WorkoutSessionController::class, 'index']);
             Route::post('workouts', [WorkoutSessionController::class, 'store']);
+            Route::post('workouts/complete', [WorkoutSessionController::class, 'storeComplete']);
             Route::get('workouts/{workout}', [WorkoutSessionController::class, 'show']);
             Route::put('workouts/{workout}', [WorkoutSessionController::class, 'update']);
             Route::delete('workouts/{workout}', [WorkoutSessionController::class, 'destroy']);
@@ -94,6 +95,7 @@ Route::prefix('v1')->group(function () {
             // Exercises
             Route::get('exercises', [ExerciseController::class, 'index']);
             Route::post('exercises', [ExerciseController::class, 'store']);
+            Route::delete('exercises/{exercise}', [ExerciseController::class, 'destroy']);
             Route::get('exercises/{exercise}/progress', [ExerciseProgressController::class, 'show']);
 
             // Workout exercises

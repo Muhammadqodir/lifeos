@@ -13,7 +13,6 @@ class WorkoutSessionResource extends JsonResource
             'id' => $this->id,
             'started_at' => $this->started_at->toISOString(),
             'ended_at' => $this->ended_at->toISOString(),
-            'type' => $this->type,
             'note' => $this->note,
             'exercises' => WorkoutExerciseResource::collection($this->whenLoaded('workoutExercises')),
             'created_at' => $this->created_at->toISOString(),

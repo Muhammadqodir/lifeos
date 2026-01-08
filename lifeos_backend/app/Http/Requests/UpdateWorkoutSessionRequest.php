@@ -16,7 +16,6 @@ class UpdateWorkoutSessionRequest extends FormRequest
         return [
             'started_at' => ['sometimes', 'date'],
             'ended_at' => ['sometimes', 'date', 'after:started_at'],
-            'type' => ['sometimes', 'in:strength,cardio,mixed'],
             'note' => ['nullable', 'string'],
         ];
     }

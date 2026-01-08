@@ -162,13 +162,17 @@ curl -X GET "http://localhost:8000/api/v1/gym/exercises?search=bench" \
 ```bash
 curl -X POST http://localhost:8000/api/v1/gym/exercises \
   -H "Authorization: Bearer YOUR_TOKEN" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "name": "Cable Fly",
-    "muscle_group": "Chest",
-    "image": "https://example.com/image.jpg"
-  }'
+  -H "Content-Type: multipart/form-data" \
+  -F "name=Cable Fly" \
+  -F "type=strength" \
+  -F "muscle_group=Chest" \
+  -F "image=@/path/to/image.jpg"
 ```
+
+**Note**: 
+- `type` is required and must be one of: `strength`, `distance`, `time`
+- `muscle_group` is optional
+- `image` is optional and accepts image files (jpeg, jpg, png, webp) up to 2MB
 
 ### Get Exercise Progress (Chart Data)
 ```bash

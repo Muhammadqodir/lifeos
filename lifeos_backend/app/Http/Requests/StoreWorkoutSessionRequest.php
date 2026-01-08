@@ -16,7 +16,6 @@ class StoreWorkoutSessionRequest extends FormRequest
         return [
             'started_at' => ['required', 'date'],
             'ended_at' => ['required', 'date', 'after:started_at'],
-            'type' => ['sometimes', 'in:strength,cardio,mixed'],
             'note' => ['nullable', 'string'],
         ];
     }

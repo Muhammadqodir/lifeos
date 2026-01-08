@@ -16,7 +16,6 @@ class WorkoutSessionFactory extends Factory
             'user_id' => User::factory(),
             'started_at' => $startedAt,
             'ended_at' => $endedAt,
-            'type' => fake()->randomElement(['strength', 'cardio', 'mixed']),
             'note' => fake()->optional()->sentence(),
         ];
     }

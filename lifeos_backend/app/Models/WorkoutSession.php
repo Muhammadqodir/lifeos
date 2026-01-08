@@ -14,7 +14,6 @@ class WorkoutSession extends Model
         'user_id',
         'started_at',
         'ended_at',
-        'type',
         'note',
     ];
 
