@@ -31,6 +31,8 @@ class Transaction extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'category_id' => 'integer',
             'occurred_at' => 'datetime',
         ];
     }

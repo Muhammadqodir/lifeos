@@ -1,6 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:lifeos_client/core/widgets/category_icon.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+
 import '../../data/models/transaction_dto.dart';
 
 class TransactionTile extends StatelessWidget {
@@ -11,7 +12,7 @@ class TransactionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     // Get first entry for amount display
@@ -23,28 +24,16 @@ class TransactionTile extends StatelessWidget {
     final currencyCode = entry?.currency.code ?? '';
     final isPositive = amount.startsWith('-') == false;
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             // Category icon
-            Container(
-              width: 40,
-              height: 40,
-              decoration: BoxDecoration(
-                color: transaction.category != null
-                    ? _hexToColor(transaction.category!.color).withOpacity(0.1)
-                    : colorScheme.muted,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Text(
-                  transaction.category?.icon ?? _getTypeIcon(transaction.type),
-                  style: const TextStyle(fontSize: 20),
-                ),
-              ),
+            CategoryIcon(
+              icon: transaction.category?.icon ?? '⭕️',
+              color: transaction.category?.color ?? '#000000',
             ),
             const SizedBox(width: 12),
             // Transaction details
@@ -56,8 +45,7 @@ class TransactionTile extends StatelessWidget {
                     transaction.category?.title ??
                         transaction.description ??
                         _getTypeLabel(transaction.type),
-                    style: TextStyle(
-                      fontSize: 14,
+                    style: theme.typography.small.copyWith(
                       fontWeight: FontWeight.w500,
                       color: colorScheme.foreground,
                     ),
@@ -67,8 +55,7 @@ class TransactionTile extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     _formatDate(transaction.occurredAt),
-                    style: TextStyle(
-                      fontSize: 12,
+                    style: theme.typography.xSmall.copyWith(
                       color: colorScheme.mutedForeground,
                     ),
                   ),
@@ -83,8 +70,7 @@ class TransactionTile extends StatelessWidget {
                 MoneyText(
                   amount: amount,
                   currencyCode: currencyCode,
-                  fontSize: 16,
-                  currencyFontSize: 10,
+                  size: MoneyTextSize.small,
                   color: isPositive
                       ? Colors.green.shade600
                       : Colors.red.shade600,

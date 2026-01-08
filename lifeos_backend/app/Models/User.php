@@ -96,4 +96,36 @@ class User extends Authenticatable
     {
         return $this->hasMany(Transaction::class);
     }
+
+    /**
+     * Get the sleep entries for the user.
+     */
+    public function sleepEntries(): HasMany
+    {
+        return $this->hasMany(SleepEntry::class);
+    }
+
+    /**
+     * Get the wellbeing entries for the user.
+     */
+    public function wellbeingEntries(): HasMany
+    {
+        return $this->hasMany(WellbeingEntry::class);
+    }
+
+    /**
+     * Get the workout sessions for the user.
+     */
+    public function workoutSessions(): HasMany
+    {
+        return $this->hasMany(WorkoutSession::class);
+    }
+
+    /**
+     * Get the custom exercises for the user.
+     */
+    public function exercises(): HasMany
+    {
+        return $this->hasMany(Exercise::class);
+    }
 }

@@ -19,9 +19,8 @@ class AddTransactionBloc
     on<AddTransactionFromWalletChanged>(_onFromWalletChanged);
     on<AddTransactionToWalletChanged>(_onToWalletChanged);
     on<AddTransactionAmountChanged>(_onAmountChanged);
-    on<AddTransactionFromAmountChanged>(_onFromAmountChanged);
-    on<AddTransactionToAmountChanged>(_onToAmountChanged);
-    on<AddTransactionRateChanged>(_onRateChanged);
+    on<AddTransactionFeePercentageChanged>(_onFeePercentageChanged);
+    on<AddTransactionCustomFeeValueChanged>(_onCustomFeeValueChanged);
     on<AddTransactionCategoryChanged>(_onCategoryChanged);
     on<AddTransactionDescriptionChanged>(_onDescriptionChanged);
     on<AddTransactionOccurredAtChanged>(_onOccurredAtChanged);
@@ -40,11 +39,15 @@ class AddTransactionBloc
       final expenseCategories =
           await financeRepository.getTransactionCategories(type: 'expense');
 
+      // Pre-select first wallet if available
+      final defaultWalletId = wallets.isNotEmpty ? wallets.first.id : null;
+
       emit(AddTransactionReady(
         wallets: wallets,
         incomeCategories: incomeCategories,
         expenseCategories: expenseCategories,
         occurredAt: DateTime.now(),
+        walletId: defaultWalletId,
       ));
     } catch (e) {
       emit(AddTransactionLoadError(message: e.toString()));
@@ -66,15 +69,14 @@ class AddTransactionBloc
         newState = currentState.copyWith(
           type: event.type,
           clearCategoryId: true, // Always clear category when switching type
-          // Reset from/to fields used by transfer/exchange
+          // Reset from/to fields used by transfer
           clearFromWalletId: true,
           clearToWalletId: true,
-          fromAmount: '',
-          toAmount: '',
-          clearRate: true,
+          clearFeePercentage: true,
+          customFeeValue: '',
         );
-      } else if (event.type == TransactionType.transfer) {
-        // For transfer: clear category, reset exchange-specific fields
+      } else {
+        // For transfer: clear category, reset fee fields
         newState = currentState.copyWith(
           type: event.type,
           clearCategoryId: true,
@@ -82,21 +84,8 @@ class AddTransactionBloc
           fromWalletId: currentState.walletId,
           clearToWalletId: true,
           clearWalletId: true,
-          fromAmount: '',
-          toAmount: '',
-          clearRate: true,
-        );
-      } else {
-        // For exchange: clear category, reset all exchange fields
-        newState = currentState.copyWith(
-          type: event.type,
-          clearCategoryId: true,
-          fromWalletId: currentState.walletId,
-          clearToWalletId: true,
-          clearWalletId: true,
-          fromAmount: currentState.amount.isNotEmpty ? currentState.amount : '',
-          toAmount: '',
-          clearRate: true,
+          clearFeePercentage: true,
+          customFeeValue: '',
         );
       }
       
@@ -145,33 +134,25 @@ class AddTransactionBloc
     }
   }
 
-  void _onFromAmountChanged(
-    AddTransactionFromAmountChanged event,
+  void _onFeePercentageChanged(
+    AddTransactionFeePercentageChanged event,
     Emitter<AddTransactionState> emit,
   ) {
     if (state is AddTransactionReady) {
       final currentState = state as AddTransactionReady;
-      emit(_validateState(currentState.copyWith(fromAmount: event.amount)));
+      emit(_validateState(
+          currentState.copyWith(feePercentage: event.feePercentage)));
     }
   }
 
-  void _onToAmountChanged(
-    AddTransactionToAmountChanged event,
+  void _onCustomFeeValueChanged(
+    AddTransactionCustomFeeValueChanged event,
     Emitter<AddTransactionState> emit,
   ) {
     if (state is AddTransactionReady) {
       final currentState = state as AddTransactionReady;
-      emit(_validateState(currentState.copyWith(toAmount: event.amount)));
-    }
-  }
-
-  void _onRateChanged(
-    AddTransactionRateChanged event,
-    Emitter<AddTransactionState> emit,
-  ) {
-    if (state is AddTransactionReady) {
-      final currentState = state as AddTransactionReady;
-      emit(_validateState(currentState.copyWith(rate: event.rate)));
+      emit(_validateState(
+          currentState.copyWith(customFeeValue: event.customFeeValue)));
     }
   }
 
@@ -226,27 +207,17 @@ class AddTransactionBloc
             state.fromWalletId != state.toWalletId &&
             state.amount.isNotEmpty &&
             _isValidAmount(state.amount);
+        
+        // Validate custom fee if set
+        if (isValid && state.feePercentage == null && state.customFeeValue.isNotEmpty) {
+          final customFee = double.tryParse(state.customFeeValue);
+          isValid = customFee != null && customFee >= 0;
+        }
         break;
 
       case TransactionType.exchange:
-        final fromWallet =
-            state.wallets.where((w) => w.id == state.fromWalletId).firstOrNull;
-        final toWallet =
-            state.wallets.where((w) => w.id == state.toWalletId).firstOrNull;
-
-        isValid = state.fromWalletId != null &&
-            state.toWalletId != null &&
-            state.fromWalletId != state.toWalletId &&
-            fromWallet != null &&
-            toWallet != null &&
-            fromWallet.currencyId != toWallet.currencyId &&
-            state.fromAmount.isNotEmpty &&
-            _isValidAmount(state.fromAmount) &&
-            state.toAmount.isNotEmpty &&
-            _isValidAmount(state.toAmount) &&
-            state.rate != null &&
-            state.rate!.isNotEmpty &&
-            _isValidAmount(state.rate!);
+        // Exchange type is deprecated
+        isValid = false;
         break;
     }
 
@@ -275,7 +246,14 @@ class AddTransactionBloc
       final transaction = await financeRepository.createTransaction(request);
       emit(AddTransactionSuccess(transaction: transaction));
     } catch (e) {
-      emit(AddTransactionError(message: e.toString()));
+      // Extract error message from Exception
+      String errorMessage = 'An unexpected error occurred';
+      if (e is Exception) {
+        errorMessage = e.toString().replaceFirst('Exception: ', '');
+      } else {
+        errorMessage = e.toString();
+      }
+      emit(AddTransactionError(message: errorMessage));
     }
   }
 
@@ -318,27 +296,32 @@ class AddTransactionBloc
           amount: state.amount,
           currencyId: toWallet.currencyId,
         ));
+
+        // Add fee entry if applicable
+        if (state.feePercentage != null && state.feePercentage! > 0) {
+          final feeAmount = (double.parse(state.amount) * state.feePercentage! / 100).toStringAsFixed(2);
+          entries.add(CreateTransactionEntryDto(
+            walletId: state.fromWalletId!,
+            amount: '-$feeAmount',
+            currencyId: fromWallet.currencyId,
+            note: 'Transfer fee (${state.feePercentage}%)',
+          ));
+        } else if (state.customFeeValue.isNotEmpty) {
+          final customFee = double.tryParse(state.customFeeValue);
+          if (customFee != null && customFee > 0) {
+            final feeAmount = (double.parse(state.amount) * customFee / 100).toStringAsFixed(2);
+            entries.add(CreateTransactionEntryDto(
+              walletId: state.fromWalletId!,
+              amount: '-$feeAmount',
+              currencyId: fromWallet.currencyId,
+              note: 'Transfer fee ($customFee%)',
+            ));
+          }
+        }
         break;
 
       case TransactionType.exchange:
-        final fromWallet =
-            state.wallets.firstWhere((w) => w.id == state.fromWalletId);
-        final toWallet =
-            state.wallets.firstWhere((w) => w.id == state.toWalletId);
-
-        entries.add(CreateTransactionEntryDto(
-          walletId: state.fromWalletId!,
-          amount: '-${state.fromAmount}',
-          currencyId: fromWallet.currencyId,
-          rate: state.rate,
-        ));
-
-        entries.add(CreateTransactionEntryDto(
-          walletId: state.toWalletId!,
-          amount: state.toAmount,
-          currencyId: toWallet.currencyId,
-          rate: state.rate,
-        ));
+        // Exchange type is deprecated, should not reach here
         break;
     }
 

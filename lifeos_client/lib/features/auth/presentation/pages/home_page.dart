@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
@@ -12,34 +12,27 @@ class HomePage extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        title: const Text(
-          'LifeOS',
-          style: TextStyle(color: Colors.white),
+      headers: [
+        CustomAppBar(
+          title: 'LifeOS',
+          rightActions: [
+            IconButton.secondary(
+              icon: const Icon(Icons.logout, color: Colors.white),
+              onPressed: () {
+                context.read<AuthBloc>().add(AuthLogoutRequested());
+              },
+            ),
+          ],
         ),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout, color: Colors.white),
-            onPressed: () {
-              context.read<AuthBloc>().add(AuthLogoutRequested());
-            },
-          ),
-        ],
-      ),
-      body: BlocBuilder<AuthBloc, AuthState>(
+      ],
+      child: BlocBuilder<AuthBloc, AuthState>(
         builder: (context, state) {
           if (state is AuthAuthenticated) {
             final user = state.user;
             return Center(
               child: Padding(
                 padding: const EdgeInsets.all(24),
-                child: ShadCard(
-                  width: 400,
-                  title: const Text(
-                    'Profile',
-                    style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                  ),
+                child: Card(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -63,8 +56,7 @@ class HomePage extends StatelessWidget {
                       _buildInfoRow(
                         'Status',
                         user.isActive ? 'Active' : 'Inactive',
-                        valueColor:
-                            user.isActive ? Colors.green : Colors.red,
+                        valueColor: user.isActive ? Colors.green : Colors.red,
                       ),
                       if (user.lastLoginAt != null) ...[
                         const SizedBox(height: 12),
@@ -79,9 +71,7 @@ class HomePage extends StatelessWidget {
               ),
             );
           }
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
+          return const Center(child: CircularProgressIndicator());
         },
       ),
     );
@@ -97,16 +87,13 @@ class HomePage extends StatelessWidget {
             label,
             style: const TextStyle(
               fontWeight: FontWeight.bold,
-              color: Colors.black87,
             ),
           ),
         ),
         Expanded(
           child: Text(
             value,
-            style: TextStyle(
-              color: valueColor ?? Colors.black,
-            ),
+            style: TextStyle(color: valueColor ?? Colors.black),
           ),
         ),
       ],

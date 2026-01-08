@@ -63,34 +63,24 @@ class AddTransactionAmountChanged extends AddTransactionEvent {
   List<Object?> get props => [amount];
 }
 
-/// Update from amount for exchange
-class AddTransactionFromAmountChanged extends AddTransactionEvent {
-  final String amount;
+/// Update fee percentage for transfer
+class AddTransactionFeePercentageChanged extends AddTransactionEvent {
+  final double? feePercentage;
 
-  const AddTransactionFromAmountChanged(this.amount);
+  const AddTransactionFeePercentageChanged(this.feePercentage);
 
   @override
-  List<Object?> get props => [amount];
+  List<Object?> get props => [feePercentage];
 }
 
-/// Update to amount for exchange
-class AddTransactionToAmountChanged extends AddTransactionEvent {
-  final String amount;
+/// Update custom fee value for transfer
+class AddTransactionCustomFeeValueChanged extends AddTransactionEvent {
+  final String customFeeValue;
 
-  const AddTransactionToAmountChanged(this.amount);
-
-  @override
-  List<Object?> get props => [amount];
-}
-
-/// Update exchange rate
-class AddTransactionRateChanged extends AddTransactionEvent {
-  final String rate;
-
-  const AddTransactionRateChanged(this.rate);
+  const AddTransactionCustomFeeValueChanged(this.customFeeValue);
 
   @override
-  List<Object?> get props => [rate];
+  List<Object?> get props => [customFeeValue];
 }
 
 /// Update category

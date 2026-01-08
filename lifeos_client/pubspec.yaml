@@ -43,9 +43,6 @@ dependencies:
   equatable: ^2.0.7
   provider: ^6.1.2
   
-  # UI components (shadcn_ui)
-  shadcn_ui: ^0.43.0
-  
   # Icons
   hugeicons: ^1.1.4
   
@@ -54,6 +51,13 @@ dependencies:
   
   # Service locator
   get_it: ^8.0.2
+  shadcn_flutter: ^0.0.47
+  fl_chart: ^1.1.1
+  rename_app: ^1.6.5
+  flutter_launcher_icons: ^0.14.4
+  intl: ^0.20.2
+  modal_bottom_sheet: ^3.0.0
+  image_picker: ^1.2.1
 
 dev_dependencies:
   flutter_test:
@@ -78,9 +82,8 @@ flutter:
   uses-material-design: true
 
   # To add assets to your application, add an assets section, like this:
-  # assets:
-  #   - images/a_dot_burr.jpeg
-  #   - images/a_dot_ham.jpeg
+  assets:
+    - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images

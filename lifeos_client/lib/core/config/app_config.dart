@@ -3,6 +3,8 @@ class AppConfig {
   // Private constructor to prevent instantiation
   AppConfig._();
 
+  static const String serverBaseUrl = 'http://127.0.0.1:8000';
+
   /// API base URL - can be overridden using --dart-define
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',

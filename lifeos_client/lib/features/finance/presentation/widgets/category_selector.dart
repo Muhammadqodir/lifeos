@@ -1,5 +1,4 @@
-import 'package:flutter/material.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../../data/models/transaction_category_dto.dart';
 
 class CategorySelector extends StatefulWidget {
@@ -19,12 +18,30 @@ class CategorySelector extends StatefulWidget {
 }
 
 class _CategorySelectorState extends State<CategorySelector> {
+  int? _selectedValue;
 
-  var searchValue = '';
-  
+  @override
+  void initState() {
+    super.initState();
+    _selectedValue = widget.selectedCategoryId;
+  }
+
+  @override
+  void didUpdateWidget(CategorySelector oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Reset selection if the selected category is not in the new list
+    if (_selectedValue != null && 
+        !widget.categories.any((c) => c.id == _selectedValue)) {
+      setState(() {
+        _selectedValue = null;
+      });
+      widget.onChanged(null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     if (widget.categories.isEmpty) {
@@ -33,8 +50,7 @@ class _CategorySelectorState extends State<CategorySelector> {
         children: [
           Text(
             'Category',
-            style: TextStyle(
-              fontSize: 14,
+            style: Theme.of(context).typography.small.copyWith(
               fontWeight: FontWeight.w500,
               color: colorScheme.foreground,
             ),
@@ -48,10 +64,7 @@ class _CategorySelectorState extends State<CategorySelector> {
             ),
             child: Text(
               'No categories available',
-              style: TextStyle(
-                fontSize: 14,
-                color: colorScheme.mutedForeground,
-              ),
+              style: Theme.of(context).typography.xSmall,
             ),
           ),
         ],
@@ -63,8 +76,7 @@ class _CategorySelectorState extends State<CategorySelector> {
       children: [
         Text(
           'Category',
-          style: TextStyle(
-            fontSize: 14,
+          style: Theme.of(context).typography.small.copyWith(
             fontWeight: FontWeight.w500,
             color: colorScheme.foreground,
           ),
@@ -72,35 +84,50 @@ class _CategorySelectorState extends State<CategorySelector> {
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
-          child: ShadSelect<int>.withSearch(
-
-            onSearchChanged: (value) => setState(() => searchValue = value),
-            searchPlaceholder: const Text('Category'),
-            placeholder: const Text('Select category'),
-            options: widget.categories.map((category) {
-              return ShadOption(
-                value: category.id,
-                child: Row(
+          child: Select<int?>(
+            itemBuilder: (context, item) {
+              if (item == null) return const Text('Select category');
+              try {
+                final category = widget.categories.firstWhere(
+                  (c) => c.id == item,
+                  orElse: () => throw StateError('Category not found'),
+                );
+                return Row(
                   children: [
                     Text(category.icon),
                     const SizedBox(width: 8),
                     Text(category.title),
                   ],
-                ),
-              );
-            }).toList(),
-            selectedOptionBuilder: (context, value) {
-              final category = widget.categories.firstWhere((c) => c.id == value);
-              return Row(
-                children: [
-                  Text(category.icon),
-                  const SizedBox(width: 8),
-                  Text(category.title),
-                ],
-              );
+                );
+              } catch (e) {
+                // Category not in current list (e.g., after type switch)
+                return const Text('Select category');
+              }
             },
-            onChanged: widget.onChanged,
-            initialValue: widget.selectedCategoryId,
+            onChanged: (value) {
+              setState(() {
+                _selectedValue = value;
+              });
+              widget.onChanged(value);
+            },
+            value: _selectedValue,
+            placeholder: const Text('Select category'),
+            popup: SelectPopup(
+              items: SelectItemList(
+                children: widget.categories.map((category) {
+                  return SelectItemButton(
+                    value: category.id,
+                    child: Row(
+                      children: [
+                        Text(category.icon),
+                        const SizedBox(width: 8),
+                        Text(category.title),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ).call,
           ),
         ),
       ],

@@ -6,6 +6,7 @@ import '../models/finance_summary_dto.dart';
 import '../models/currency_dto.dart';
 import '../models/transaction_category_dto.dart';
 import '../models/create_transaction_dto.dart';
+import '../models/analytics_summary_dto.dart';
 
 class FinanceRepositoryImpl implements FinanceRepository {
   final FinanceApiClient apiClient;
@@ -103,5 +104,65 @@ class FinanceRepositoryImpl implements FinanceRepository {
     CreateTransactionRequestDto request,
   ) async {
     return await apiClient.createTransaction(request);
+  }
+
+  @override
+  Future<AnalyticsSummaryDto> getAnalytics({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int? currencyId,
+  }) async {
+    return await apiClient.getAnalytics(
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      currencyId: currencyId,
+    );
+  }
+
+  @override
+  Future<Map<String, dynamic>> getFinanceSettings() async {
+    return await apiClient.getFinanceSettings();
+  }
+
+  @override
+  Future<Map<String, dynamic>> updateFinanceSettings({
+    required int baseCurrencyId,
+  }) async {
+    return await apiClient.updateFinanceSettings(baseCurrencyId: baseCurrencyId);
+  }
+
+  @override
+  Future<List<CurrencyDto>> getAllCurrencies() async {
+    return await apiClient.getAllCurrencies();
+  }
+
+  @override
+  Future<CurrencyDto> addUserCurrency(int currencyId) async {
+    return await apiClient.addUserCurrency(currencyId);
+  }
+
+  @override
+  Future<void> removeUserCurrency(int currencyId) async {
+    return await apiClient.removeUserCurrency(currencyId);
+  }
+
+  @override
+  Future<TransactionCategoryDto> createCategory({
+    required String title,
+    required String type,
+    required String icon,
+    required String color,
+  }) async {
+    return await apiClient.createCategory(
+      title: title,
+      type: type,
+      icon: icon,
+      color: color,
+    );
+  }
+
+  @override
+  Future<void> deleteCategory(int categoryId) async {
+    return await apiClient.deleteCategory(categoryId);
   }
 }

@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
+import 'package:lifeos_client/utils/toast.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
 import '../../../../injection.dart';
 import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../data/models/transaction_dto.dart';
@@ -12,6 +12,7 @@ import '../widgets/transaction_type_selector.dart';
 import '../widgets/wallet_selector.dart';
 import '../widgets/amount_input_field.dart';
 import '../widgets/category_selector.dart';
+import '../widgets/fee_selector.dart';
 
 class AddTransactionPage extends StatelessWidget {
   const AddTransactionPage({super.key});
@@ -31,40 +32,53 @@ class _AddTransactionPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final outerContext = context;
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return BlocListener<AddTransactionBloc, AddTransactionState>(
       listener: (context, state) {
         if (state is AddTransactionSuccess) {
-          ShadToaster.of(context).show(
-            const ShadToast(
-              title: Text('Success'),
-              description: Text('Transaction created successfully'),
-            ),
+          showToast(
+            context: context,
+            builder: (ctx, overlay) {
+              return Utils.buildToast(
+                ctx,
+                overlay,
+                'Success',
+                'Transaction created successfully',
+              );
+            },
+            location: ToastLocation.topCenter,
           );
+
           Navigator.of(context).pop(true);
         } else if (state is AddTransactionError) {
-          ShadToaster.of(context).show(
-            ShadToast.destructive(
-              title: const Text('Error'),
-              description: Text(state.message),
-            ),
+          showToast(
+            context: context,
+            builder: (context, overlay) {
+              return Utils.buildToast(context, overlay, 'Error', state.message);
+            },
+            location: ToastLocation.topCenter,
           );
+
+          Navigator.of(context).pop(false);
         }
       },
       child: Scaffold(
-        appBar: CustomAppBar(
-          title: 'Add Transaction',
-          leftActions: [
-            AppBarAction(
-              icon: HugeIcons.strokeRoundedArrowLeft01,
-              tooltip: 'Back',
-              onTap: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-        body: BlocBuilder<AddTransactionBloc, AddTransactionState>(
+        headers: [
+          CustomAppBar(
+            title: 'Add Transaction',
+            leftActions: [
+              AppBarAction(
+                icon: HugeIcons.strokeRoundedArrowLeft01,
+                tooltip: 'Back',
+                onTap: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+        ],
+        child: BlocBuilder<AddTransactionBloc, AddTransactionState>(
           builder: (context, state) {
             if (state is AddTransactionLoadingData) {
               return const Center(child: CircularProgressIndicator());
@@ -83,8 +97,7 @@ class _AddTransactionPageContent extends StatelessWidget {
                     const SizedBox(height: 16),
                     Text(
                       'Failed to load data',
-                      style: TextStyle(
-                        fontSize: 16,
+                      style: Theme.of(context).typography.normal.copyWith(
                         fontWeight: FontWeight.w600,
                         color: colorScheme.foreground,
                       ),
@@ -94,15 +107,14 @@ class _AddTransactionPageContent extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(horizontal: 32),
                       child: Text(
                         state.message,
-                        style: TextStyle(
-                          fontSize: 14,
+                        style: Theme.of(context).typography.small.copyWith(
                           color: colorScheme.mutedForeground,
                         ),
                         textAlign: TextAlign.center,
                       ),
                     ),
                     const SizedBox(height: 24),
-                    ShadButton(
+                    PrimaryButton(
                       onPressed: () {
                         context.read<AddTransactionBloc>().add(
                           const AddTransactionLoadData(),
@@ -115,18 +127,8 @@ class _AddTransactionPageContent extends StatelessWidget {
               );
             }
 
-            if (state is AddTransactionReady ||
-                state is AddTransactionSubmitting) {
-              final readyState = state is AddTransactionReady
-                  ? state
-                  : (state as AddTransactionSubmitting);
-
-              // For submitting state, we need to get the last ready state
-              // Let's assume submitting keeps the form data visible
-              return _buildForm(
-                context,
-                readyState is AddTransactionReady ? readyState : null,
-              );
+            if (state is AddTransactionReady) {
+              return _buildForm(outerContext, state, isSubmitting: false);
             }
 
             return const SizedBox.shrink();
@@ -136,15 +138,15 @@ class _AddTransactionPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildForm(BuildContext context, AddTransactionReady? state) {
-    if (state == null) {
-      return const Center(child: CircularProgressIndicator());
-    }
+  Widget _buildForm(
+    BuildContext context,
+    AddTransactionReady state, {
+    required bool isSubmitting,
+  }) {
+    DateTime _value = state.occurredAt;
 
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    final isSubmitting =
-        context.read<AddTransactionBloc>().state is AddTransactionSubmitting;
 
     return Column(
       children: [
@@ -196,14 +198,13 @@ class _AddTransactionPageContent extends StatelessWidget {
                   children: [
                     Text(
                       'Description (optional)',
-                      style: TextStyle(
-                        fontSize: 14,
+                      style: Theme.of(context).typography.small.copyWith(
                         fontWeight: FontWeight.w500,
                         color: colorScheme.foreground,
                       ),
                     ),
                     const SizedBox(height: 8),
-                    ShadInput(
+                    TextField(
                       initialValue: state.description,
                       placeholder: const Text('Add a note...'),
                       maxLines: 3,
@@ -217,65 +218,63 @@ class _AddTransactionPageContent extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
+                Text(
+                  'Date & Time',
+                  style: Theme.of(context).typography.small.copyWith(
+                    fontWeight: FontWeight.w500,
+                    color: colorScheme.foreground,
+                  ),
+                ),
+                const SizedBox(height: 8),
                 // Date/Time
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Date & Time',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    InkWell(
-                      onTap: () => _selectDateTime(context, state.occurredAt),
-                      borderRadius: BorderRadius.circular(6),
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 12,
-                          vertical: 10,
-                        ),
-                        decoration: BoxDecoration(
-                          border: Border.all(color: colorScheme.border),
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Row(
-                          children: [
-                            HugeIcon(
-                              icon: HugeIcons.strokeRoundedCalendar03,
-                              size: 20,
-                              color: colorScheme.mutedForeground,
-                            ),
-                            const SizedBox(width: 12),
-                            Text(
-                              _formatDateTime(state.occurredAt),
-                              style: TextStyle(
-                                fontSize: 14,
-                                color: colorScheme.foreground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
+                DatePicker(
+                  value: _value,
+                  mode: PromptMode.dialog,
+                  // Title shown at the top of the dialog variant.
+                  dialogTitle: const Text('Select Date'),
+                  stateBuilder: (date) {
+                    if (date.isAfter(DateTime.now())) {
+                      return DateState.disabled;
+                    }
+                    return DateState.enabled;
+                  },
+                  onChanged: (value) {
+                    context.read<AddTransactionBloc>().add(
+                      AddTransactionOccurredAtChanged(value!),
+                    );
+                  },
                 ),
 
-                const SizedBox(height: 150), // Space for bottom button
+                const SizedBox(height: 24), // Space for bottom button
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: ShadButton(
-                    width: double.infinity,
-                    onPressed: state.isValid && !isSubmitting
-                        ? () {
+                  padding: const EdgeInsets.symmetric(horizontal: 0),
+                  child: PrimaryButton(
+                    onPressed: isSubmitting
+                        ? null
+                        : () {
+                            // Check if form is valid
+                            if (!state.isValid) {
+                              // Show validation error
+                              String errorMessage = _getValidationError(state);
+                              showToast(
+                                context: context,
+                                builder: (context, overlay) {
+                                  return Utils.buildToast(
+                                    context,
+                                    overlay,
+                                    'Validation Error',
+                                    errorMessage,
+                                  );
+                                },
+                                location: ToastLocation.topCenter,
+                              );
+                              return;
+                            }
+
                             context.read<AddTransactionBloc>().add(
                               const AddTransactionSubmitted(),
                             );
-                          }
-                        : null,
+                          },
                     child: isSubmitting
                         ? const Row(
                             mainAxisAlignment: MainAxisAlignment.center,
@@ -294,6 +293,8 @@ class _AddTransactionPageContent extends StatelessWidget {
                         : const Text('Create Transaction'),
                   ),
                 ),
+
+                const SizedBox(height: 24), // Space for bottom button
               ],
             ),
           ),
@@ -338,6 +339,28 @@ class _AddTransactionPageContent extends StatelessWidget {
         );
 
       case TransactionType.transfer:
+        final fromWallet = state.wallets
+            .where((w) => w.id == state.fromWalletId)
+            .firstOrNull;
+        final toWallet = state.wallets
+            .where((w) => w.id == state.toWalletId)
+            .firstOrNull;
+        final isDifferentCurrency =
+            fromWallet != null &&
+            toWallet != null &&
+            fromWallet.currencyId != toWallet.currencyId;
+
+        // Calculate exchange rate if different currencies
+        String? exchangeRate;
+        if (isDifferentCurrency && state.amount.isNotEmpty) {
+          final amount = double.tryParse(state.amount);
+          if (amount != null && amount > 0) {
+            // Simplified rate calculation - you may want to fetch actual rates from API
+            exchangeRate =
+                '1 ${fromWallet.currency.code} = 1 ${toWallet.currency.code}';
+          }
+        }
+
         return Column(
           children: [
             WalletSelector(
@@ -368,133 +391,115 @@ class _AddTransactionPageContent extends StatelessWidget {
               placeholder: 'Select destination wallet',
             ),
             const SizedBox(height: 16),
-            AmountInputField(
-              label: 'Amount',
-              value: state.amount,
-              onChanged: (amount) {
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                AmountInputField(
+                  label: 'Amount',
+                  value: state.amount,
+                  onChanged: (amount) {
+                    context.read<AddTransactionBloc>().add(
+                      AddTransactionAmountChanged(amount),
+                    );
+                  },
+                  placeholder: '0.00',
+                ),
+                if (exchangeRate != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    exchangeRate,
+                    style: Theme.of(context).typography.xSmall.copyWith(
+                      color: Theme.of(context).colorScheme.mutedForeground,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+            const SizedBox(height: 16),
+            FeeSelector(
+              selectedFeeType: _getFeeTypeFromState(state),
+              customFeeValue: state.customFeeValue,
+              onFeeTypeChanged: (feeType) {
                 context.read<AddTransactionBloc>().add(
-                  AddTransactionAmountChanged(amount),
+                  AddTransactionFeePercentageChanged(feeType.percentage),
                 );
               },
-              placeholder: '0.00',
+              onCustomFeeChanged: (value) {
+                context.read<AddTransactionBloc>().add(
+                  AddTransactionCustomFeeValueChanged(value),
+                );
+              },
             ),
           ],
         );
 
       case TransactionType.exchange:
-        return Column(
-          children: [
-            WalletSelector(
-              label: 'From Wallet',
-              wallets: state.wallets,
-              selectedWalletId: state.fromWalletId,
-              onChanged: (walletId) {
-                if (walletId != null) {
-                  context.read<AddTransactionBloc>().add(
-                    AddTransactionFromWalletChanged(walletId),
-                  );
-                }
-              },
-              placeholder: 'Select source currency',
-            ),
-            const SizedBox(height: 16),
-            AmountInputField(
-              label: 'From Amount',
-              value: state.fromAmount,
-              onChanged: (amount) {
-                context.read<AddTransactionBloc>().add(
-                  AddTransactionFromAmountChanged(amount),
-                );
-              },
-              placeholder: '0.00',
-            ),
-            const SizedBox(height: 16),
-            WalletSelector(
-              label: 'To Wallet',
-              wallets: state.wallets,
-              selectedWalletId: state.toWalletId,
-              onChanged: (walletId) {
-                if (walletId != null) {
-                  context.read<AddTransactionBloc>().add(
-                    AddTransactionToWalletChanged(walletId),
-                  );
-                }
-              },
-              placeholder: 'Select destination currency',
-            ),
-            const SizedBox(height: 16),
-            AmountInputField(
-              label: 'To Amount',
-              value: state.toAmount,
-              onChanged: (amount) {
-                context.read<AddTransactionBloc>().add(
-                  AddTransactionToAmountChanged(amount),
-                );
-              },
-              placeholder: '0.00',
-            ),
-            const SizedBox(height: 16),
-            AmountInputField(
-              label: 'Exchange Rate',
-              value: state.rate ?? '',
-              onChanged: (rate) {
-                context.read<AddTransactionBloc>().add(
-                  AddTransactionRateChanged(rate),
-                );
-              },
-              placeholder: '1.0',
-            ),
-          ],
-        );
+        // Exchange type is deprecated
+        return const SizedBox.shrink();
     }
   }
 
-  Future<void> _selectDateTime(BuildContext context, DateTime initial) async {
-    final date = await showDatePicker(
-      context: context,
-      initialDate: initial,
-      firstDate: DateTime(2000),
-      lastDate: DateTime.now().add(const Duration(days: 365)),
-    );
-
-    if (date != null && context.mounted) {
-      final time = await showTimePicker(
-        context: context,
-        initialTime: TimeOfDay.fromDateTime(initial),
-      );
-
-      if (time != null && context.mounted) {
-        final dateTime = DateTime(
-          date.year,
-          date.month,
-          date.day,
-          time.hour,
-          time.minute,
-        );
-        context.read<AddTransactionBloc>().add(
-          AddTransactionOccurredAtChanged(dateTime),
-        );
+  FeeType _getFeeTypeFromState(AddTransactionReady state) {
+    if (state.feePercentage == null) {
+      if (state.customFeeValue.isNotEmpty) {
+        return FeeType.custom;
       }
+      return FeeType.none;
     }
+    if (state.feePercentage == 0) return FeeType.none;
+    if (state.feePercentage == 0.5) return FeeType.halfPercent;
+    if (state.feePercentage == 1.0) return FeeType.onePercent;
+    return FeeType.custom;
   }
 
-  String _formatDateTime(DateTime dateTime) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final date = DateTime(dateTime.year, dateTime.month, dateTime.day);
+  String _getValidationError(AddTransactionReady state) {
+    switch (state.type) {
+      case TransactionType.income:
+      case TransactionType.expense:
+        if (state.walletId == null) {
+          return 'Please select a wallet';
+        }
+        if (state.amount.isEmpty) {
+          return 'Please enter an amount';
+        }
+        if (double.tryParse(state.amount) == null ||
+            double.parse(state.amount) <= 0) {
+          return 'Please enter a valid amount greater than 0';
+        }
+        if (state.categoryId == null) {
+          return 'Please select a category';
+        }
+        break;
 
-    String dateStr;
-    if (date == today) {
-      dateStr = 'Today';
-    } else if (date == yesterday) {
-      dateStr = 'Yesterday';
-    } else {
-      dateStr = '${dateTime.day}/${dateTime.month}/${dateTime.year}';
+      case TransactionType.transfer:
+        if (state.fromWalletId == null) {
+          return 'Please select a source wallet';
+        }
+        if (state.toWalletId == null) {
+          return 'Please select a destination wallet';
+        }
+        if (state.fromWalletId == state.toWalletId) {
+          return 'Source and destination wallets must be different';
+        }
+        if (state.amount.isEmpty) {
+          return 'Please enter an amount';
+        }
+        if (double.tryParse(state.amount) == null ||
+            double.parse(state.amount) <= 0) {
+          return 'Please enter a valid amount greater than 0';
+        }
+        if (state.feePercentage == null && state.customFeeValue.isNotEmpty) {
+          final customFee = double.tryParse(state.customFeeValue);
+          if (customFee == null || customFee < 0) {
+            return 'Please enter a valid fee percentage';
+          }
+        }
+        break;
+
+      case TransactionType.exchange:
+        return 'Exchange type is deprecated';
     }
 
-    final hour = dateTime.hour.toString().padLeft(2, '0');
-    final minute = dateTime.minute.toString().padLeft(2, '0');
-    return '$dateStr at $hour:$minute';
+    return 'Please fill in all required fields';
   }
 }

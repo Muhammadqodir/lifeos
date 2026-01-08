@@ -5,6 +5,7 @@ import '../models/finance_summary_dto.dart';
 import '../models/currency_dto.dart';
 import '../models/transaction_category_dto.dart';
 import '../models/create_transaction_dto.dart';
+import '../models/analytics_summary_dto.dart';
 
 class FinanceApiClient {
   final Dio dio;
@@ -225,7 +226,12 @@ class FinanceApiClient {
           response: response,
         );
       }
-    } catch (e) {
+    } catch (e, s) {
+      print('Exception in createTransaction: $e'); // Debug log
+      print(s);
+      if (e is! DioException) {
+        print('Stack trace: ${StackTrace.current}'); // Debug log
+      }
       throw _handleError(e);
     }
   }
@@ -264,5 +270,200 @@ class FinanceApiClient {
       }
     }
     return Exception('An unexpected error occurred');
+  }
+
+  /// Get analytics data grouped by category for a given period
+  Future<AnalyticsSummaryDto> getAnalytics({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int? currencyId,
+  }) async {
+    try {
+      final queryParameters = <String, dynamic>{};
+
+      if (dateFrom != null) {
+        queryParameters['date_from'] = dateFrom.toIso8601String().split('T')[0];
+      }
+      if (dateTo != null) {
+        queryParameters['date_to'] = dateTo.toIso8601String().split('T')[0];
+      }
+      if (currencyId != null) {
+        queryParameters['currency_id'] = currencyId;
+      }
+
+      final response = await dio.get(
+        '$baseUrl/analytics',
+        queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
+      );
+      
+      if (response.statusCode == 200) {
+        final data = response.data['data'];
+        print(data);
+        return AnalyticsSummaryDto.fromJson(data as Map<String, dynamic>);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e ,s) {
+      print("Analytics API error: $e");
+      print("Stack trace: $s");
+      if (e is DioException && e.response != null) {
+        print("Response status: ${e.response!.statusCode}");
+        print("Response data: ${e.response!.data}");
+      }
+      throw _handleError(e);
+    }
+  }
+
+  /// Get user's finance settings including default currency
+  Future<Map<String, dynamic>> getFinanceSettings() async {
+    try {
+      final response = await dio.get('$baseUrl/user/finance-settings');
+
+      if (response.statusCode == 200) {
+        return response.data['data'] as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Update user's finance settings (base currency)
+  Future<Map<String, dynamic>> updateFinanceSettings({
+    required int baseCurrencyId,
+  }) async {
+    try {
+      final response = await dio.patch(
+        '$baseUrl/user/finance-settings',
+        data: {
+          'base_currency_id': baseCurrencyId,
+        },
+      );
+
+      if (response.statusCode == 200) {
+        return response.data['data'] as Map<String, dynamic>;
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Get all available currencies
+  Future<List<CurrencyDto>> getAllCurrencies() async {
+    try {
+      final response = await dio.get('$baseUrl/currencies');
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List;
+        return data.map((json) => CurrencyDto.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Add a currency to user's currency list
+  Future<CurrencyDto> addUserCurrency(int currencyId) async {
+    try {
+      final response = await dio.post(
+        '$baseUrl/user/currencies',
+        data: {
+          'currency_id': currencyId,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'];
+        return CurrencyDto.fromJson(data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Remove a currency from user's currency list
+  Future<void> removeUserCurrency(int currencyId) async {
+    try {
+      final response = await dio.delete('$baseUrl/user/currencies/$currencyId');
+
+      if (response.statusCode != 204 && response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Create a new transaction category
+  Future<TransactionCategoryDto> createCategory({
+    required String title,
+    required String type,
+    required String icon,
+    required String color,
+  }) async {
+    try {
+      final response = await dio.post(
+        '$baseUrl/transaction-categories',
+        data: {
+          'title': title,
+          'type': type,
+          'icon': icon,
+          'color': color,
+        },
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        final data = response.data['data'];
+        return TransactionCategoryDto.fromJson(data);
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
+  /// Delete a transaction category
+  Future<void> deleteCategory(int categoryId) async {
+    try {
+      final response = await dio.delete('$baseUrl/transaction-categories/$categoryId');
+
+      if (response.statusCode != 204 && response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
   }
 }

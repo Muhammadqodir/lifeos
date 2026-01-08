@@ -1,5 +1,5 @@
-import 'package:flutter/material.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
+
 import '../../data/models/transaction_dto.dart';
 
 class TransactionTypeSelector extends StatelessWidget {
@@ -14,7 +14,7 @@ class TransactionTypeSelector extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Column(
@@ -49,24 +49,10 @@ class TransactionTypeSelector extends StatelessWidget {
           ],
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: _TypeButton(
-                label: 'Transfer',
-                isSelected: selectedType == TransactionType.transfer,
-                onTap: () => onChanged(TransactionType.transfer),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: _TypeButton(
-                label: 'Exchange',
-                isSelected: selectedType == TransactionType.exchange,
-                onTap: () => onChanged(TransactionType.exchange),
-              ),
-            ),
-          ],
+        _TypeButton(
+          label: 'Transfer',
+          isSelected: selectedType == TransactionType.transfer,
+          onTap: () => onChanged(TransactionType.transfer),
         ),
       ],
     );
@@ -86,13 +72,13 @@ class _TypeButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(6),
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 12),
         decoration: BoxDecoration(
           color: isSelected ? colorScheme.primary : colorScheme.muted,
@@ -105,12 +91,9 @@ class _TypeButton extends StatelessWidget {
         child: Center(
           child: Text(
             label,
-            style: TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w500,
-              color: isSelected
-                  ? colorScheme.primaryForeground
-                  : colorScheme.foreground,
+            style: Theme.of(context).typography.small.copyWith(
+              color: isSelected ? colorScheme.accent : colorScheme.foreground,
+              
             ),
           ),
         ),

@@ -1,0 +1,33 @@
+import '../../data/models/exercise_dto.dart';
+import '../../data/models/workout_session_dto.dart';
+
+abstract class WorkoutRepository {
+  /// Get all exercises (system + user's custom)
+  Future<List<ExerciseDto>> getExercises();
+
+  /// Create a new custom exercise
+  Future<ExerciseDto> createExercise({
+    required String name,
+    required String type,
+    String? muscleGroup,
+    String? imagePath,
+  });
+
+  /// Delete a custom exercise
+  Future<void> deleteExercise(int exerciseId);
+
+  /// Save active workout locally (offline)
+  Future<void> saveActiveWorkoutLocally(WorkoutSessionDto workout);
+
+  /// Get active workout from local storage
+  WorkoutSessionDto? getActiveWorkout();
+
+  /// Check if there's an active workout
+  bool hasActiveWorkout();
+
+  /// Submit completed workout to server
+  Future<WorkoutSessionDto> submitWorkout(WorkoutSessionDto workout);
+
+  /// Clear active workout (cancel)
+  Future<void> clearActiveWorkout();
+}

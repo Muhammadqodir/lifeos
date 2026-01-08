@@ -18,9 +18,11 @@ class TransactionCategoryController extends Controller
      */
     public function index(Request $request): AnonymousResourceCollection
     {
+        $userId = $request->user()->id;
+
         $query = TransactionCategory::query()
-            ->where(function ($q) {
-                $q->where('user_id', auth()->id())
+            ->where(function ($q) use ($userId) {
+                $q->where('user_id', $userId)
                   ->orWhereNull('user_id'); // System categories
             });
 
@@ -40,8 +42,8 @@ class TransactionCategoryController extends Controller
     public function store(StoreCategoryRequest $request): TransactionCategoryResource
     {
         $category = TransactionCategory::create([
-            'user_id' => auth()->id(),
             ...$request->validated(),
+            'user_id' => $request->user()->id,
         ]);
 
         return new TransactionCategoryResource($category);
@@ -50,29 +52,29 @@ class TransactionCategoryController extends Controller
     /**
      * Update the specified transaction category.
      */
-    public function update(UpdateCategoryRequest $request, TransactionCategory $category): TransactionCategoryResource
+    public function update(UpdateCategoryRequest $request, TransactionCategory $transaction_category): TransactionCategoryResource
     {
         // Only allow updating user's own categories (not system categories)
-        if ($category->user_id !== auth()->id()) {
+        if ($transaction_category->user_id != $request->user()->id) {
             abort(403, 'Cannot update system categories or categories belonging to other users.');
         }
 
-        $category->update($request->validated());
+        $transaction_category->update($request->validated());
 
-        return new TransactionCategoryResource($category);
+        return new TransactionCategoryResource($transaction_category);
     }
 
     /**
      * Remove the specified transaction category.
      */
-    public function destroy(TransactionCategory $category): JsonResponse
+    public function destroy(Request $request, TransactionCategory $transaction_category): JsonResponse
     {
         // Only allow deleting user's own categories (not system categories)
-        if ($category->user_id !== auth()->id()) {
+        if ($transaction_category->user_id != $request->user()->id) {
             abort(403, 'Cannot delete system categories or categories belonging to other users.');
         }
 
-        $category->delete();
+        $transaction_category->delete();
 
         return response()->json(null, 204);
     }

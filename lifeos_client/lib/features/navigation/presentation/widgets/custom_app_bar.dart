@@ -1,6 +1,6 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+
 
 /// Custom app bar following shadcn design principles
 class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
@@ -19,7 +19,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     return Container(
@@ -37,7 +37,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
       child: SafeArea(
         bottom: false,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
           child: Row(
             children: [
               // Left actions
@@ -54,11 +54,7 @@ class CustomAppBar extends StatelessWidget implements PreferredSizeWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.w600,
-                    color: colorScheme.foreground,
-                  ),
+                  style: Theme.of(context).typography.h4,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
@@ -96,7 +92,7 @@ class AppBarAction extends StatelessWidget {
     required this.icon,
     this.onTap,
     this.tooltip,
-    this.size = 28,
+    this.size = 24,
   });
 
   @override
@@ -106,13 +102,6 @@ class AppBarAction extends StatelessWidget {
       onTap: onTap,
       size: size,
     );
-
-    if (tooltip != null) {
-      return Tooltip(
-        message: tooltip!,
-        child: button,
-      );
-    }
 
     return button;
   }
@@ -140,7 +129,7 @@ class _AppBarActionButtonState extends State<_AppBarActionButton> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
     final backgroundColor = _isPressed

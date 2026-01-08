@@ -1,8 +1,10 @@
-import 'package:flutter/material.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
-import 'package:shadcn_ui/shadcn_ui.dart';
+
+import 'package:provider/provider.dart';
 import '../../data/models/wallet_dto.dart';
+import '../providers/amount_visibility_provider.dart';
 
 class WalletCard extends StatelessWidget {
   final WalletDto wallet;
@@ -25,13 +27,12 @@ class WalletCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = ShadTheme.of(context);
+    final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    return ShadCard(
-      child: InkWell(
+    return Card(
+      child: GestureDetector(
         onTap: onTap,
-        borderRadius: BorderRadius.circular(8),
         child: SizedBox(
           width: 200,
           child: Column(
@@ -72,8 +73,10 @@ class WalletCard extends StatelessWidget {
                 MoneyText(
                   amount: wallet.balance!,
                   currencyCode: wallet.currency.code,
-                  fontSize: 20,
-                  currencyFontSize: 12,
+                  size: MoneyTextSize.large,
+                  isVisible: context
+                      .watch<AmountVisibilityProvider>()
+                      .isVisible,
                 )
               else
                 Container(
