@@ -66,14 +66,6 @@ class User extends Authenticatable
     }
 
     /**
-     * Get the user-owned currencies.
-     */
-    public function currencies(): HasMany
-    {
-        return $this->hasMany(Currency::class);
-    }
-
-    /**
      * Get the user's finance settings.
      */
     public function financeSettings(): HasOne

@@ -8,7 +8,6 @@ use App\Http\Controllers\Api\V1\FxRatesController;
 use App\Http\Controllers\Api\V1\SleepEntryController;
 use App\Http\Controllers\Api\V1\TransactionCategoryController;
 use App\Http\Controllers\Api\V1\TransactionController;
-use App\Http\Controllers\Api\V1\UserCurrencyController;
 use App\Http\Controllers\Api\V1\UserFinanceSettingsController;
 use App\Http\Controllers\Api\V1\WalletController;
 use App\Http\Controllers\Api\V1\WellbeingEntryController;
@@ -38,9 +37,6 @@ Route::prefix('v1')->group(function () {
     Route::middleware('auth:sanctum')->group(function () {
         // User-specific routes
         Route::prefix('user')->group(function () {
-            Route::get('currencies', [UserCurrencyController::class, 'index']);
-            Route::post('currencies', [UserCurrencyController::class, 'store']);
-            Route::delete('currencies/{currency}', [UserCurrencyController::class, 'destroy']);
             Route::get('finance-settings', [UserFinanceSettingsController::class, 'show']);
             Route::patch('finance-settings', [UserFinanceSettingsController::class, 'update']);
         });

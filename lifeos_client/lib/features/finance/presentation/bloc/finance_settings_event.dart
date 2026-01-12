@@ -20,24 +20,6 @@ class FinanceSettingsUpdateDefaultCurrency extends FinanceSettingsEvent {
   List<Object?> get props => [currencyId];
 }
 
-class FinanceSettingsAddCurrency extends FinanceSettingsEvent {
-  final int currencyId;
-
-  const FinanceSettingsAddCurrency(this.currencyId);
-
-  @override
-  List<Object?> get props => [currencyId];
-}
-
-class FinanceSettingsRemoveCurrency extends FinanceSettingsEvent {
-  final int currencyId;
-
-  const FinanceSettingsRemoveCurrency(this.currencyId);
-
-  @override
-  List<Object?> get props => [currencyId];
-}
-
 class FinanceSettingsAddCategory extends FinanceSettingsEvent {
   final String title;
   final String type;

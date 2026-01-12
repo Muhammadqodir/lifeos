@@ -2,9 +2,7 @@
 
 namespace App\Http\Requests;
 
-use App\Models\Currency;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class UpdateFinanceSettingsRequest extends FormRequest
 {
@@ -27,10 +25,7 @@ class UpdateFinanceSettingsRequest extends FormRequest
             'base_currency_id' => [
                 'required',
                 'integer',
-                Rule::exists('currencies', 'id')->where(function ($query) {
-                    // Only allow selecting from user's own currencies
-                    $query->where('user_id', auth()->id());
-                }),
+                'exists:currencies,id',
             ],
         ];
     }
@@ -41,7 +36,7 @@ class UpdateFinanceSettingsRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'base_currency_id.exists' => 'The selected base currency must be one of your own currencies.',
+            'base_currency_id.exists' => 'The selected currency does not exist.',
         ];
     }
 }

@@ -75,8 +75,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         return Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(currency.icon, style: const TextStyle(fontSize: 16)),
-            const SizedBox(width: 8),
+            // Text(currency.icon, style: const TextStyle(fontSize: 16)),
+            // const SizedBox(width: 8),
             Text(currency.code, style: const TextStyle(fontSize: 14)),
           ],
         );
@@ -93,8 +93,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                   value: currency.id,
                   child: Row(
                     children: [
-                      Text(currency.icon, style: const TextStyle(fontSize: 18)),
-                      const SizedBox(width: 12),
+                      // Text(currency.icon, style: const TextStyle(fontSize: 18)),
+                      // const SizedBox(width: 12),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,

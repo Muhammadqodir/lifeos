@@ -9,8 +9,6 @@ class FinanceSettingsBloc extends Bloc<FinanceSettingsEvent, FinanceSettingsStat
   FinanceSettingsBloc({required this.financeRepository}) : super(const FinanceSettingsInitial()) {
     on<FinanceSettingsLoadData>(_onLoadData);
     on<FinanceSettingsUpdateDefaultCurrency>(_onUpdateDefaultCurrency);
-    on<FinanceSettingsAddCurrency>(_onAddCurrency);
-    on<FinanceSettingsRemoveCurrency>(_onRemoveCurrency);
     on<FinanceSettingsAddCategory>(_onAddCategory);
     on<FinanceSettingsRemoveCategory>(_onRemoveCategory);
   }
@@ -53,58 +51,6 @@ class FinanceSettingsBloc extends Bloc<FinanceSettingsEvent, FinanceSettingsStat
       
       emit(FinanceSettingsOperationSuccess(
         message: 'Default currency updated successfully',
-        previousState: updatedState,
-      ));
-      
-      emit(updatedState);
-    } catch (e) {
-      emit(FinanceSettingsError(e.toString()));
-      emit(currentState);
-    }
-  }
-
-  Future<void> _onAddCurrency(
-    FinanceSettingsAddCurrency event,
-    Emitter<FinanceSettingsState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is! FinanceSettingsLoaded) return;
-
-    try {
-      final currency = await financeRepository.addUserCurrency(event.currencyId);
-      
-      final updatedUserCurrencies = [...currentState.userCurrencies, currency];
-      final updatedState = currentState.copyWith(userCurrencies: updatedUserCurrencies);
-      
-      emit(FinanceSettingsOperationSuccess(
-        message: 'Currency added successfully',
-        previousState: updatedState,
-      ));
-      
-      emit(updatedState);
-    } catch (e) {
-      emit(FinanceSettingsError(e.toString()));
-      emit(currentState);
-    }
-  }
-
-  Future<void> _onRemoveCurrency(
-    FinanceSettingsRemoveCurrency event,
-    Emitter<FinanceSettingsState> emit,
-  ) async {
-    final currentState = state;
-    if (currentState is! FinanceSettingsLoaded) return;
-
-    try {
-      await financeRepository.removeUserCurrency(event.currencyId);
-      
-      final updatedUserCurrencies = currentState.userCurrencies
-          .where((c) => c.id != event.currencyId)
-          .toList();
-      final updatedState = currentState.copyWith(userCurrencies: updatedUserCurrencies);
-      
-      emit(FinanceSettingsOperationSuccess(
-        message: 'Currency removed successfully',
         previousState: updatedState,
       ));
       

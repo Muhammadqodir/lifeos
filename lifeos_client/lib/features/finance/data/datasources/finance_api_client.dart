@@ -198,23 +198,10 @@ class FinanceApiClient {
     }
   }
 
-  /// Get user's currencies
+  /// Get all system currencies
   Future<List<CurrencyDto>> getUserCurrencies() async {
-    try {
-      final response = await dio.get('$baseUrl/user/currencies');
-
-      if (response.statusCode == 200) {
-        final data = response.data['data'] as List;
-        return data.map((json) => CurrencyDto.fromJson(json)).toList();
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-        );
-      }
-    } catch (e) {
-      throw _handleError(e);
-    }
+    // All currencies are now system currencies
+    return getAllCurrencies();
   }
 
   /// Create a new wallet
@@ -464,43 +451,7 @@ class FinanceApiClient {
     }
   }
 
-  /// Add a currency to user's currency list
-  Future<CurrencyDto> addUserCurrency(int currencyId) async {
-    try {
-      final response = await dio.post(
-        '$baseUrl/user/currencies',
-        data: {'currency_id': currencyId},
-      );
 
-      if (response.statusCode == 200 || response.statusCode == 201) {
-        final data = response.data['data'];
-        return CurrencyDto.fromJson(data);
-      } else {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-        );
-      }
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
-
-  /// Remove a currency from user's currency list
-  Future<void> removeUserCurrency(int currencyId) async {
-    try {
-      final response = await dio.delete('$baseUrl/user/currencies/$currencyId');
-
-      if (response.statusCode != 204 && response.statusCode != 200) {
-        throw DioException(
-          requestOptions: response.requestOptions,
-          response: response,
-        );
-      }
-    } catch (e) {
-      throw _handleError(e);
-    }
-  }
 
   /// Create a new transaction category
   Future<TransactionCategoryDto> createCategory({

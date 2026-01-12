@@ -232,31 +232,80 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                           ),
                         )
                       else
-                        SelectableGroup(
-                          initialValue: _selectedCurrencyId,
-                          options: currencies.map((item) {
-                            return SelectableGroupOption(
-                              value: item.id,
-                              widget: Row(
+                        SizedBox(
+                          width: double.infinity,
+                          child: Select<int>(
+                            placeholder: Text("Select currency",
+                                style: Theme.of(context)
+                                    .typography
+                                    .small
+                                    .copyWith(color: colorScheme.mutedForeground)),
+                            value: _selectedCurrencyId,
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                            itemBuilder: (context, item) {
+                              final currency = currencies.firstWhere(
+                                (c) => c.id == item,
+                              );
+                              return Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  // Text(currency.icon, style: Theme.of(context).typography.small),
+                                  // const SizedBox(width: 12),
                                   Text(
-                                    item.icon,
-                                    style: Theme.of(context).typography.xSmall,
-                                  ),
-                                  const SizedBox(width: 4),
-                                  Text(
-                                    item.code,
-                                    style: Theme.of(context).typography.small,
+                                    currency.name,
+                                    style: Theme.of(context).typography.small.copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ],
+                              );
+                            },
+                            onChanged: (value) {
+                              if (value != null) {
+                                setState(() {
+                                  _selectedCurrencyId = value;
+                                });
+                              }
+                            },
+                            popup: SelectPopup(
+                              items: SelectItemList(
+                                children: currencies
+                                    .map(
+                                      (currency) => SelectItemButton<int>(
+                                        value: currency.id,
+                                        child: Row(
+                                          children: [
+                                            // Text(
+                                            //   currency.icon,
+                                            //   style: Theme.of(context).typography.base,
+                                            // ),
+                                            // const SizedBox(width: 16),
+                                            Expanded(
+                                              child: Column(
+                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                mainAxisSize: MainAxisSize.min,
+                                                children: [
+                                                  Text(
+                                                    currency.code,
+                                                    style: Theme.of(context).typography.small.copyWith(
+                                                      fontWeight: FontWeight.w600,
+                                                    ),
+                                                  ),
+                                                  Text(
+                                                    currency.name,
+                                                    style: Theme.of(context).typography.xSmall,
+                                                  ),
+                                                ],
+                                              ),
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                    )
+                                    .toList(),
                               ),
-                            );
-                          }).toList(),
-                          onChanged: (v) {
-                            setState(() {
-                              _selectedCurrencyId = v;
-                            });
-                          },
+                            ).call,
+                          ),
                         ),
                     ],
                   ),

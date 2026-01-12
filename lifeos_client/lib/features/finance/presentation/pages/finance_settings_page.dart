@@ -10,7 +10,6 @@ import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../bloc/finance_settings_bloc.dart';
 import '../bloc/finance_settings_event.dart';
 import '../bloc/finance_settings_state.dart';
-import '../../data/models/currency_dto.dart';
 import '../../data/models/transaction_category_dto.dart';
 import '../../../../core/widgets/selectable_group.dart';
 import '../../../../core/widgets/color_selector.dart';
@@ -134,8 +133,6 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                   children: [
                     _buildDefaultCurrencySection(context, loadedState),
                     const SizedBox(height: 12),
-                    _buildMyCurrenciesSection(context, loadedState),
-                    const SizedBox(height: 12),
                     _buildCategoriesSection(context, loadedState),
                     const SizedBox(height: 24),
                   ],
@@ -170,8 +167,8 @@ class _FinanceSettingsPageContent extends StatelessWidget {
             return Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Text(currency.icon, style: Theme.of(context).typography.small),
-                const SizedBox(width: 12),
+                // Text(currency.icon, style: Theme.of(context).typography.small),
+                // const SizedBox(width: 12),
                 Text(
                   currency.name,
                   style: Theme.of(
@@ -196,11 +193,11 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                       value: currency.id,
                       child: Row(
                         children: [
-                          Text(
-                            currency.icon,
-                            style: Theme.of(context).typography.base,
-                          ),
-                          const SizedBox(width: 16),
+                          // Text(
+                          //   currency.icon,
+                          //   style: Theme.of(context).typography.base,
+                          // ),
+                          // const SizedBox(width: 16),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
@@ -230,104 +227,6 @@ class _FinanceSettingsPageContent extends StatelessWidget {
     );
   }
 
-  Widget _buildMyCurrenciesSection(
-    BuildContext context,
-    FinanceSettingsLoaded state,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return SettingsSection(
-      title: "My Currencies",
-      subTitle: "Manage currencies you use",
-      icon: HugeIcon(icon: HugeIcons.strokeRoundedMoneyBag02),
-      trailing: IconButton.primary(
-        onPressed: () => _showAddCurrencyDialog(context, state),
-        icon: HugeIcon(
-          icon: HugeIcons.strokeRoundedAdd01,
-          strokeWidth: 3,
-          size: 16,
-        ),
-      ),
-      content: state.userCurrencies.isEmpty
-          ? Center(
-              child: Text(
-                'No currencies added yet',
-                style: theme.typography.small.copyWith(
-                  color: colorScheme.mutedForeground,
-                ),
-              ),
-            )
-          : ListView.separated(
-              padding: EdgeInsets.zero,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              itemCount: state.userCurrencies.length,
-              separatorBuilder: (context, index) =>
-                  Divider(height: 1, color: colorScheme.border),
-              itemBuilder: (context, index) {
-                final currency = state.userCurrencies[index];
-                final isDefaultCurrency =
-                    currency.id == state.defaultCurrencyId;
-
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 4,
-                    vertical: 12,
-                  ),
-                  child: Row(
-                    children: [
-                      Text(
-                        currency.icon,
-                        style: Theme.of(context).typography.small,
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              currency.code,
-                              style: theme.typography.xSmall.copyWith(
-                                fontWeight: FontWeight.w600,
-                                color: colorScheme.foreground,
-                              ),
-                            ),
-                            Text(
-                              currency.name,
-                              style: theme.typography.xSmall.copyWith(
-                                color: colorScheme.mutedForeground,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      isDefaultCurrency
-                          ? SecondaryBadge(
-                              child: Text(
-                                'Default',
-                                style: theme.typography.xSmall.copyWith(
-                                  color: colorScheme.primary,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            )
-                          : IconButton.ghost(
-                              icon: HugeIcon(
-                                icon: HugeIcons.strokeRoundedDelete02,
-                                size: 20,
-                                color: colorScheme.destructive,
-                              ),
-                              onPressed: () =>
-                                  _confirmRemoveCurrency(context, currency),
-                            ),
-                    ],
-                  ),
-                );
-              },
-            ),
-    );
-  }
 
   Widget _buildCategoriesSection(
     BuildContext context,
@@ -462,120 +361,6 @@ class _FinanceSettingsPageContent extends StatelessWidget {
         );
       },
     );
-  }
-
-  void _showAddCurrencyDialog(
-    BuildContext context,
-    FinanceSettingsLoaded state,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    final availableCurrencies = state.allCurrencies
-        .where((c) => !state.userCurrencies.any((uc) => uc.id == c.id))
-        .toList();
-
-    if (availableCurrencies.isEmpty) {
-      showToast(
-        context: context,
-        builder: (ctx, overlay) {
-          return Utils.buildToast(
-            ctx,
-            overlay,
-            'Info',
-            'You have already added all available currencies',
-          );
-        },
-        location: ToastLocation.topCenter,
-      );
-      return;
-    }
-
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Add Currency'),
-        content: SizedBox(
-          width: 400,
-          child: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: availableCurrencies.map((currency) {
-                return GestureDetector(
-                  onTap: () {
-                    Navigator.of(dialogContext).pop();
-                    context.read<FinanceSettingsBloc>().add(
-                      FinanceSettingsAddCurrency(currency.id),
-                    );
-                  },
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 0,
-                      vertical: 12,
-                    ),
-                    child: Row(
-                      children: [
-                        Text(
-                          currency.icon,
-                          style: Theme.of(context).typography.base,
-                        ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                currency.code,
-                                style: theme.typography.base.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: colorScheme.foreground,
-                                ),
-                              ),
-                              Text(
-                                currency.name,
-                                style: theme.typography.small.copyWith(
-                                  color: colorScheme.mutedForeground,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
-        ),
-        actions: [
-          SecondaryButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _confirmRemoveCurrency(
-    BuildContext context,
-    CurrencyDto currency,
-  ) async {
-    bool? confirmed = await Dialogs.showConfirmDialog(
-      title: 'Remove Currency',
-      message:
-          'Are you sure you want to remove ${currency.code} from your currencies?',
-      context: context,
-    );
-
-    if (confirmed == true) {
-      if (context.mounted) {
-        context.read<FinanceSettingsBloc>().add(
-          FinanceSettingsRemoveCurrency(currency.id),
-        );
-      }
-    }
   }
 
   void _showAddCategoryDialog(BuildContext context) {

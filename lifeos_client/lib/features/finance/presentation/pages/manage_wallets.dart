@@ -1,8 +1,6 @@
 import 'package:lifeos_client/core/extension/extensions.dart';
 import 'package:lifeos_client/core/theme/app_colors.dart';
-import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:lifeos_client/features/finance/data/datasources/constants.dart';
-import 'package:lifeos_client/features/finance/presentation/pages/add_wallet_page.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';

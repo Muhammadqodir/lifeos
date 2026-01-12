@@ -23,7 +23,7 @@ class SetupUserFinanceData
     /**
      * Handle the event.
      *
-     * Clones system currencies for the new user and creates finance settings.
+     * Creates finance settings for the new user with USD as default base currency.
      */
     public function handle(Registered $event): void
     {
@@ -36,31 +36,18 @@ class SetupUserFinanceData
         }
 
         DB::transaction(function () use ($user) {
-            // Step 1: Clone all system currencies for this user
-            $systemCurrencies = Currency::system()->get();
+            // Get USD as default base currency
+            $usdCurrency = Currency::where('code', 'USD')->first();
 
-            $userCurrencies = [];
-            foreach ($systemCurrencies as $systemCurrency) {
-                $userCurrencies[] = Currency::create([
-                    'user_id' => $user->id,
-                    'code' => $systemCurrency->code,
-                    'name' => $systemCurrency->name,
-                    'color' => $systemCurrency->color,
-                    'icon' => $systemCurrency->icon,
-                    'is_active' => true,
-                ]);
-            }
-
-            // Step 2: Create user finance settings with first currency as base
-            if (count($userCurrencies) > 0) {
+            if ($usdCurrency) {
                 UserFinanceSettings::create([
                     'user_id' => $user->id,
-                    'base_currency_id' => $userCurrencies[0]->id,
+                    'base_currency_id' => $usdCurrency->id,
                 ]);
 
-                Log::info("Finance setup completed for user {$user->id}: cloned " . count($userCurrencies) . " currencies.");
+                Log::info("Finance setup completed for user {$user->id} with USD as base currency.");
             } else {
-                Log::warning("No system currencies found to clone for user {$user->id}.");
+                Log::warning("USD currency not found. Cannot create finance settings for user {$user->id}.");
             }
         });
     }

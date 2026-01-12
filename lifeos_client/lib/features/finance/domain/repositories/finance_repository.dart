@@ -45,8 +45,6 @@ abstract class FinanceRepository {
     required int baseCurrencyId,
   });
   Future<List<CurrencyDto>> getAllCurrencies();
-  Future<CurrencyDto> addUserCurrency(int currencyId);
-  Future<void> removeUserCurrency(int currencyId);
   Future<TransactionCategoryDto> createCategory({
     required String title,
     required String type,

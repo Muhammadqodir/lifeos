@@ -141,15 +141,7 @@ class FinanceRepositoryImpl implements FinanceRepository {
     return await apiClient.getAllCurrencies();
   }
 
-  @override
-  Future<CurrencyDto> addUserCurrency(int currencyId) async {
-    return await apiClient.addUserCurrency(currencyId);
-  }
 
-  @override
-  Future<void> removeUserCurrency(int currencyId) async {
-    return await apiClient.removeUserCurrency(currencyId);
-  }
 
   @override
   Future<TransactionCategoryDto> createCategory({
