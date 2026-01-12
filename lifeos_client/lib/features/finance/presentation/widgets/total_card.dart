@@ -6,7 +6,7 @@ import 'package:provider/provider.dart';
 import '../providers/amount_visibility_provider.dart';
 
 class TotalCard extends StatelessWidget {
-  final String amount;
+  final double amount;
   final String currencyCode;
   final bool isLoading;
 
@@ -52,6 +52,8 @@ class TotalCard extends StatelessWidget {
                 Expanded(
                   child: MoneyText(
                     amount: amount,
+                    isApproximate: true,
+                    isShort: false,
                     currencyCode: currencyCode,
                     isVisible: context
                         .watch<AmountVisibilityProvider>()

@@ -82,34 +82,40 @@ class _RegisterPageState extends State<RegisterPage> {
                       TextField(
                         controller: _firstNameController,
                         placeholder: const Text('John'),
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _lastNameController,
                         placeholder: const Text('Doe'),
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _fatherNameController,
                         placeholder: const Text('Middle name'),
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _emailController,
                         placeholder: const Text('email@example.com'),
                         keyboardType: TextInputType.emailAddress,
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _passwordController,
                         placeholder: const Text('Minimum 8 characters'),
                         obscureText: true,
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       ),
                       const SizedBox(height: 16),
                       TextField(
                         controller: _passwordConfirmationController,
                         placeholder: const Text('Re-enter password'),
                         obscureText: true,
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       ),
                       const SizedBox(height: 24),
                       BlocBuilder<AuthBloc, AuthState>(
@@ -133,9 +139,7 @@ class _RegisterPageState extends State<RegisterPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Text(
-                            'Already have an account? ',
-                          ),
+                          const Text('Already have an account? '),
                           Button.ghost(
                             onPressed: () {
                               Navigator.of(context).pop();

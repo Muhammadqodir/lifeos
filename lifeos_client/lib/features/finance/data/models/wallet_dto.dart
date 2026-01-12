@@ -44,7 +44,7 @@ class WalletDto extends Equatable {
   final CurrencyDto currency;
   final WalletType type;
   final bool isActive;
-  final String? balance; // Coming from balance endpoint
+  final double? balance; // Coming from balance endpoint
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -70,7 +70,7 @@ class WalletDto extends Equatable {
       currency: CurrencyDto.fromJson(json['currency'] as Map<String, dynamic>),
       type: WalletType.fromJson(json['type'] as String),
       isActive: json['is_active'] as bool,
-      balance: json['balance'] as String?,
+      balance: (json['balance'] as num?)?.toDouble(),
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -91,9 +91,7 @@ class WalletDto extends Equatable {
     };
   }
 
-  WalletDto copyWith({
-    String? balance,
-  }) {
+  WalletDto copyWith({double? balance}) {
     return WalletDto(
       id: id,
       userId: userId,
@@ -110,15 +108,15 @@ class WalletDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        name,
-        currencyId,
-        currency,
-        type,
-        isActive,
-        balance,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    name,
+    currencyId,
+    currency,
+    type,
+    isActive,
+    balance,
+    createdAt,
+    updatedAt,
+  ];
 }

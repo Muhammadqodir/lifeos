@@ -1,4 +1,6 @@
 import 'package:hugeicons/hugeicons.dart';
+import 'package:lifeos_client/core/extension/extensions.dart';
+import 'package:lifeos_client/features/finance/data/datasources/constants.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import '../../data/models/wallet_dto.dart';
@@ -25,19 +27,6 @@ class WalletSelector extends StatefulWidget {
 
 class _WalletSelectorState extends State<WalletSelector> {
   int? _selectedValue;
-
-  dynamic _getWalletTypeIcon(WalletType type) {
-    switch (type) {
-      case WalletType.card:
-        return HugeIcons.strokeRoundedCreditCard;
-      case WalletType.bankAccount:
-        return HugeIcons.strokeRoundedBank;
-      case WalletType.cash:
-        return HugeIcons.strokeRoundedMoneyBag01;
-      case WalletType.other:
-        return HugeIcons.strokeRoundedWallet03;
-    }
-  }
 
   @override
   void initState() {
@@ -83,12 +72,17 @@ class _WalletSelectorState extends State<WalletSelector> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  HugeIcon(icon: _getWalletTypeIcon(wallet.type), size: 18),
+                  HugeIcon(icon: FinanceConstants.getWalletTypeIcon(wallet.type), size: 18),
                   const SizedBox(width: 8),
-                  Text(wallet.name),
-                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [Text(wallet.name)],
+                    ),
+                  ),
                   Text(
-                    '(${wallet.currency.code})',
+                    wallet.currency.code,
                     style: TextStyle(
                       fontSize: 12,
                       color: colorScheme.mutedForeground,
@@ -113,14 +107,30 @@ class _WalletSelectorState extends State<WalletSelector> {
                     child: Row(
                       children: [
                         HugeIcon(
-                          icon: _getWalletTypeIcon(wallet.type),
+                          icon: FinanceConstants.getWalletTypeIcon(wallet.type),
                           size: 18,
                         ),
                         const SizedBox(width: 8),
-                        Text(wallet.name),
-                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(wallet.name),
+                              if (wallet.balance != null) ...[
+                                Text(
+                                  '${wallet.currency.icon} ${wallet.balance?.toMoneyFormat()}',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    color: colorScheme.mutedForeground,
+                                  ),
+                                ),
+                              ],
+                            ],
+                          ),
+                        ),
                         Text(
-                          '(${wallet.currency.code})',
+                          wallet.currency.code,
                           style: TextStyle(
                             fontSize: 12,
                             color: colorScheme.mutedForeground,

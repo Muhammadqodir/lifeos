@@ -1,3 +1,4 @@
+import 'package:lifeos_client/core/extension/extensions.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 enum MoneyTextSize { xSmall, small, large, xLarge }
@@ -9,16 +10,20 @@ class MoneyText extends StatelessWidget {
     required this.currencyCode,
     this.color,
     this.size = MoneyTextSize.large,
+    this.isShort = true,
     this.isVisible = true,
+    this.isApproximate = false,
     this.alignment = MainAxisAlignment.start,
   });
 
-  final String amount;
+  final double amount;
   final String currencyCode;
   final Color? color;
   final MoneyTextSize size;
   final MainAxisAlignment alignment;
   final bool isVisible;
+  final bool isShort;
+  final bool isApproximate;
 
   @override
   Widget build(BuildContext context) {
@@ -73,23 +78,18 @@ class MoneyText extends StatelessWidget {
       mainAxisAlignment: alignment,
       textBaseline: TextBaseline.alphabetic,
       children: [
-        Text(isVisible ? _formatAmount(amount) : '••••', style: amountStyle),
+        Text(
+          isVisible
+              ? ((isApproximate ? '~ ' : '') +
+                    (isShort
+                        ? amount.toMoneyFormatShort()
+                        : amount.toMoneyFormat()))
+              : '••••',
+          style: amountStyle,
+        ),
         const SizedBox(width: 4),
         Text(currencyCode, style: currencyStyle),
       ],
     );
-  }
-
-  String _formatAmount(String balance) {
-    final amount = double.tryParse(balance) ?? 0.0;
-    final absAmount = amount.abs();
-    final sign = amount < 0 ? '-' : '';
-
-    if (absAmount >= 1000000) {
-      return '$sign${(absAmount / 1000000).toStringAsFixed(1)}M';
-    } else if (absAmount >= 1000) {
-      return '$sign${(absAmount / 1000).toStringAsFixed(1)}K';
-    }
-    return amount.toStringAsFixed(2);
   }
 }

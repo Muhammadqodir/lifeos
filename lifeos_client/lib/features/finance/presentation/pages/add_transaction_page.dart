@@ -1,3 +1,4 @@
+import 'package:lifeos_client/features/finance/data/models/wallet_dto.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -208,6 +209,7 @@ class _AddTransactionPageContent extends StatelessWidget {
                       initialValue: state.description,
                       placeholder: const Text('Add a note...'),
                       maxLines: 3,
+                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       onChanged: (value) {
                         context.read<AddTransactionBloc>().add(
                           AddTransactionDescriptionChanged(value),
@@ -350,17 +352,6 @@ class _AddTransactionPageContent extends StatelessWidget {
             toWallet != null &&
             fromWallet.currencyId != toWallet.currencyId;
 
-        // Calculate exchange rate if different currencies
-        String? exchangeRate;
-        if (isDifferentCurrency && state.amount.isNotEmpty) {
-          final amount = double.tryParse(state.amount);
-          if (amount != null && amount > 0) {
-            // Simplified rate calculation - you may want to fetch actual rates from API
-            exchangeRate =
-                '1 ${fromWallet.currency.code} = 1 ${toWallet.currency.code}';
-          }
-        }
-
         return Column(
           children: [
             WalletSelector(
@@ -395,7 +386,9 @@ class _AddTransactionPageContent extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 AmountInputField(
-                  label: 'Amount',
+                  label: isDifferentCurrency
+                      ? 'Amount (${fromWallet.currency.code})'
+                      : 'Amount',
                   value: state.amount,
                   onChanged: (amount) {
                     context.read<AddTransactionBloc>().add(
@@ -404,10 +397,21 @@ class _AddTransactionPageContent extends StatelessWidget {
                   },
                   placeholder: '0.00',
                 ),
-                if (exchangeRate != null) ...[
+                if (isDifferentCurrency) ...[
+                  const SizedBox(height: 16),
+                  AmountInputField(
+                    label: 'Amount (${toWallet.currency.code})',
+                    value: state.exchangeAmount,
+                    onChanged: (amount) {
+                      context.read<AddTransactionBloc>().add(
+                        AddTransactionExchangeAmountChanged(amount),
+                      );
+                    },
+                    placeholder: '0.00',
+                  ),
                   const SizedBox(height: 4),
                   Text(
-                    exchangeRate,
+                    'Exchange Rate: ${_calculateExchangeRate(state, fromWallet!, toWallet!)}',
                     style: Theme.of(context).typography.xSmall.copyWith(
                       color: Theme.of(context).colorScheme.mutedForeground,
                     ),
@@ -437,6 +441,37 @@ class _AddTransactionPageContent extends StatelessWidget {
         // Exchange type is deprecated
         return const SizedBox.shrink();
     }
+  }
+
+  String _calculateExchangeRate(
+    AddTransactionReady state,
+    WalletDto fromWallet,
+    WalletDto toWallet,
+  ) {
+    String exchangeRate = '';
+    final fromAmount = double.tryParse(state.amount);
+    final toAmount = double.tryParse(state.exchangeAmount);
+
+    if (state.amount.isNotEmpty && state.exchangeAmount.isNotEmpty) {
+      final amount = double.tryParse(state.amount);
+      final exchangeAmount = double.tryParse(state.exchangeAmount);
+      if (amount != null &&
+          amount > 0 &&
+          exchangeAmount != null &&
+          exchangeAmount > 0) {
+        if (amount > exchangeAmount) {
+          final rate = amount / exchangeAmount;
+          exchangeRate =
+              '1 ${toWallet.currency.code} = ${rate.toStringAsFixed(1)} ${fromWallet.currency.code}';
+        } else {
+          final rate = exchangeAmount / amount;
+          exchangeRate =
+              '1 ${fromWallet.currency.code} = ${rate.toStringAsFixed(1)} ${toWallet.currency.code}';
+        }
+      }
+    }
+
+    return exchangeRate;
   }
 
   FeeType _getFeeTypeFromState(AddTransactionReady state) {
@@ -487,6 +522,27 @@ class _AddTransactionPageContent extends StatelessWidget {
         if (double.tryParse(state.amount) == null ||
             double.parse(state.amount) <= 0) {
           return 'Please enter a valid amount greater than 0';
+        }
+        // Check for exchange amount if currencies are different
+        final fromWallet = state.wallets
+            .where((w) => w.id == state.fromWalletId)
+            .firstOrNull;
+        final toWallet = state.wallets
+            .where((w) => w.id == state.toWalletId)
+            .firstOrNull;
+        final isDifferentCurrency =
+            fromWallet != null &&
+            toWallet != null &&
+            fromWallet.currencyId != toWallet.currencyId;
+
+        if (isDifferentCurrency) {
+          if (state.exchangeAmount.isEmpty) {
+            return 'Please enter the exchange amount';
+          }
+          if (double.tryParse(state.exchangeAmount) == null ||
+              double.parse(state.exchangeAmount) <= 0) {
+            return 'Please enter a valid exchange amount greater than 0';
+          }
         }
         if (state.feePercentage == null && state.customFeeValue.isNotEmpty) {
           final customFee = double.tryParse(state.customFeeValue);

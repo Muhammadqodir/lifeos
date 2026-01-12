@@ -613,6 +613,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                 TextField(
                   controller: nameController,
                   placeholder: const Text('Category name'),
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
                 ),
                 const SizedBox(height: 16),
                 Text('Type:', style: Theme.of(dialogContext).typography.small),
@@ -668,6 +669,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                 TextField(
                   initialValue: selectedIcon,
                   maxLength: 1,
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   placeholder: const Text('Enter emoji'),
                   onChanged: (value) => selectedIcon = value,
                 ),

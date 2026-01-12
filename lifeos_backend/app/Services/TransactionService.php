@@ -37,7 +37,7 @@ class TransactionService
             if (isset($data['entries'])) {
                 $walletIds = collect($data['entries'])->pluck('wallet_id')->unique()->toArray();
                 $validWallets = \App\Models\Wallet::whereIn('id', $walletIds)
-                    ->where('user_id', $userId)
+                    ->where('user_id', $userId)->where('is_active', true)
                     ->count();
 
                 if ($validWallets !== count($walletIds)) {
@@ -102,7 +102,7 @@ class TransactionService
             // Validate wallet ownership for new entries if provided
             if (isset($data['entries'])) {
                 $walletIds = collect($data['entries'])->pluck('wallet_id')->unique()->toArray();
-                $validWallets = \App\Models\Wallet::whereIn('id', $walletIds)
+                $validWallets = \App\Models\Wallet::whereIn('id', $walletIds)->where('is_active', true)
                     ->where('user_id', $transaction->user_id)
                     ->count();
 

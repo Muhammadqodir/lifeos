@@ -43,10 +43,10 @@ class TransactionEntryDto extends Equatable {
   final int transactionId;
   final int walletId;
   final WalletEntryDto wallet;
-  final String amount;
+  final double amount;
   final int currencyId;
   final CurrencyDto currency;
-  final String? rate;
+  final double? rate;
   final String? note;
   final DateTime createdAt;
 
@@ -69,10 +69,10 @@ class TransactionEntryDto extends Equatable {
       transactionId: json['transaction_id'] as int,
       walletId: json['wallet_id'] as int,
       wallet: WalletEntryDto.fromJson(json['wallet'] as Map<String, dynamic>),
-      amount: json['amount'] as String,
+      amount: (json['amount'] as num).toDouble(),
       currencyId: json['currency_id'] as int,
       currency: CurrencyDto.fromJson(json['currency'] as Map<String, dynamic>),
-      rate: json['rate'] as String?,
+      rate: json['rate'] != null ? (json['rate'] as num).toDouble() : null,
       note: json['note'] as String?,
       createdAt: DateTime.parse(json['created_at'] as String),
     );
@@ -95,17 +95,17 @@ class TransactionEntryDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        transactionId,
-        walletId,
-        wallet,
-        amount,
-        currencyId,
-        currency,
-        rate,
-        note,
-        createdAt,
-      ];
+    id,
+    transactionId,
+    walletId,
+    wallet,
+    amount,
+    currencyId,
+    currency,
+    rate,
+    note,
+    createdAt,
+  ];
 }
 
 // Simplified wallet info in transaction entry
@@ -129,11 +129,7 @@ class WalletEntryDto extends Equatable {
   }
 
   Map<String, dynamic> toJson() {
-    return {
-      'id': id,
-      'name': name,
-      'type': type.toJson(),
-    };
+    return {'id': id, 'name': name, 'type': type.toJson()};
   }
 
   @override
@@ -176,7 +172,8 @@ class TransactionDto extends Equatable {
       categoryId: json['category_id'] as int?,
       category: json['category'] != null
           ? TransactionCategoryDto.fromJson(
-              json['category'] as Map<String, dynamic>)
+              json['category'] as Map<String, dynamic>,
+            )
           : null,
       description: json['description'] as String?,
       occurredAt: DateTime.parse(json['occurred_at'] as String),
@@ -206,28 +203,25 @@ class TransactionDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        userId,
-        clientId,
-        type,
-        categoryId,
-        category,
-        description,
-        occurredAt,
-        entries,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    userId,
+    clientId,
+    type,
+    categoryId,
+    category,
+    description,
+    occurredAt,
+    entries,
+    createdAt,
+    updatedAt,
+  ];
 }
 
 class TransactionListResponseDto {
   final List<TransactionDto> data;
   final PaginationMeta meta;
 
-  const TransactionListResponseDto({
-    required this.data,
-    required this.meta,
-  });
+  const TransactionListResponseDto({required this.data, required this.meta});
 
   factory TransactionListResponseDto.fromJson(Map<String, dynamic> json) {
     return TransactionListResponseDto(

@@ -75,22 +75,37 @@ class StoreTransactionRequest extends FormRequest
                 }
 
                 if ($type === 'transfer') {
-                    if (count($entries) !== 2) {
-                        $validator->errors()->add('entries', 'Transfer transactions must have exactly 2 entries.');
+                    $entryCount = count($entries);
+
+                    if (!in_array($entryCount, [2, 3])) {
+                        $validator->errors()->add('entries', 'Transfer transactions must have 2 or 3 entries (source, destination, and optional fee).');
                     } else {
-                        // Check same currency
+                        // Check same currency for main entries
                         if ($entries[0]['currency_id'] !== $entries[1]['currency_id']) {
-                            $validator->errors()->add('entries', 'Transfer entries must have the same currency.');
+                            $validator->errors()->add('entries', 'Transfer source and destination entries must have the same currency.');
                         }
-                        // Check amounts sum to 0
-                        $sum = $entries[0]['amount'] + $entries[1]['amount'];
-                        if (abs($sum) > 0.000001) {
-                            $validator->errors()->add('entries', 'Transfer entry amounts must sum to 0.');
+
+                        if ($entryCount === 2) {
+                            // Standard transfer: amounts must sum to 0
+                            $sum = $entries[0]['amount'] + $entries[1]['amount'];
+                            if (abs($sum) > 0.000001) {
+                                $validator->errors()->add('entries', 'Transfer entry amounts must sum to 0.');
+                            }
+                        } else {
+                            // Transfer with fee: third entry is the fee (negative)
+                            // Fee must be negative (outgoing)
+                            if ($entries[2]['amount'] >= 0) {
+                                $validator->errors()->add('entries.2.amount', 'Fee amount must be negative.');
+                            }
+
+                            // The first two entries represent the transfer (don't need to sum to 0 with fee)
+                            // Total of all three entries will be negative (the fee amount)
                         }
-                        // Check one positive, one negative
+
+                        // Check one positive, one negative for first two entries
                         if (($entries[0]['amount'] > 0 && $entries[1]['amount'] > 0) ||
                             ($entries[0]['amount'] < 0 && $entries[1]['amount'] < 0)) {
-                            $validator->errors()->add('entries', 'Transfer must have one positive and one negative entry.');
+                            $validator->errors()->add('entries', 'Transfer must have one positive and one negative entry for source and destination.');
                         }
                     }
                 }

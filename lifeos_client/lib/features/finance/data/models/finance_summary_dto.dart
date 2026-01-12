@@ -3,7 +3,7 @@ import 'package:equatable/equatable.dart';
 /// Summary of finances in user's base currency
 /// TODO: Update based on actual API endpoint when available
 class FinanceSummaryDto extends Equatable {
-  final String totalBalance;
+  final double totalBalance;
   final String currencyCode;
 
   const FinanceSummaryDto({
@@ -13,7 +13,7 @@ class FinanceSummaryDto extends Equatable {
 
   factory FinanceSummaryDto.fromJson(Map<String, dynamic> json) {
     return FinanceSummaryDto(
-      totalBalance: json['total_balance'] as String,
+      totalBalance: (json['total_balance'] as num).toDouble(),
       currencyCode: json['currency_code'] as String,
     );
   }

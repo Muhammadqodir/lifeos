@@ -17,8 +17,27 @@ class WalletController extends Controller
      */
     public function index(): AnonymousResourceCollection
     {
-        $wallets = Wallet::where('user_id', auth()->id())
+        $query = Wallet::where('user_id', auth()->id())->where('is_active', true)
+            ->with('currency');
+
+        // Include balances if requested
+        if (request()->has('with_balances') && request()->boolean('with_balances')) {
+            $query->withSum('transactionEntries as balance', 'amount');
+        }
+
+        $wallets = $query->get();
+
+        return WalletResource::collection($wallets);
+    }
+
+    /**
+     * Display a listing of wallets with their balances.
+     */
+    public function indexWithBalances(): AnonymousResourceCollection
+    {
+        $wallets = Wallet::where('user_id', auth()->id())->where('is_active', true)
             ->with('currency')
+            ->withSum('transactionEntries as balance', 'amount')
             ->get();
 
         return WalletResource::collection($wallets);
@@ -100,7 +119,7 @@ class WalletController extends Controller
         return response()->json([
             'data' => [
                 'wallet_id' => $wallet->id,
-                'balance' => number_format($balance, 6, '.', ''),
+                'balance' => (float) $balance,
                 'currency_id' => $wallet->currency_id,
             ]
         ]);

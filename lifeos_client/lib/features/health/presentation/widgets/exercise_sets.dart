@@ -288,6 +288,7 @@ class _SetRowState extends State<_SetRow> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   onChanged: (_) => _updateSet(),
                 ),
               ),
@@ -302,6 +303,7 @@ class _SetRowState extends State<_SetRow> {
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   controller: repsController,
                   keyboardType: TextInputType.number,
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   onChanged: (_) => _updateSet(),
                 ),
               ),
@@ -317,6 +319,7 @@ class _SetRowState extends State<_SetRow> {
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   controller: durationController,
                   keyboardType: TextInputType.number,
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   onChanged: (_) => _updateSet(),
                 ),
               ),
@@ -333,6 +336,7 @@ class _SetRowState extends State<_SetRow> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   onChanged: (_) => _updateSet(),
                 ),
               ),

@@ -7,7 +7,7 @@ import '../../data/models/category_summary_dto.dart';
 class PieChartSection extends StatefulWidget {
   final String title;
   final List<CategorySummaryDto> categories;
-  final String totalAmount;
+  final double totalAmount;
   final String currencyIcon;
 
   const PieChartSection({
@@ -102,8 +102,8 @@ class _PieChartSectionState extends State<PieChartSection> {
             final index = entry.key;
             final category = entry.value;
             final percentage =
-                (double.parse(category.totalAmount).abs() /
-                sorted.fold<double>(0, (a, b) => a + double.parse(b.totalAmount).abs()) *
+                (category.totalAmount.abs() /
+                sorted.fold<double>(0, (a, b) => a + b.totalAmount.abs()) *
                 100);
             return Padding(
               padding: const EdgeInsets.only(bottom: 12),
@@ -114,7 +114,9 @@ class _PieChartSectionState extends State<PieChartSection> {
                 isSelected: selectedIndexSorted == index,
                 onTap: () {
                   setState(() {
-                    selectedIndexSorted = selectedIndexSorted == index ? null : index;
+                    selectedIndexSorted = selectedIndexSorted == index
+                        ? null
+                        : index;
                   });
                 },
               ),
@@ -127,42 +129,41 @@ class _PieChartSectionState extends State<PieChartSection> {
 
   List<CategorySummaryDto> _sortedCategories() {
     final List<CategorySummaryDto> sorted = List.from(widget.categories);
-    sorted.sort((a, b) => double.parse(b.totalAmount).abs().compareTo(double.parse(a.totalAmount).abs()));
+    sorted.sort((a, b) => b.totalAmount.abs().compareTo(a.totalAmount.abs()));
     return sorted;
   }
 
-  Widget _buildSimplePieChart(BuildContext context, List<CategorySummaryDto> sorted) {
+  Widget _buildSimplePieChart(
+    BuildContext context,
+    List<CategorySummaryDto> sorted,
+  ) {
     return LayoutBuilder(
       builder: (context, constraints) {
         final theme = Theme.of(context);
-        final values = sorted
-            .map((c) => (double.tryParse(c.totalAmount) ?? 0).abs())
-            .toList();
+        final values = sorted.map((c) => c.totalAmount.abs()).toList();
         final sum = values.fold<double>(0, (a, b) => a + b);
         Color parseHex(String hex) {
           final clean = hex.replaceFirst('#', '');
           return Color(int.parse('0xFF$clean'));
         }
-        List<PieChartSectionData> sections = List.generate(
-          sorted.length,
-          (i) {
-            final value = values[i];
-            final color = parseHex(sorted[i].categoryColor);
-            final category = sorted[i];
-            final percent = sum > 0 ? (value / sum * 100) : 0.0;
-            final isSelected = selectedIndexSorted == i;
-            return PieChartSectionData(
-              color: color,
-              value: value,
-              title: '${category.categoryIcon}${percent.toStringAsFixed(1)}%',
-              titleStyle: theme.typography.xSmall.copyWith(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-              ),
-              radius: isSelected ? 65 : 60,
-            );
-          },
-        );
+
+        List<PieChartSectionData> sections = List.generate(sorted.length, (i) {
+          final value = values[i];
+          final color = parseHex(sorted[i].categoryColor);
+          final category = sorted[i];
+          final percent = sum > 0 ? (value / sum * 100) : 0.0;
+          final isSelected = selectedIndexSorted == i;
+          return PieChartSectionData(
+            color: color,
+            value: value,
+            title: '${category.categoryIcon}${percent.toStringAsFixed(1)}%',
+            titleStyle: theme.typography.xSmall.copyWith(
+              color: Colors.white,
+              fontWeight: FontWeight.bold,
+            ),
+            radius: isSelected ? 65 : 60,
+          );
+        });
         return Stack(
           alignment: Alignment.center,
           children: [

@@ -129,7 +129,7 @@ class WorkoutStreakCard extends StatelessWidget {
             child: PrimaryButton(
               onPressed: () {
                 Navigator.of(context).push(
-                  CupertinoPageRoute(
+                  MaterialPageRoute(
                     builder: (context) {
                       return MultiBlocProvider(
                         providers: [

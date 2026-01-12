@@ -40,11 +40,28 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
 
     // Calculate new cursor position
     int selectionIndex = newValue.selection.end;
-    int originalSpaces = oldValue.text.substring(0, oldValue.selection.end).split(' ').length - 1;
-    int newSpaces = formatted.substring(0, formatted.length.clamp(0, selectionIndex + (formatted.split(' ').length - 1 - originalSpaces))).split(' ').length - 1;
-    
+    int originalSpaces =
+        oldValue.text.substring(0, oldValue.selection.end).split(' ').length -
+        1;
+    int newSpaces =
+        formatted
+            .substring(
+              0,
+              formatted.length.clamp(
+                0,
+                selectionIndex +
+                    (formatted.split(' ').length - 1 - originalSpaces),
+              ),
+            )
+            .split(' ')
+            .length -
+        1;
+
     // Adjust cursor position accounting for added/removed spaces
-    selectionIndex = (selectionIndex + newSpaces - originalSpaces).clamp(0, formatted.length);
+    selectionIndex = (selectionIndex + newSpaces - originalSpaces).clamp(
+      0,
+      formatted.length,
+    );
 
     return TextEditingValue(
       text: formatted,
@@ -73,7 +90,7 @@ class AmountInputField extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     // Format the initial value if provided
     String? formattedValue;
     if (value != null && value!.isNotEmpty) {
@@ -81,7 +98,7 @@ class AmountInputField extends StatelessWidget {
       final parts = cleanValue.split('.');
       String integerPart = parts[0];
       String? decimalPart = parts.length > 1 ? parts[1] : null;
-      
+
       String formatted = '';
       for (int i = 0; i < integerPart.length; i++) {
         if (i > 0 && (integerPart.length - i) % 3 == 0) {
@@ -89,13 +106,13 @@ class AmountInputField extends StatelessWidget {
         }
         formatted += integerPart[i];
       }
-      
+
       if (decimalPart != null) {
         formatted += '.$decimalPart';
       }
       formattedValue = formatted;
     }
-    
+
     final controller = TextEditingController(text: formattedValue ?? value);
     controller.selection = TextSelection.fromPosition(
       TextPosition(offset: controller.text.length),
@@ -116,9 +133,8 @@ class AmountInputField extends StatelessWidget {
           controller: controller,
           placeholder: Text(placeholder ?? 'Enter amount'),
           keyboardType: const TextInputType.numberWithOptions(decimal: true),
-          inputFormatters: [
-            ThousandsSeparatorInputFormatter(),
-          ],
+          inputFormatters: [ThousandsSeparatorInputFormatter()],
+          onSubmitted: (_) => FocusScope.of(context).unfocus(),
           onChanged: (formatted) {
             // Remove spaces before passing to parent
             final cleanValue = formatted.replaceAll(' ', '');

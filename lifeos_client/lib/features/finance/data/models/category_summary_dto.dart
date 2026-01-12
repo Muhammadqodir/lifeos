@@ -6,7 +6,7 @@ class CategorySummaryDto extends Equatable {
   final String categoryTitle;
   final String categoryIcon;
   final String categoryColor;
-  final String totalAmount;
+  final double totalAmount;
   final int transactionCount;
 
   const CategorySummaryDto({
@@ -24,7 +24,7 @@ class CategorySummaryDto extends Equatable {
       categoryTitle: json['category_title'] as String,
       categoryIcon: json['category_icon'] as String,
       categoryColor: json['category_color'] as String,
-      totalAmount: json['total_amount'] as String,
+      totalAmount: (json['total_amount'] as num?)?.toDouble() ?? 0.0,
       transactionCount: json['transaction_count'] as int,
     );
   }

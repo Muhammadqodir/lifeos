@@ -93,6 +93,11 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
+  Future<void> deleteWallet(int walletId) async {
+    return await apiClient.deleteWallet(walletId);
+  }
+
+  @override
   Future<List<TransactionCategoryDto>> getTransactionCategories({
     String? type,
   }) async {

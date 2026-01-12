@@ -8,8 +8,8 @@ import 'package:lifeos_client/features/health/presentation/bloc/workout_state.da
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_selection_sheet.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_sets.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
+import 'package:lifeos_client/utils/modal.dart';
 import 'package:lifeos_client/utils/toast.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class WorkoutPage extends StatefulWidget {
@@ -67,15 +67,11 @@ class _WorkoutPageState extends State<WorkoutPage> {
     // Capture the bloc before the builder to avoid context issues
     final exerciseBloc = context.read<ExerciseBloc>();
 
-    final exercise = await showBarModalBottomSheet<ExerciseDto>(
+    final ExerciseDto? exercise = await BottomSheetModal.openSheet<ExerciseDto>(
       context: context,
-      barrierColor: Colors.black.withAlpha(100),
-      builder: (context) => SizedBox(
-        height: MediaQuery.of(context).size.height * 0.7,
-        child: BlocProvider.value(
-          value: exerciseBloc,
-          child: const ExerciseSelectionSheet(),
-        ),
+      builder: (context) => BlocProvider.value(
+        value: exerciseBloc,
+        child: const ExerciseSelectionSheet(),
       ),
     );
 

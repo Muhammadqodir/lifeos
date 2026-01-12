@@ -58,7 +58,7 @@ class _GymMainPageState extends State<GymMainPage> {
                   tooltip: 'Workout Settings',
                   onTap: () {
                     Navigator.of(context).push(
-                      CupertinoPageRoute(
+                      MaterialPageRoute(
                         builder: (context) {
                           return MultiBlocProvider(
                             providers: [

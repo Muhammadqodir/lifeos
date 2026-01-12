@@ -20,11 +20,11 @@ class TransactionEntryResource extends JsonResource
             'wallet_id' => $this->wallet_id,
             'wallet' => $this->when($this->relationLoaded('wallet') && $this->wallet,
                 new WalletResource($this->wallet)),
-            'amount' => $this->amount,
+            'amount' => (float) $this->amount,
             'currency_id' => $this->currency_id,
             'currency' => $this->when($this->relationLoaded('currency') && $this->currency,
                 new CurrencyResource($this->currency)),
-            'rate' => $this->rate,
+            'rate' => $this->rate !== null ? (float) $this->rate : null,
             'note' => $this->note,
             'created_at' => $this->created_at?->toISOString(),
         ];

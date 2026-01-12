@@ -40,6 +40,7 @@ class AddTransactionReady extends AddTransactionState {
   final int? fromWalletId; // For transfer
   final int? toWalletId; // For transfer
   final String amount; // For income/expense/transfer
+  final String exchangeAmount; // For exchange (destination amount in different currency)
   final double? feePercentage; // For transfer fee (0, 0.5, 1.0, or custom)
   final String customFeeValue; // For custom fee percentage input
   final int? categoryId;
@@ -56,6 +57,7 @@ class AddTransactionReady extends AddTransactionState {
     this.fromWalletId,
     this.toWalletId,
     this.amount = '',
+    this.exchangeAmount = '',
     this.feePercentage,
     this.customFeeValue = '',
     this.categoryId,
@@ -76,6 +78,7 @@ class AddTransactionReady extends AddTransactionState {
     int? toWalletId,
     bool clearToWalletId = false,
     String? amount,
+    String? exchangeAmount,
     double? feePercentage,
     bool clearFeePercentage = false,
     String? customFeeValue,
@@ -94,6 +97,7 @@ class AddTransactionReady extends AddTransactionState {
       fromWalletId: clearFromWalletId ? null : (fromWalletId ?? this.fromWalletId),
       toWalletId: clearToWalletId ? null : (toWalletId ?? this.toWalletId),
       amount: amount ?? this.amount,
+      exchangeAmount: exchangeAmount ?? this.exchangeAmount,
       feePercentage: clearFeePercentage ? null : (feePercentage ?? this.feePercentage),
       customFeeValue: customFeeValue ?? this.customFeeValue,
       categoryId: clearCategoryId ? null : (categoryId ?? this.categoryId),
@@ -113,6 +117,7 @@ class AddTransactionReady extends AddTransactionState {
         fromWalletId,
         toWalletId,
         amount,
+        exchangeAmount,
         feePercentage,
         customFeeValue,
         categoryId,

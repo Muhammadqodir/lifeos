@@ -33,13 +33,13 @@ class FinanceApiClient {
   }
 
   /// Get wallet balance by ID
-  Future<String> getWalletBalance(int walletId) async {
+  Future<double> getWalletBalance(int walletId) async {
     try {
       final response = await dio.get('$baseUrl/wallets/$walletId/balance');
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
-        return data['balance'] as String;
+        return (data['balance'] as num?)?.toDouble() ?? 0.0;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -100,29 +100,98 @@ class FinanceApiClient {
   }
 
   /// Get finance summary
-  /// TODO: Replace with actual endpoint when API provides a summary endpoint
-  /// For now, this is a placeholder that computes total from wallets
+  /// Computes total balance converted to user's default currency
   Future<FinanceSummaryDto> getFinanceSummary() async {
     try {
-      // TODO: Replace this with actual API call when endpoint is available
-      // Placeholder: compute from wallets
-      final wallets = await getWallets();
+      // Get user's default currency from finance settings
+      final settings = await getFinanceSettings();
+      final baseCurrencyData = settings['base_currency'] as Map<String, dynamic>?;
       
-      // For now, return a simple computed total
-      // This should be replaced with proper API endpoint
-      double total = 0.0;
-      String baseCurrency = 'USD'; // Default fallback
+      if (baseCurrencyData == null) {
+        // No default currency set, return 0
+        return const FinanceSummaryDto(
+          totalBalance: 0.0,
+          currencyCode: 'USD',
+        );
+      }
+
+      final baseCurrency = CurrencyDto.fromJson(baseCurrencyData);
       
+      // Get all wallets with balances
+      final response = await dio.get('$baseUrl/wallets?with_balances=true');
+      
+      if (response.statusCode != 200) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+
+      final walletsJson = response.data['data'] as List<dynamic>;
+      final wallets = walletsJson.map((json) => WalletDto.fromJson(json as Map<String, dynamic>)).toList();
+
+      if (wallets.isEmpty) {
+        return FinanceSummaryDto(
+          totalBalance: 0.0,
+          currencyCode: baseCurrency.code,
+        );
+      }
+
+      // Group wallets by currency to minimize API calls
+      final walletsByCurrency = <String, List<WalletDto>>{};
       for (final wallet in wallets) {
-        if (wallet.balance != null) {
-          total += double.tryParse(wallet.balance!) ?? 0.0;
-          baseCurrency = wallet.currency.code; // Use first wallet's currency
+        if (wallet.balance != null && wallet.balance! > 0) {
+          walletsByCurrency.putIfAbsent(wallet.currency.code, () => []).add(wallet);
+        }
+      }
+
+      // Calculate total in base currency
+      double totalInBaseCurrency = 0.0;
+
+      for (final entry in walletsByCurrency.entries) {
+        final currencyCode = entry.key;
+        final walletsInCurrency = entry.value;
+        
+        // Sum balances in this currency
+        final sumInCurrency = walletsInCurrency.fold<double>(
+          0.0,
+          (sum, wallet) => sum + (wallet.balance ?? 0.0),
+        );
+
+        // Convert to base currency
+        if (currencyCode == baseCurrency.code) {
+          // Same currency, no conversion needed
+          totalInBaseCurrency += sumInCurrency;
+        } else {
+          // Different currency, need to convert using FX rates
+          try {
+            final fxResponse = await dio.get(
+              '$baseUrl/fx/rates',
+              queryParameters: {
+                'origin': currencyCode,
+                'target': baseCurrency.code,
+              },
+            );
+
+            if (fxResponse.statusCode == 200) {
+              final rates = fxResponse.data['data']['rates'] as Map<String, dynamic>;
+              final rate = (rates[baseCurrency.code] as num?)?.toDouble() ?? 1.0;
+              totalInBaseCurrency += sumInCurrency * rate;
+            } else {
+              // If conversion fails, skip this currency
+              // In production, you might want to handle this differently
+              print('Failed to get FX rate for $currencyCode to ${baseCurrency.code}');
+            }
+          } catch (e) {
+            // If FX rate fetch fails, skip this currency
+            print('Error fetching FX rate for $currencyCode: $e');
+          }
         }
       }
 
       return FinanceSummaryDto(
-        totalBalance: total.toStringAsFixed(2),
-        currencyCode: baseCurrency,
+        totalBalance: totalInBaseCurrency,
+        currencyCode: baseCurrency.code,
       );
     } catch (e) {
       throw _handleError(e);
@@ -180,6 +249,22 @@ class FinanceApiClient {
     }
   }
 
+  /// Delete a wallet
+  Future<void> deleteWallet(int walletId) async {
+    try {
+      final response = await dio.delete('$baseUrl/wallets/$walletId');
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   /// Get transaction categories
   Future<List<TransactionCategoryDto>> getTransactionCategories({
     String? type,
@@ -195,7 +280,9 @@ class FinanceApiClient {
 
       if (response.statusCode == 200) {
         final data = response.data['data'] as List;
-        return data.map((json) => TransactionCategoryDto.fromJson(json)).toList();
+        return data
+            .map((json) => TransactionCategoryDto.fromJson(json))
+            .toList();
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -240,8 +327,8 @@ class FinanceApiClient {
     if (error is DioException) {
       if (error.response != null) {
         final statusCode = error.response!.statusCode;
-        final message = error.response!.data['message'] as String? ??
-            'An error occurred';
+        final message =
+            error.response!.data['message'] as String? ?? 'An error occurred';
 
         switch (statusCode) {
           case 401:
@@ -295,7 +382,7 @@ class FinanceApiClient {
         '$baseUrl/analytics',
         queryParameters: queryParameters.isNotEmpty ? queryParameters : null,
       );
-      
+
       if (response.statusCode == 200) {
         final data = response.data['data'];
         print(data);
@@ -306,7 +393,7 @@ class FinanceApiClient {
           response: response,
         );
       }
-    } catch (e ,s) {
+    } catch (e, s) {
       print("Analytics API error: $e");
       print("Stack trace: $s");
       if (e is DioException && e.response != null) {
@@ -342,9 +429,7 @@ class FinanceApiClient {
     try {
       final response = await dio.patch(
         '$baseUrl/user/finance-settings',
-        data: {
-          'base_currency_id': baseCurrencyId,
-        },
+        data: {'base_currency_id': baseCurrencyId},
       );
 
       if (response.statusCode == 200) {
@@ -384,9 +469,7 @@ class FinanceApiClient {
     try {
       final response = await dio.post(
         '$baseUrl/user/currencies',
-        data: {
-          'currency_id': currencyId,
-        },
+        data: {'currency_id': currencyId},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -429,12 +512,7 @@ class FinanceApiClient {
     try {
       final response = await dio.post(
         '$baseUrl/transaction-categories',
-        data: {
-          'title': title,
-          'type': type,
-          'icon': icon,
-          'color': color,
-        },
+        data: {'title': title, 'type': type, 'icon': icon, 'color': color},
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -454,7 +532,9 @@ class FinanceApiClient {
   /// Delete a transaction category
   Future<void> deleteCategory(int categoryId) async {
     try {
-      final response = await dio.delete('$baseUrl/transaction-categories/$categoryId');
+      final response = await dio.delete(
+        '$baseUrl/transaction-categories/$categoryId',
+      );
 
       if (response.statusCode != 204 && response.statusCode != 200) {
         throw DioException(

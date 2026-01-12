@@ -50,6 +50,7 @@ Route::prefix('v1')->group(function () {
         Route::get('currencies/{currency}', [CurrencyController::class, 'show']);
 
         // Wallets
+        Route::get('wallets-with-balances', [WalletController::class, 'indexWithBalances']);
         Route::apiResource('wallets', WalletController::class);
         Route::get('wallets/{wallet}/balance', [WalletController::class, 'balance']);
 

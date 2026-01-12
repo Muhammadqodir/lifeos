@@ -1,4 +1,5 @@
 import 'package:lifeos_client/core/widgets/selectable_group.dart';
+import 'package:lifeos_client/features/finance/data/datasources/constants.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,32 +36,6 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
   int? _selectedCurrencyId;
   WalletType _selectedWalletType = WalletType.card;
   bool _isActive = true;
-
-  String _getWalletTypeName(WalletType type) {
-    switch (type) {
-      case WalletType.card:
-        return 'Card';
-      case WalletType.bankAccount:
-        return 'Bank Account';
-      case WalletType.cash:
-        return 'Cash';
-      case WalletType.other:
-        return 'Other';
-    }
-  }
-
-  dynamic _getWalletTypeIcon(WalletType type) {
-    switch (type) {
-      case WalletType.card:
-        return HugeIcons.strokeRoundedCreditCard;
-      case WalletType.bankAccount:
-        return HugeIcons.strokeRoundedBank;
-      case WalletType.cash:
-        return HugeIcons.strokeRoundedMoneyBag01;
-      case WalletType.other:
-        return HugeIcons.strokeRoundedWallet03;
-    }
-  }
 
   void _handleFormSubmit(BuildContext context) {
     // Validate wallet name
@@ -222,6 +197,7 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                       TextField(
                         initialValue: _walletName,
                         placeholder: const Text('e.g., My Cash Wallet'),
+                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
                         onChanged: (value) {
                           setState(() {
                             _walletName = value;
@@ -303,12 +279,14 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                             widget: Row(
                               children: [
                                 HugeIcon(
-                                  icon: _getWalletTypeIcon(type),
+                                  icon: FinanceConstants.getWalletTypeIcon(
+                                    type,
+                                  ),
                                   size: 18,
                                 ),
                                 const SizedBox(width: 4),
                                 Text(
-                                  _getWalletTypeName(type),
+                                  FinanceConstants.getWalletTypeName(type),
                                   style: Theme.of(context).typography.small,
                                 ),
                               ],

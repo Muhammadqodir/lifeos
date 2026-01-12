@@ -3,9 +3,9 @@ import 'category_summary_dto.dart';
 
 /// Analytics summary data for a given period
 class AnalyticsSummaryDto extends Equatable {
-  final String totalIncome;
-  final String totalExpense;
-  final String netAmount;
+  final double totalIncome;
+  final double totalExpense;
+  final double netAmount;
   final String currencyCode;
   final String currencyIcon;
   final DateTime periodStart;
@@ -36,9 +36,9 @@ class AnalyticsSummaryDto extends Equatable {
         [];
 
     return AnalyticsSummaryDto(
-      totalIncome: json['total_income'] as String? ?? '0',
-      totalExpense: json['total_expense'] as String? ?? '0',
-      netAmount: json['net_amount'] as String? ?? '0',
+      totalIncome: (json['total_income'] as num?)?.toDouble() ?? 0.0,
+      totalExpense: (json['total_expense'] as num?)?.toDouble() ?? 0.0,
+      netAmount: (json['net_amount'] as num?)?.toDouble() ?? 0.0,
       // Backend currently returns currency_icon; currency_code may be absent
       currencyCode: json['currency_code'] as String? ?? 'USD',
       currencyIcon: json['currency_icon'] as String? ?? '\$',

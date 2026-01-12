@@ -74,7 +74,7 @@ class AnalyticsSummaryCard extends StatelessWidget {
                 MoneyText(
                   amount: analytics.netAmount,
                   currencyCode: analytics.currencyIcon,
-                  color: analytics.netAmount.startsWith('-')
+                  color: analytics.netAmount < 0
                       ? Colors.red.shade600
                       : Colors.green.shade600,
                 ),

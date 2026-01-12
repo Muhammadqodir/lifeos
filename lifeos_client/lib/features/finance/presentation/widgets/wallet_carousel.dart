@@ -1,4 +1,5 @@
 import 'package:hugeicons/hugeicons.dart';
+import 'package:lifeos_client/core/widgets/tappable.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../../data/models/wallet_dto.dart';
 import 'wallet_card.dart';
@@ -6,15 +7,16 @@ import 'wallet_card.dart';
 class WalletCarousel extends StatelessWidget {
   final List<WalletDto> wallets;
   final Function(int walletId)? onWalletTap;
-  final VoidCallback? onAddWallet;
+  final VoidCallback onAddWallet;
+  final VoidCallback onManageWallet;
 
   const WalletCarousel({
     super.key,
     required this.wallets,
     this.onWalletTap,
-    this.onAddWallet,
+    required this.onAddWallet,
+    required this.onManageWallet,
   });
-
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -26,39 +28,65 @@ class WalletCarousel extends StatelessWidget {
         itemCount: wallets.length + 1, // +1 for the add card button
         separatorBuilder: (context, index) => const SizedBox(width: 12),
         itemBuilder: (context, index) {
-          // Add card button at the end
-          if (index == wallets.length) {
-            return _buildAddCardButton(context);
+          // Add card button at the start
+          if (index == 0) {
+            return _buildActions(context);
           }
-          
-          final wallet = wallets[index];
+
+          final wallet = wallets[index - 1];
           return WalletCard(
             wallet: wallet,
-            onTap: onWalletTap != null
-                ? () => onWalletTap!(wallet.id)
-                : null,
+            onTap: onWalletTap != null ? () => onWalletTap!(wallet.id) : null,
           );
         },
       ),
     );
   }
 
-  Widget _buildAddCardButton(BuildContext context) {
-    return GestureDetector(
-      onTap: onAddWallet,
-      child: Card(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            HugeIcon(icon: HugeIcons.strokeRoundedAdd01, size: 32,),
-            const SizedBox(height: 8),
-            Text(
-              'Add Wallet',
-              style: Theme.of(context).typography.small
+  Widget _buildActions(BuildContext context) {
+    return Column(
+      children: [
+        Expanded(
+          child: SizedBox(
+            width: 90,
+            child: Button.secondary(
+              onPressed: onAddWallet,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedAdd01,
+                    size: 18,
+                    strokeWidth: 2,
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Add', style: Theme.of(context).typography.xSmall),
+                ],
+              ),
             ),
-          ],
+          ),
         ),
-      ),
-    );
+        Expanded(
+          child: SizedBox(
+            width: 90,
+            child: Button.secondary(
+              onPressed: onManageWallet,
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedListView,
+                    size: 18,
+                    strokeWidth: 2,
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Manage', style: Theme.of(context).typography.xSmall),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    ).gap(12);
   }
 }

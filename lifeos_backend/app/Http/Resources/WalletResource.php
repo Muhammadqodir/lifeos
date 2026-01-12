@@ -23,6 +23,7 @@ class WalletResource extends JsonResource
                 new CurrencyResource($this->currency)),
             'type' => $this->type,
             'is_active' => $this->is_active,
+            'balance' => $this->when(isset($this->balance), fn() => (float) $this->balance),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

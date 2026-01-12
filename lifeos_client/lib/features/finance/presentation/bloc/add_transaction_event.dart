@@ -63,6 +63,16 @@ class AddTransactionAmountChanged extends AddTransactionEvent {
   List<Object?> get props => [amount];
 }
 
+/// Update exchange amount (destination amount for exchange)
+class AddTransactionExchangeAmountChanged extends AddTransactionEvent {
+  final String exchangeAmount;
+
+  const AddTransactionExchangeAmountChanged(this.exchangeAmount);
+
+  @override
+  List<Object?> get props => [exchangeAmount];
+}
+
 /// Update fee percentage for transfer
 class AddTransactionFeePercentageChanged extends AddTransactionEvent {
   final double? feePercentage;

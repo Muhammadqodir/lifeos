@@ -16,13 +16,13 @@ class TransactionTile extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     // Get first entry for amount display
-    final entry = transaction.entries.isNotEmpty
+    final TransactionEntryDto? entry = transaction.entries.isNotEmpty
         ? transaction.entries.first
         : null;
 
-    final amount = entry?.amount ?? '0';
+    final double amount = entry?.amount ?? 0;
     final currencyCode = entry?.currency.code ?? '';
-    final isPositive = amount.startsWith('-') == false;
+    final isPositive = amount >= 0;
 
     return GestureDetector(
       onTap: onTap,

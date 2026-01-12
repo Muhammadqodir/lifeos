@@ -28,6 +28,7 @@ abstract class FinanceRepository {
     required String type,
     bool isActive = true,
   });
+  Future<void> deleteWallet(int walletId);
   Future<List<TransactionCategoryDto>> getTransactionCategories({
     String? type,
   });

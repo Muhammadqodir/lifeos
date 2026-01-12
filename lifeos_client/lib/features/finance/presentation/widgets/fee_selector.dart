@@ -123,6 +123,7 @@ class _FeeSelectorState extends State<FeeSelector> {
                       keyboardType: const TextInputType.numberWithOptions(
                         decimal: true,
                       ),
+                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
                       onChanged: (value) {
                         widget.onCustomFeeChanged(value);
                         _updateFeeTypeFromValue(value);
@@ -141,7 +142,7 @@ class _FeeSelectorState extends State<FeeSelector> {
   Widget _buildFeeButton(FeeType type) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
-    
+
     // Check if input value matches this button's percentage
     final inputValue = double.tryParse(widget.customFeeValue) ?? 0;
     final buttonValue = type.percentage;

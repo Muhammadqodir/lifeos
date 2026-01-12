@@ -19,6 +19,7 @@ class AddTransactionBloc
     on<AddTransactionFromWalletChanged>(_onFromWalletChanged);
     on<AddTransactionToWalletChanged>(_onToWalletChanged);
     on<AddTransactionAmountChanged>(_onAmountChanged);
+    on<AddTransactionExchangeAmountChanged>(_onExchangeAmountChanged);
     on<AddTransactionFeePercentageChanged>(_onFeePercentageChanged);
     on<AddTransactionCustomFeeValueChanged>(_onCustomFeeValueChanged);
     on<AddTransactionCategoryChanged>(_onCategoryChanged);
@@ -33,7 +34,7 @@ class AddTransactionBloc
   ) async {
     emit(const AddTransactionLoadingData());
     try {
-      final wallets = await financeRepository.getWallets();
+      final wallets = await financeRepository.getWalletsWithBalances();
       final incomeCategories =
           await financeRepository.getTransactionCategories(type: 'income');
       final expenseCategories =
@@ -74,6 +75,7 @@ class AddTransactionBloc
           clearToWalletId: true,
           clearFeePercentage: true,
           customFeeValue: '',
+          exchangeAmount: '',
         );
       } else {
         // For transfer: clear category, reset fee fields
@@ -86,6 +88,7 @@ class AddTransactionBloc
           clearWalletId: true,
           clearFeePercentage: true,
           customFeeValue: '',
+          exchangeAmount: '',
         );
       }
       
@@ -131,6 +134,16 @@ class AddTransactionBloc
     if (state is AddTransactionReady) {
       final currentState = state as AddTransactionReady;
       emit(_validateState(currentState.copyWith(amount: event.amount)));
+    }
+  }
+
+  void _onExchangeAmountChanged(
+    AddTransactionExchangeAmountChanged event,
+    Emitter<AddTransactionState> emit,
+  ) {
+    if (state is AddTransactionReady) {
+      final currentState = state as AddTransactionReady;
+      emit(_validateState(currentState.copyWith(exchangeAmount: event.exchangeAmount)));
     }
   }
 
@@ -207,6 +220,23 @@ class AddTransactionBloc
             state.fromWalletId != state.toWalletId &&
             state.amount.isNotEmpty &&
             _isValidAmount(state.amount);
+        
+        // Check if it's an exchange (different currencies)
+        if (isValid) {
+          final fromWallet = state.wallets
+              .where((w) => w.id == state.fromWalletId)
+              .firstOrNull;
+          final toWallet = state.wallets
+              .where((w) => w.id == state.toWalletId)
+              .firstOrNull;
+          
+          if (fromWallet != null && toWallet != null &&
+              fromWallet.currencyId != toWallet.currencyId) {
+            // Different currencies - need exchange amount
+            isValid = state.exchangeAmount.isNotEmpty &&
+                _isValidAmount(state.exchangeAmount);
+          }
+        }
         
         // Validate custom fee if set
         if (isValid && state.feePercentage == null && state.customFeeValue.isNotEmpty) {
@@ -285,37 +315,62 @@ class AddTransactionBloc
         final toWallet =
             state.wallets.firstWhere((w) => w.id == state.toWalletId);
 
-        entries.add(CreateTransactionEntryDto(
-          walletId: state.fromWalletId!,
-          amount: '-${state.amount}',
-          currencyId: fromWallet.currencyId,
-        ));
+        // Check if currencies are different (exchange)
+        final isDifferentCurrency = fromWallet.currencyId != toWallet.currencyId;
 
-        entries.add(CreateTransactionEntryDto(
-          walletId: state.toWalletId!,
-          amount: state.amount,
-          currencyId: toWallet.currencyId,
-        ));
+        if (isDifferentCurrency) {
+          // Exchange transaction
+          final fromAmount = double.parse(state.amount);
+          final toAmount = double.parse(state.exchangeAmount);
+          final rate = toAmount / fromAmount;
 
-        // Add fee entry if applicable
-        if (state.feePercentage != null && state.feePercentage! > 0) {
-          final feeAmount = (double.parse(state.amount) * state.feePercentage! / 100).toStringAsFixed(2);
           entries.add(CreateTransactionEntryDto(
             walletId: state.fromWalletId!,
-            amount: '-$feeAmount',
+            amount: '-${state.amount}',
             currencyId: fromWallet.currencyId,
-            note: 'Transfer fee (${state.feePercentage}%)',
+            rate: rate.toString(),
           ));
-        } else if (state.customFeeValue.isNotEmpty) {
-          final customFee = double.tryParse(state.customFeeValue);
-          if (customFee != null && customFee > 0) {
-            final feeAmount = (double.parse(state.amount) * customFee / 100).toStringAsFixed(2);
+
+          entries.add(CreateTransactionEntryDto(
+            walletId: state.toWalletId!,
+            amount: state.exchangeAmount,
+            currencyId: toWallet.currencyId,
+            rate: rate.toString(),
+          ));
+        } else {
+          // Regular transfer (same currency)
+          entries.add(CreateTransactionEntryDto(
+            walletId: state.fromWalletId!,
+            amount: '-${state.amount}',
+            currencyId: fromWallet.currencyId,
+          ));
+
+          entries.add(CreateTransactionEntryDto(
+            walletId: state.toWalletId!,
+            amount: state.amount,
+            currencyId: toWallet.currencyId,
+          ));
+
+          // Add fee entry if applicable (only for same currency transfers)
+          if (state.feePercentage != null && state.feePercentage! > 0) {
+            final feeAmount = (double.parse(state.amount) * state.feePercentage! / 100).toStringAsFixed(2);
             entries.add(CreateTransactionEntryDto(
               walletId: state.fromWalletId!,
               amount: '-$feeAmount',
               currencyId: fromWallet.currencyId,
-              note: 'Transfer fee ($customFee%)',
+              note: 'Transfer fee (${state.feePercentage}%)',
             ));
+          } else if (state.customFeeValue.isNotEmpty) {
+            final customFee = double.tryParse(state.customFeeValue);
+            if (customFee != null && customFee > 0) {
+              final feeAmount = (double.parse(state.amount) * customFee / 100).toStringAsFixed(2);
+              entries.add(CreateTransactionEntryDto(
+                walletId: state.fromWalletId!,
+                amount: '-$feeAmount',
+                currencyId: fromWallet.currencyId,
+                note: 'Transfer fee ($customFee%)',
+              ));
+            }
           }
         }
         break;
@@ -325,9 +380,22 @@ class AddTransactionBloc
         break;
     }
 
+    // Determine actual transaction type
+    String transactionType = state.type.toJson();
+    if (state.type == TransactionType.transfer) {
+      final fromWallet =
+          state.wallets.firstWhere((w) => w.id == state.fromWalletId);
+      final toWallet =
+          state.wallets.firstWhere((w) => w.id == state.toWalletId);
+      
+      if (fromWallet.currencyId != toWallet.currencyId) {
+        transactionType = 'exchange';
+      }
+    }
+
     return CreateTransactionRequestDto(
       clientId: _generateUuid(),
-      type: state.type.toJson(),
+      type: transactionType,
       categoryId: state.categoryId,
       description:
           state.description.isEmpty ? null : state.description,

@@ -73,9 +73,9 @@ class AnalyticsController extends Controller
         $expenseByCategory = $this->groupByCategory($expenseTransactions);
 
         return new AnalyticsResource([
-            'total_income' => number_format($totalIncome, 2, '.', ''),
-            'total_expense' => number_format($totalExpense, 2, '.', ''),
-            'net_amount' => number_format($netAmount, 2, '.', ''),
+            'total_income' => (float) $totalIncome,
+            'total_expense' => (float) $totalExpense,
+            'net_amount' => (float) $netAmount,
             'currency_icon' => $currencyIcon,
             'date_from' => $request->date_from,
             'date_to' => $request->date_to,
@@ -111,7 +111,7 @@ class AnalyticsController extends Controller
                 'category_title' => $category?->title ?? 'Uncategorized',
                 'category_icon' => $category?->icon ?? 'default',
                 'category_color' => $category?->color ?? '#000000',
-                'total_amount' => number_format($totalAmount, 2, '.', ''),
+                'total_amount' => (float) $totalAmount,
                 'transaction_count' => $categoryTransactions->count(),
             ];
         })->values()->toArray();

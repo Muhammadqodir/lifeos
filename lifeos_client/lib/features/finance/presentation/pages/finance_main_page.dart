@@ -1,7 +1,9 @@
+import 'package:flutter/cupertino.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/add_transaction_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/analytics_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/finance_settings_page.dart';
 import 'package:lifeos_client/core/widgets/loading_state.dart';
+import 'package:lifeos_client/features/finance/presentation/pages/manage_wallets.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -144,6 +146,10 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
                 onAddWallet: () {
                   _navigateToAddWallet(context);
                 },
+                onManageWallet: () {
+                  _navigateToManageWallet(context);
+                },
+
                 onWalletTap: (walletId) {
                   // TODO: Navigate to wallet details
                   _showComingSoonToast(context, 'Wallet Details #$walletId');
@@ -219,7 +225,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
                           )
                         : Text(
                             'No more transactions',
-                            style: TextStyle(
+                            style: Theme.of(context).typography.small.copyWith(
                               color: colorScheme.mutedForeground,
                             ),
                           ),
@@ -256,9 +262,9 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
 
   /// Navigate to Add Transaction page
   Future<void> _navigateToAddTransaction(BuildContext context) async {
-    final result = await Navigator.of(
-      context,
-    ).push<bool>(MaterialPageRoute(builder: (_) => const AddTransactionPage()));
+    final result = await Navigator.of(context).push<bool>(
+      MaterialPageRoute(builder: (_) => const AddTransactionPage()),
+    );
 
     // If wallet was created successfully, refresh the page
     if (result == true && context.mounted) {
@@ -270,6 +276,17 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
     final result = await Navigator.of(
       context,
     ).push<bool>(MaterialPageRoute(builder: (_) => const AddWalletPage()));
+
+    // If wallet was created successfully, refresh the page
+    if (result == true && context.mounted) {
+      context.read<FinanceHomeBloc>().add(const FinanceHomeRefreshed());
+    }
+  }
+
+  Future<void> _navigateToManageWallet(BuildContext context) async {
+    final result = await Navigator.of(
+      context,
+    ).push<bool>(MaterialPageRoute(builder: (_) => const ManageWalletsPage()));
 
     // If wallet was created successfully, refresh the page
     if (result == true && context.mounted) {
