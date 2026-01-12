@@ -72,9 +72,9 @@ class _ExerciseSetsState extends State<ExerciseSets> {
                   size: ButtonSize.small,
                   onPressed: () async {
                     bool? confirmed = await Dialogs.showConfirmDialog(
-                      context,
-                      'Confirm Delete',
-                      'Are you sure you want to delete this exercise?',
+                      context: context,
+                      title: 'Confirm Delete',
+                      message: 'Are you sure you want to delete this exercise?',
                     );
                     if (confirmed == true) {
                       if (mounted) {

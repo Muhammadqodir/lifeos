@@ -8,6 +8,7 @@ import 'package:lifeos_client/features/health/presentation/bloc/workout_state.da
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_selection_sheet.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_sets.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
+import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/modal.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -35,31 +36,18 @@ class _WorkoutPageState extends State<WorkoutPage> {
   }
 
   Future<void> _confirmCancel(BuildContext context) async {
-    final bool? confirmed = await showDialog<bool>(
+    final bool? confirmed = await Dialogs.showConfirmDialog(
       context: context,
-      builder: (context) {
-        return AlertDialog(
-          title: const Text('Cancel Workout'),
-          content: const Text(
-            'Are you sure you want to cancel the workout? Your progress will not be saved.',
-          ),
-          actions: [
-            OutlineButton(
-              child: const Text('Cancel'),
-              onPressed: () => Navigator.pop(context, true),
-            ),
-            PrimaryButton(
-              child: const Text('Continue'),
-              onPressed: () => Navigator.pop(context, false),
-            ),
-          ],
-        );
-      },
+      title: 'Cancel Workout',
+      message:
+          'Are you sure you want to cancel the workout? Your progress will not be saved.',
     );
 
-    if (mounted && (confirmed ?? false)) {
-      context.read<WorkoutBloc>().add(CancelWorkout());
-      Navigator.of(context).pop();
+    if (confirmed == true) {
+      if (context.mounted) {
+        context.read<WorkoutBloc>().add(CancelWorkout());
+        Navigator.of(context).pop();
+      }
     }
   }
 

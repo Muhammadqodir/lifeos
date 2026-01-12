@@ -2,7 +2,10 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/config/app_config.dart';
 import 'package:lifeos_client/core/theme/app_colors.dart';
 import 'package:lifeos_client/features/health/data/models/exercise_dto.dart';
-import 'package:lifeos_client/features/health/presentation/widgets/delete_exercise_dialog.dart';
+import 'package:lifeos_client/features/health/presentation/bloc/exercise_bloc.dart';
+import 'package:lifeos_client/features/health/presentation/bloc/exercise_event.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class ExerciseCard extends StatelessWidget {
@@ -94,5 +97,23 @@ class ExerciseCard extends StatelessWidget {
         ],
       ),
     );
+  }
+
+  void showDeleteExerciseDialog(
+    BuildContext context,
+    ExerciseDto exercise,
+  ) async {
+    bool? confirmed = await Dialogs.showConfirmDialog(
+      context: context,
+      title: 'Delete Exercise',
+      message:
+          'Are you sure you want to delete "${exercise.name}"? This action cannot be undone.',
+    );
+
+    if (confirmed == true) {
+      if (context.mounted) {
+        context.read<ExerciseBloc>().add(DeleteExercise(exercise.id));
+      }
+    }
   }
 }

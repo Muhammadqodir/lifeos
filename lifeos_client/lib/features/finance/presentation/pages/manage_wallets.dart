@@ -3,6 +3,7 @@ import 'package:lifeos_client/core/theme/app_colors.dart';
 import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:lifeos_client/features/finance/data/datasources/constants.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/add_wallet_page.dart';
+import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -35,31 +36,20 @@ class _ManageWalletsPageContent extends StatefulWidget {
 }
 
 class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
-  void _showDeleteConfirmation(BuildContext context, WalletDto wallet) {
-    showDialog(
+  void _showDeleteConfirmation(BuildContext context, WalletDto wallet) async {
+    bool? confirmed = await Dialogs.showConfirmDialog(
+      title: 'Delete Wallet',
+      message: 'Are you sure you want to delete "${wallet.name}"?',
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Wallet'),
-        content: Text(
-          'Are you sure you want to delete "${wallet.name}"? This action cannot be undone.',
-        ),
-        actions: [
-          SecondaryButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          DestructiveButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              context.read<ManageWalletsBloc>().add(
-                ManageWalletsDelete(walletId: wallet.id),
-              );
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
     );
+
+    if (confirmed == true) {
+      if (context.mounted) {
+        context.read<ManageWalletsBloc>().add(
+          ManageWalletsDelete(walletId: wallet.id),
+        );
+      }
+    }
   }
 
   @override

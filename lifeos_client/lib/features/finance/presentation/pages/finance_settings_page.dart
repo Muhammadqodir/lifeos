@@ -1,5 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lifeos_client/core/widgets/category_icon.dart';
+import 'package:lifeos_client/utils/dialogs.dart';
+import 'package:lifeos_client/utils/modal.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
@@ -556,35 +558,24 @@ class _FinanceSettingsPageContent extends StatelessWidget {
     );
   }
 
-  void _confirmRemoveCurrency(BuildContext context, CurrencyDto currency) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: Text(
-          'Remove Currency',
-          style: Theme.of(context).typography.base,
-        ),
-        content: Text(
+  void _confirmRemoveCurrency(
+    BuildContext context,
+    CurrencyDto currency,
+  ) async {
+    bool? confirmed = await Dialogs.showConfirmDialog(
+      title: 'Remove Currency',
+      message:
           'Are you sure you want to remove ${currency.code} from your currencies?',
-          style: Theme.of(context).typography.small,
-        ),
-        actions: [
-          SecondaryButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          DestructiveButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              context.read<FinanceSettingsBloc>().add(
-                FinanceSettingsRemoveCurrency(currency.id),
-              );
-            },
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+      context: context,
     );
+
+    if (confirmed == true) {
+      if (context.mounted) {
+        context.read<FinanceSettingsBloc>().add(
+          FinanceSettingsRemoveCurrency(currency.id),
+        );
+      }
+    }
   }
 
   void _showAddCategoryDialog(BuildContext context) {
@@ -595,125 +586,140 @@ class _FinanceSettingsPageContent extends StatelessWidget {
     // Capture the bloc before showing the dialog
     final bloc = context.read<FinanceSettingsBloc>();
 
-    showDialog(
+    BottomSheetModal.openSheet(
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) {
           String selectedType = 'expense';
 
-          return AlertDialog(
-            title: Text(
-              'Add Category',
-              style: Theme.of(dialogContext).typography.base,
+          return SingleChildScrollView(
+            physics: AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
             ),
-            content: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                TextField(
-                  controller: nameController,
-                  placeholder: const Text('Category name'),
-                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                ),
-                const SizedBox(height: 16),
-                Text('Type:', style: Theme.of(dialogContext).typography.small),
-                const SizedBox(height: 8),
-                SelectableGroup<String>(
-                  initialValue: selectedType,
-                  options: [
-                    SelectableGroupOption(
-                      value: 'expense',
-                      widget: Row(
-                        children: [
-                          HugeIcon(
-                            icon: HugeIcons.strokeRoundedArrowDown01,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Expense',
-                            style: Theme.of(dialogContext).typography.small,
-                          ),
-                        ],
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Add Category',
+                    style: Theme.of(
+                      context,
+                    ).typography.large.copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 24),
+                  Text(
+                    'Category Name:',
+                    style: Theme.of(dialogContext).typography.small,
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    controller: nameController,
+                    placeholder: const Text('Category name'),
+                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Type:',
+                    style: Theme.of(dialogContext).typography.small,
+                  ),
+                  const SizedBox(height: 8),
+                  SelectableGroup<String>(
+                    initialValue: selectedType,
+                    options: [
+                      SelectableGroupOption(
+                        value: 'expense',
+                        widget: Row(
+                          children: [
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedArrowDown01,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Expense',
+                              style: Theme.of(dialogContext).typography.small,
+                            ),
+                          ],
+                        ),
+                      ),
+                      SelectableGroupOption(
+                        value: 'income',
+                        widget: Row(
+                          children: [
+                            HugeIcon(
+                              icon: HugeIcons.strokeRoundedArrowUp01,
+                              size: 18,
+                            ),
+                            const SizedBox(width: 8),
+                            Text(
+                              'Income',
+                              style: Theme.of(dialogContext).typography.small,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedType = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Icon (emoji):',
+                    style: Theme.of(dialogContext).typography.small,
+                  ),
+                  const SizedBox(height: 8),
+                  TextField(
+                    initialValue: selectedIcon,
+                    maxLength: 1,
+                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
+                    placeholder: const Text('Enter emoji'),
+                    onChanged: (value) => selectedIcon = value,
+                  ),
+                  const SizedBox(height: 16),
+                  Text(
+                    'Color:',
+                    style: Theme.of(dialogContext).typography.small,
+                  ),
+                  const SizedBox(height: 8),
+                  ColorSelector(
+                    initialColor: selectedColor,
+                    onChanged: (value) {
+                      setState(() {
+                        selectedColor = value;
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 24),
+                  SizedBox(
+                    width: double.infinity,
+                    child: PrimaryButton(
+                      onPressed: () {
+                        if (nameController.text.isNotEmpty) {
+                          Navigator.of(dialogContext).pop();
+                          bloc.add(
+                            FinanceSettingsAddCategory(
+                              title: nameController.text,
+                              type: selectedType,
+                              icon: selectedIcon,
+                              color: selectedColor,
+                            ),
+                          );
+                        }
+                      },
+                      child: Text(
+                        'Add',
+                        style: Theme.of(dialogContext).typography.small,
                       ),
                     ),
-                    SelectableGroupOption(
-                      value: 'income',
-                      widget: Row(
-                        children: [
-                          HugeIcon(
-                            icon: HugeIcons.strokeRoundedArrowUp01,
-                            size: 18,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Income',
-                            style: Theme.of(dialogContext).typography.small,
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                  onChanged: (value) {
-                    setState(() {
-                      selectedType = value;
-                    });
-                  },
-                ),
-                const SizedBox(height: 16),
-                Text(
-                  'Icon (emoji):',
-                  style: Theme.of(dialogContext).typography.small,
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  initialValue: selectedIcon,
-                  maxLength: 1,
-                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                  placeholder: const Text('Enter emoji'),
-                  onChanged: (value) => selectedIcon = value,
-                ),
-                const SizedBox(height: 16),
-                Text('Color:', style: Theme.of(dialogContext).typography.small),
-                const SizedBox(height: 8),
-                ColorSelector(
-                  initialColor: selectedColor,
-                  onChanged: (value) {
-                    setState(() {
-                      selectedColor = value;
-                    });
-                  },
-                ),
-              ],
+                  ),
+                ],
+              ),
             ),
-            actions: [
-              SecondaryButton(
-                onPressed: () => Navigator.of(dialogContext).pop(),
-                child: Text(
-                  'Cancel',
-                  style: Theme.of(dialogContext).typography.small,
-                ),
-              ),
-              PrimaryButton(
-                onPressed: () {
-                  if (nameController.text.isNotEmpty) {
-                    Navigator.of(dialogContext).pop();
-                    bloc.add(
-                      FinanceSettingsAddCategory(
-                        title: nameController.text,
-                        type: selectedType,
-                        icon: selectedIcon,
-                        color: selectedColor,
-                      ),
-                    );
-                  }
-                },
-                child: Text(
-                  'Add',
-                  style: Theme.of(dialogContext).typography.small,
-                ),
-              ),
-            ],
           );
         },
       ),
@@ -723,31 +729,20 @@ class _FinanceSettingsPageContent extends StatelessWidget {
   void _confirmRemoveCategory(
     BuildContext context,
     TransactionCategoryDto category,
-  ) {
-    showDialog(
+  ) async {
+    bool? confirmed = await Dialogs.showConfirmDialog(
+      title: 'Remove Category',
+      message: 'Are you sure you want to remove "${category.title}" category?',
       context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Remove Category'),
-        content: Text(
-          'Are you sure you want to remove "${category.title}" category?',
-        ),
-        actions: [
-          SecondaryButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          DestructiveButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              context.read<FinanceSettingsBloc>().add(
-                FinanceSettingsRemoveCategory(category.id),
-              );
-            },
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
     );
+
+    if (confirmed == true) {
+      if (context.mounted) {
+        context.read<FinanceSettingsBloc>().add(
+          FinanceSettingsRemoveCategory(category.id),
+        );
+      }
+    }
   }
 }
 

@@ -1,11 +1,11 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class Dialogs {
-  static Future<bool?> showConfirmDialog(
-    BuildContext context,
-    String title,
-    String message,
-  ) {
+  static Future<bool?> showConfirmDialog({
+    required BuildContext context,
+    required String title,
+    required String message,
+  }) {
     return showDialog<bool>(
       context: context,
       builder: (dialogContext) {
