@@ -263,7 +263,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
   /// Navigate to Add Transaction page
   Future<void> _navigateToAddTransaction(BuildContext context) async {
     final result = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => const AddTransactionPage()),
+      CupertinoPageRoute(builder: (_) => const AddTransactionPage()),
     );
 
     // If wallet was created successfully, refresh the page
@@ -275,7 +275,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
   Future<void> _navigateToAddWallet(BuildContext context) async {
     final result = await Navigator.of(
       context,
-    ).push<bool>(MaterialPageRoute(builder: (_) => const AddWalletPage()));
+    ).push<bool>(CupertinoPageRoute(builder: (_) => const AddWalletPage()));
 
     // If wallet was created successfully, refresh the page
     if (result == true && context.mounted) {
@@ -286,7 +286,7 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
   Future<void> _navigateToManageWallet(BuildContext context) async {
     final result = await Navigator.of(
       context,
-    ).push<bool>(MaterialPageRoute(builder: (_) => const ManageWalletsPage()));
+    ).push<bool>(CupertinoPageRoute(builder: (_) => const ManageWalletsPage()));
 
     // If wallet was created successfully, refresh the page
     if (result == true && context.mounted) {
@@ -297,14 +297,14 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
   void _navigateToAnalytics(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const AnalyticsPage()),
+      CupertinoPageRoute(builder: (context) => const AnalyticsPage()),
     );
   }
 
   void _navigateToFinanceSettings(BuildContext context) {
     Navigator.push(
       context,
-      MaterialPageRoute(builder: (context) => const FinanceSettingsPage()),
+      CupertinoPageRoute(builder: (context) => const FinanceSettingsPage()),
     );
   }
 

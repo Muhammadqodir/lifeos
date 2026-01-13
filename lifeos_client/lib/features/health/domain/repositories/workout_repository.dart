@@ -1,4 +1,5 @@
 import '../../data/models/exercise_dto.dart';
+import '../../data/models/workout_completion_dto.dart';
 import '../../data/models/workout_session_dto.dart';
 
 abstract class WorkoutRepository {
@@ -27,6 +28,12 @@ abstract class WorkoutRepository {
 
   /// Submit completed workout to server
   Future<WorkoutSessionDto> submitWorkout(WorkoutSessionDto workout);
+
+  /// Submit completed workout with completion data (photo, measurements)
+  Future<WorkoutSessionDto> submitWorkoutWithCompletion(
+    WorkoutSessionDto workout,
+    WorkoutCompletionDto completion,
+  );
 
   /// Clear active workout (cancel)
   Future<void> clearActiveWorkout();

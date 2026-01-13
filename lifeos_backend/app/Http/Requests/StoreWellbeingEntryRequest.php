@@ -14,10 +14,21 @@ class StoreWellbeingEntryRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'date' => ['required', 'date'],
+            'date' => [
+                'required',
+                'date',
+                'unique:wellbeing_entries,date,NULL,id,user_id,' . auth()->id(),
+            ],
             'energy' => ['required', 'integer', 'min:1', 'max:5'],
             'stress' => ['required', 'integer', 'min:1', 'max:5'],
             'note' => ['nullable', 'string'],
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'date.unique' => 'You already have a wellbeing entry for this date. Please choose a different date or edit the existing entry.',
         ];
     }
 }

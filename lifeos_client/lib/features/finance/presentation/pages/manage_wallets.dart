@@ -316,7 +316,7 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
   // Future<void> _navigateToAddWallet(BuildContext context) async {
   //   final result = await Navigator.of(
   //     context,
-  //   ).push<bool>(MaterialPageRoute(builder: (_) => const AddWalletPage()));
+  //   ).push<bool>(CupertinoPageRoute(builder: (_) => const AddWalletPage()));
 
   //   // If wallet was created successfully, refresh the page
   //   if (result == true && context.mounted) {

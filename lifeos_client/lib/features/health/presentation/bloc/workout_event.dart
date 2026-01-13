@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:lifeos_client/features/health/data/models/exercise_dto.dart';
+import 'package:lifeos_client/features/health/data/models/workout_completion_dto.dart';
 
 abstract class WorkoutEvent extends Equatable {
   const WorkoutEvent();
@@ -84,6 +85,15 @@ class RemoveSet extends WorkoutEvent {
 }
 
 class FinishWorkout extends WorkoutEvent {}
+
+class SaveWorkoutCompletion extends WorkoutEvent {
+  final WorkoutCompletionDto completion;
+
+  const SaveWorkoutCompletion(this.completion);
+
+  @override
+  List<Object?> get props => [completion];
+}
 
 class CancelWorkout extends WorkoutEvent {}
 

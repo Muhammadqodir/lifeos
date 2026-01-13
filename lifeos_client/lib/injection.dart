@@ -27,6 +27,8 @@ import 'features/health/domain/repositories/workout_repository.dart';
 import 'features/health/presentation/bloc/health_home_bloc.dart';
 import 'features/health/presentation/bloc/workout_bloc.dart';
 import 'features/health/presentation/bloc/exercise_bloc.dart';
+import 'features/health/presentation/bloc/sleep_entry_bloc.dart';
+import 'features/health/presentation/bloc/wellbeing_entry_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -140,6 +142,14 @@ Future<void> setupDependencies() async {
 
   getIt.registerFactory<HealthHomeBloc>(
     () => HealthHomeBloc(healthRepository: getIt<HealthRepository>()),
+  );
+
+  getIt.registerFactory<SleepEntryBloc>(
+    () => SleepEntryBloc(healthRepository: getIt<HealthRepository>()),
+  );
+
+  getIt.registerFactory<WellbeingEntryBloc>(
+    () => WellbeingEntryBloc(healthRepository: getIt<HealthRepository>()),
   );
 
   getIt.registerSingleton<ThemeBloc>(ThemeBloc(getIt<SharedPreferences>()));

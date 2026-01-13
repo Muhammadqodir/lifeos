@@ -38,6 +38,7 @@ class _ExerciseSetsState extends State<ExerciseSets> {
             child: Row(
               children: [
                 ClipRRect(
+                  borderRadius: BorderRadius.circular(8),
                   child: Image.network(
                     AppConfig.serverBaseUrl +
                         (widget.exercise.exercise?.image ?? ''),

@@ -21,6 +21,7 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
     on<UpdateSet>(_onUpdateSet);
     on<RemoveSet>(_onRemoveSet);
     on<FinishWorkout>(_onFinishWorkout);
+    on<SaveWorkoutCompletion>(_onSaveWorkoutCompletion);
     on<CancelWorkout>(_onCancelWorkout);
     on<UpdateElapsedTime>(_onUpdateElapsedTime);
   }
@@ -227,17 +228,31 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
     FinishWorkout event,
     Emitter<WorkoutState> emit,
   ) async {
+    // This event now just triggers validation and prepares for completion flow
+    // The actual saving happens in SaveWorkoutCompletion
     if (state is! WorkoutInProgress) return;
 
     final currentState = state as WorkoutInProgress;
 
-    // Validate workout before submission
+    // Validate workout before allowing camera/completion
     final validationError = _validateWorkout(currentState.workout);
     if (validationError != null) {
       emit(WorkoutError(validationError));
       emit(currentState);
       return;
     }
+
+    // State stays in WorkoutInProgress to maintain data during camera flow
+    // The UI will navigate to camera page
+  }
+
+  Future<void> _onSaveWorkoutCompletion(
+    SaveWorkoutCompletion event,
+    Emitter<WorkoutState> emit,
+  ) async {
+    if (state is! WorkoutInProgress) return;
+
+    final currentState = state as WorkoutInProgress;
 
     emit(WorkoutLoading());
 
@@ -246,7 +261,10 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
         endedAt: DateTime.now(),
       );
 
-      final savedWorkout = await repository.submitWorkout(completedWorkout);
+      final savedWorkout = await repository.submitWorkoutWithCompletion(
+        completedWorkout,
+        event.completion,
+      );
 
       _stopTimer();
       _workoutStartTime = null;

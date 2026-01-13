@@ -34,6 +34,23 @@ class HealthRepositoryImpl implements HealthRepository {
   }
 
   @override
+  Future<SleepEntryDto> createSleepEntry({
+    required String date,
+    required String sleepStart,
+    required String sleepEnd,
+    required int quality,
+    String? note,
+  }) async {
+    return await apiClient.createSleepEntry(
+      date: date,
+      sleepStart: sleepStart,
+      sleepEnd: sleepEnd,
+      quality: quality,
+      note: note,
+    );
+  }
+
+  @override
   Future<List<WellbeingEntryDto>> getWellbeingEntries({
     DateTime? dateFrom,
     DateTime? dateTo,
@@ -52,6 +69,21 @@ class HealthRepositoryImpl implements HealthRepository {
     return await apiClient.getWellbeingSummary(
       dateFrom: dateFrom,
       dateTo: dateTo,
+    );
+  }
+
+  @override
+  Future<WellbeingEntryDto> createWellbeingEntry({
+    required String date,
+    required int energy,
+    required int stress,
+    String? note,
+  }) async {
+    return await apiClient.createWellbeingEntry(
+      date: date,
+      energy: energy,
+      stress: stress,
+      note: note,
     );
   }
 

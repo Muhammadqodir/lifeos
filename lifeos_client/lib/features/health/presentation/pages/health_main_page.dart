@@ -7,7 +7,7 @@ import 'package:lifeos_client/features/health/presentation/pages/exercises_page.
 import 'package:lifeos_client/features/health/presentation/pages/workout_page.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/injection.dart';
-import 'package:lifeos_client/utils/toast.dart';
+import 'package:lifeos_client/utils/modal.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../../../../core/widgets/empty_state.dart';
 import '../../../../core/widgets/error_state.dart';
@@ -18,6 +18,10 @@ import '../bloc/health_home_state.dart';
 import '../widgets/sleep_chart_card.dart';
 import '../widgets/wellbeing_chart_card.dart';
 import '../widgets/workout_streak_card.dart';
+import '../widgets/add_sleep_entry_sheet.dart';
+import '../bloc/sleep_entry_bloc.dart';
+import '../widgets/add_wellbeing_entry_sheet.dart';
+import '../bloc/wellbeing_entry_bloc.dart';
 
 class GymMainPage extends StatefulWidget {
   const GymMainPage({super.key});
@@ -43,14 +47,30 @@ class _GymMainPageState extends State<GymMainPage> {
                   icon: HugeIcons.strokeRoundedPlay,
                   tooltip: 'Start workout',
                   onTap: () {
-                    _showComingSoonToast(context, 'Start Workout');
+                    Navigator.of(context).push(
+                      CupertinoPageRoute(
+                        builder: (context) {
+                          return MultiBlocProvider(
+                            providers: [
+                              BlocProvider<WorkoutBloc>(
+                                create: (context) => getIt<WorkoutBloc>(),
+                              ),
+                              BlocProvider<ExerciseBloc>(
+                                create: (context) => getIt<ExerciseBloc>(),
+                              ),
+                            ],
+                            child: const WorkoutPage(),
+                          );
+                        },
+                      ),
+                    );
                   },
                 ),
                 AppBarAction(
                   icon: HugeIcons.strokeRoundedChartUp,
                   tooltip: 'Progress',
                   onTap: () {
-                    _showComingSoonToast(context, 'Progress');
+                    // _showComingSoonToast(context, 'Progress');
                   },
                 ),
                 AppBarAction(
@@ -58,7 +78,7 @@ class _GymMainPageState extends State<GymMainPage> {
                   tooltip: 'Workout Settings',
                   onTap: () {
                     Navigator.of(context).push(
-                      MaterialPageRoute(
+                      CupertinoPageRoute(
                         builder: (context) {
                           return MultiBlocProvider(
                             providers: [
@@ -119,7 +139,7 @@ class _GymMainPageState extends State<GymMainPage> {
         ),
         action: PrimaryButton(
           onPressed: () {
-            _showComingSoonToast(context, 'Add Health Entry');
+            // _showComingSoonToast(context, 'Add Health Entry');
           },
           child: const Text('Add Health Entry'),
         ),
@@ -146,7 +166,21 @@ class _GymMainPageState extends State<GymMainPage> {
             child: SleepChartCard(
               sleepSummary: successState.sleepSummary,
               onAddEntry: () {
-                _showComingSoonToast(context, 'Add Sleep Entry');
+                final healthHomeBloc = context.read<HealthHomeBloc>();
+                BottomSheetModal.openSheet(
+                  context: context,
+                  builder: (context) => MultiBlocProvider(
+                    providers: [
+                      BlocProvider<SleepEntryBloc>(
+                        create: (context) => getIt<SleepEntryBloc>(),
+                      ),
+                      BlocProvider<HealthHomeBloc>.value(
+                        value: healthHomeBloc,
+                      ),
+                    ],
+                    child: const AddSleepEntrySheet(),
+                  ),
+                );
               },
             ),
           ),
@@ -159,7 +193,21 @@ class _GymMainPageState extends State<GymMainPage> {
             child: WellbeingChartCard(
               wellbeingSummary: successState.wellbeingSummary,
               onAddEntry: () {
-                _showComingSoonToast(context, 'Add Wellbeing Entry');
+                final healthHomeBloc = context.read<HealthHomeBloc>();
+                BottomSheetModal.openSheet(
+                  context: context,
+                  builder: (context) => MultiBlocProvider(
+                    providers: [
+                      BlocProvider<WellbeingEntryBloc>(
+                        create: (context) => getIt<WellbeingEntryBloc>(),
+                      ),
+                      BlocProvider<HealthHomeBloc>.value(
+                        value: healthHomeBloc,
+                      ),
+                    ],
+                    child: const AddWellbeingEntrySheet(),
+                  ),
+                );
               },
             ),
           ),
@@ -168,19 +216,6 @@ class _GymMainPageState extends State<GymMainPage> {
         // Bottom padding
         const SliverToBoxAdapter(child: SizedBox(height: 20)),
       ],
-    );
-  }
-
-  void _showComingSoonToast(BuildContext context, String feature) {
-    showToast(
-      context: context,
-      builder: (context, overlay) => Utils.buildToast(
-        context,
-        overlay,
-        'Coming Soon',
-        '$feature feature is not yet implemented',
-      ),
-      location: ToastLocation.topCenter,
     );
   }
 }

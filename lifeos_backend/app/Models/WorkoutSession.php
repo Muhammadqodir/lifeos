@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class WorkoutSession extends Model
 {
@@ -30,5 +31,10 @@ class WorkoutSession extends Model
     public function workoutExercises(): HasMany
     {
         return $this->hasMany(WorkoutExercise::class, 'session_id')->orderBy('sort_order');
+    }
+
+    public function completion(): HasOne
+    {
+        return $this->hasOne(WorkoutCompletion::class);
     }
 }

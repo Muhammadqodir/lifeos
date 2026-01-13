@@ -5,6 +5,8 @@ import 'package:lifeos_client/features/health/presentation/bloc/exercise_bloc.da
 import 'package:lifeos_client/features/health/presentation/bloc/workout_bloc.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/workout_event.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/workout_state.dart';
+import 'package:lifeos_client/features/health/presentation/pages/workout_camera_page.dart';
+import 'package:lifeos_client/features/health/presentation/pages/workout_completion_page.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_selection_sheet.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_sets.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
@@ -68,26 +70,50 @@ class _WorkoutPageState extends State<WorkoutPage> {
     }
   }
 
+  Future<void> _finishWorkout(BuildContext context, WorkoutInProgress state) async {
+    // First validate the workout
+    context.read<WorkoutBloc>().add(FinishWorkout());
+    
+    // Wait a bit to see if there's a validation error
+    await Future.delayed(const Duration(milliseconds: 100));
+    
+    if (!mounted) return;
+    
+    // Check if we're still in WorkoutInProgress (validation passed)
+    // ignore: use_build_context_synchronously
+    final currentState = context.read<WorkoutBloc>().state;
+    if (currentState is! WorkoutInProgress) return;
+    
+    // Navigate to camera page
+    // ignore: use_build_context_synchronously
+    final String? photoPath = await Navigator.of(context).push<String>(
+      MaterialPageRoute(
+        builder: (context) => const WorkoutCameraPage(),
+      ),
+    );
+
+    if (photoPath != null && mounted) {
+      // Navigate to completion page
+      // ignore: use_build_context_synchronously
+      await Navigator.of(context).push(
+        MaterialPageRoute(
+          builder: (context) => BlocProvider.value(
+            // ignore: use_build_context_synchronously
+            value: context.read<WorkoutBloc>(),
+            child: WorkoutCompletionPage(
+              photoPath: photoPath,
+              workout: state.workout,
+            ),
+          ),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return BlocConsumer<WorkoutBloc, WorkoutState>(
       listener: (context, state) {
-        if (state is WorkoutSaved) {
-          showToast(
-            context: context,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Workout saved successfully!',
-              );
-            },
-          );
-          Navigator.of(context).pop();
-        }
-
         if (state is WorkoutError) {
           showToast(
             context: context,
@@ -192,7 +218,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
                       onPressed: state.workout.exercises.isEmpty
                           ? null
                           : () {
-                              context.read<WorkoutBloc>().add(FinishWorkout());
+                              _finishWorkout(context, state);
                             },
                       child: Row(
                         mainAxisSize: MainAxisSize.min,

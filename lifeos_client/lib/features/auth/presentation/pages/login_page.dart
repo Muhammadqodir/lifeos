@@ -109,7 +109,7 @@ class _LoginPageState extends State<LoginPage> {
                         Button.ghost(
                           onPressed: () {
                             Navigator.of(context).push(
-                              MaterialPageRoute(
+                              CupertinoPageRoute(
                                 builder: (_) => BlocProvider.value(
                                   value: context.read<AuthBloc>(),
                                   child: const RegisterPage(),

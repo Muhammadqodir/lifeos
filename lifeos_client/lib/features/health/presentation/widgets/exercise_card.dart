@@ -36,7 +36,7 @@ class ExerciseCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(24),
             ),
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(24),
+              borderRadius: BorderRadius.circular(8),
               child: Image.network(
                 AppConfig.serverBaseUrl + (exercise.image ?? ''),
                 fit: BoxFit.cover,

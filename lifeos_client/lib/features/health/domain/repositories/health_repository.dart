@@ -15,6 +15,14 @@ abstract class HealthRepository {
     DateTime? dateTo,
   });
 
+  Future<SleepEntryDto> createSleepEntry({
+    required String date,
+    required String sleepStart,
+    required String sleepEnd,
+    required int quality,
+    String? note,
+  });
+
   Future<List<WellbeingEntryDto>> getWellbeingEntries({
     DateTime? dateFrom,
     DateTime? dateTo,
@@ -23,6 +31,13 @@ abstract class HealthRepository {
   Future<WellbeingSummaryDto> getWellbeingSummary({
     DateTime? dateFrom,
     DateTime? dateTo,
+  });
+
+  Future<WellbeingEntryDto> createWellbeingEntry({
+    required String date,
+    required int energy,
+    required int stress,
+    String? note,
   });
 
   Future<WorkoutSummaryDto> getWorkoutSummary({
