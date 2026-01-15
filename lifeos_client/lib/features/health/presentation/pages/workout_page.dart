@@ -65,7 +65,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
       ),
     );
 
-    if (exercise != null && mounted) {
+    if (exercise != null && context.mounted) {
       context.read<WorkoutBloc>().add(AddExercise(exercise));
     }
   }
@@ -77,7 +77,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
     // Wait a bit to see if there's a validation error
     await Future.delayed(const Duration(milliseconds: 100));
     
-    if (!mounted) return;
+    if (!context.mounted) return;
     
     // Check if we're still in WorkoutInProgress (validation passed)
     // ignore: use_build_context_synchronously

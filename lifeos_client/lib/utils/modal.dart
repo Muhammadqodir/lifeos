@@ -7,47 +7,31 @@ class BottomSheetModal {
     required BuildContext context,
     required WidgetBuilder builder,
   }) async {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    
-    SystemChrome.setSystemUIOverlayStyle(
-      const SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: Brightness.light,
-        statusBarBrightness: Brightness.dark,
-      ),
-    );
-
     T? res = await showBarModalBottomSheet<T>(
+      backgroundColor: Theme.of(context).colorScheme.background,
+      overlayStyle: SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: Theme.of(context).brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+        systemNavigationBarColor: Theme.of(context).colorScheme.background,
+        systemNavigationBarIconBrightness:
+            Theme.of(context).brightness == Brightness.dark
+            ? Brightness.light
+            : Brightness.dark,
+      ),
       context: context,
       builder: (sheetContext) {
-        return AnnotatedRegion<SystemUiOverlayStyle>(
-          value: const SystemUiOverlayStyle(
-            statusBarColor: Colors.transparent,
-            statusBarIconBrightness: Brightness.light,
-            statusBarBrightness: Brightness.dark,
+        return Container(
+          padding: EdgeInsets.only(
+            top: 24,
+            bottom: 24 + MediaQuery.of(sheetContext).viewInsets.bottom,
           ),
-          child: SafeArea(
-            child: Padding(
-              padding: EdgeInsets.only(
-                top: 24,
-                bottom: 24 + MediaQuery.of(sheetContext).viewInsets.bottom,
-              ),
-              child: builder(sheetContext),
-            ),
-          ),
+          child: builder(context),
         );
       },
     );
 
-    // Restore style based on current theme
-    SystemChrome.setSystemUIOverlayStyle(
-      SystemUiOverlayStyle(
-        statusBarColor: Colors.transparent,
-        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
-        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
-      ),
-    );
-    
     return res;
   }
 }

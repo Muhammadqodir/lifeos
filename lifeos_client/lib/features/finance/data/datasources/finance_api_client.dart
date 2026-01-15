@@ -14,9 +14,10 @@ class FinanceApiClient {
   FinanceApiClient({required this.dio, required this.baseUrl});
 
   /// Get all wallets for the authenticated user
-  Future<List<WalletDto>> getWallets() async {
+  Future<List<WalletDto>> getWallets({bool withBalances = false}) async {
     try {
-      final response = await dio.get('$baseUrl/wallets');
+      
+      final response = await dio.get('$baseUrl/wallets${withBalances ? '?with_balances=true' : ''}');
 
       if (response.statusCode == 200) {
         final data = response.data['data'] as List;

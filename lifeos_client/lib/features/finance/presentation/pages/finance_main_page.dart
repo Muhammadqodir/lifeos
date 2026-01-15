@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/add_transaction_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/analytics_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/finance_settings_page.dart';
-import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/manage_wallets.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
@@ -23,7 +22,6 @@ import '../widgets/total_card.dart';
 import '../widgets/wallet_carousel.dart';
 import '../widgets/transaction_tile.dart';
 import '../../../../core/widgets/empty_state.dart';
-import '../../../../core/widgets/error_state.dart';
 import 'add_wallet_page.dart';
 
 class FinanceMainPage extends StatefulWidget {

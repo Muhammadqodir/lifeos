@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lifeos_client/core/widgets/category_icon.dart';
+import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/modal.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -71,7 +72,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
         child: BlocBuilder<FinanceSettingsBloc, FinanceSettingsState>(
           builder: (context, state) {
             if (state is FinanceSettingsLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return LoadingState(message: 'Loading settings...');
             }
 
             if (state is FinanceSettingsError) {
@@ -226,7 +227,6 @@ class _FinanceSettingsPageContent extends StatelessWidget {
       ),
     );
   }
-
 
   Widget _buildCategoriesSection(
     BuildContext context,

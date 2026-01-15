@@ -44,7 +44,7 @@ class WalletDto extends Equatable {
   final CurrencyDto currency;
   final WalletType type;
   final bool isActive;
-  final double? balance; // Coming from balance endpoint
+  final double balance; // Coming from balance endpoint
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -56,7 +56,7 @@ class WalletDto extends Equatable {
     required this.currency,
     required this.type,
     required this.isActive,
-    this.balance,
+    required this.balance,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -70,7 +70,7 @@ class WalletDto extends Equatable {
       currency: CurrencyDto.fromJson(json['currency'] as Map<String, dynamic>),
       type: WalletType.fromJson(json['type'] as String),
       isActive: json['is_active'] as bool,
-      balance: (json['balance'] as num?)?.toDouble(),
+      balance: (json['balance'] as num?)?.toDouble() ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );

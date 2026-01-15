@@ -425,7 +425,7 @@ class _AddTransactionPageContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Exchange Rate: ${_calculateExchangeRate(state, fromWallet!, toWallet!)}',
+                    'Exchange Rate: ${_calculateExchangeRate(state, fromWallet, toWallet)}',
                     style: Theme.of(context).typography.xSmall.copyWith(
                       color: Theme.of(context).colorScheme.mutedForeground,
                     ),
@@ -463,8 +463,6 @@ class _AddTransactionPageContent extends StatelessWidget {
     WalletDto toWallet,
   ) {
     String exchangeRate = '';
-    final fromAmount = double.tryParse(state.amount);
-    final toAmount = double.tryParse(state.exchangeAmount);
 
     if (state.amount.isNotEmpty && state.exchangeAmount.isNotEmpty) {
       final amount = double.tryParse(state.amount);

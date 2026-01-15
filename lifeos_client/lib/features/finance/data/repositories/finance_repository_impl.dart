@@ -20,25 +20,18 @@ class FinanceRepositoryImpl implements FinanceRepository {
 
   @override
   Future<WalletDto> getWalletWithBalance(int walletId) async {
-    final wallets = await apiClient.getWallets();
+    final wallets = await apiClient.getWallets(withBalances: true);
     final wallet = wallets.firstWhere((w) => w.id == walletId);
-    final balance = await apiClient.getWalletBalance(walletId);
-    return wallet.copyWith(balance: balance);
+    return wallet;
   }
 
   @override
   Future<List<WalletDto>> getWalletsWithBalances() async {
-    final wallets = await apiClient.getWallets();
+    final wallets = await apiClient.getWallets(withBalances: true);
     final walletsWithBalances = <WalletDto>[];
 
     for (final wallet in wallets) {
-      try {
-        final balance = await apiClient.getWalletBalance(wallet.id);
-        walletsWithBalances.add(wallet.copyWith(balance: balance));
-      } catch (e) {
-        // If balance fetch fails, add wallet with null balance
-        walletsWithBalances.add(wallet);
-      }
+      walletsWithBalances.add(wallet);
     }
 
     return walletsWithBalances;
@@ -138,15 +131,15 @@ class FinanceRepositoryImpl implements FinanceRepository {
   Future<Map<String, dynamic>> updateFinanceSettings({
     required int baseCurrencyId,
   }) async {
-    return await apiClient.updateFinanceSettings(baseCurrencyId: baseCurrencyId);
+    return await apiClient.updateFinanceSettings(
+      baseCurrencyId: baseCurrencyId,
+    );
   }
 
   @override
   Future<List<CurrencyDto>> getAllCurrencies() async {
     return await apiClient.getAllCurrencies();
   }
-
-
 
   @override
   Future<TransactionCategoryDto> createCategory({

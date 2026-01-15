@@ -253,31 +253,29 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
                                             ),
                                       ),
 
-                                      if (wallet.balance != null) ...[
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          '•',
-                                          style: Theme.of(context)
-                                              .typography
-                                              .xSmall
-                                              .copyWith(
-                                                color:
-                                                    colorScheme.mutedForeground,
-                                              ),
-                                        ),
-                                        const SizedBox(width: 8),
-                                        Text(
-                                          '${wallet.balance!.toMoneyFormat()} ${wallet.currency.code}',
-                                          style: Theme.of(context)
-                                              .typography
-                                              .xSmall
-                                              .copyWith(
-                                                fontWeight: FontWeight.w600,
-                                                color:
-                                                    colorScheme.mutedForeground,
-                                              ),
-                                        ),
-                                      ],
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '•',
+                                        style: Theme.of(context)
+                                            .typography
+                                            .xSmall
+                                            .copyWith(
+                                              color:
+                                                  colorScheme.mutedForeground,
+                                            ),
+                                      ),
+                                      const SizedBox(width: 8),
+                                      Text(
+                                        '${wallet.balance.toMoneyFormat()} ${wallet.currency.code}',
+                                        style: Theme.of(context)
+                                            .typography
+                                            .xSmall
+                                            .copyWith(
+                                              fontWeight: FontWeight.w600,
+                                              color:
+                                                  colorScheme.mutedForeground,
+                                            ),
+                                      ),
                                     ],
                                   ),
                                 ],

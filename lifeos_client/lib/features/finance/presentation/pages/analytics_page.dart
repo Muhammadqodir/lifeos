@@ -193,21 +193,13 @@ class _AnalyticsPageContent extends StatefulWidget {
 }
 
 class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
-  late DateTime _dateFrom;
-  late DateTime _dateTo;
 
   @override
   void initState() {
     super.initState();
-    _dateFrom = widget.initialDateFrom;
-    _dateTo = widget.initialDateTo;
   }
 
   void _onDateRangeChanged(DateTime from, DateTime to) {
-    setState(() {
-      _dateFrom = from;
-      _dateTo = to;
-    });
     context.read<AnalyticsBloc>().add(
       AnalyticsDateRangeChanged(
         dateFrom: from,

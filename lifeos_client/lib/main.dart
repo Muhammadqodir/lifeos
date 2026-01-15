@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/custom_theme.dart';
@@ -13,6 +14,7 @@ import 'injection.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await setupDependencies();
+
   runApp(const MyApp());
 }
 

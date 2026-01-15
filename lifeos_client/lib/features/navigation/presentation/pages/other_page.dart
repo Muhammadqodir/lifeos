@@ -1,4 +1,7 @@
 import 'package:flutter/cupertino.dart';
+import 'package:lifeos_client/core/theme/presentation/bloc/theme_bloc.dart';
+import 'package:lifeos_client/core/theme/presentation/bloc/theme_event.dart';
+import 'package:lifeos_client/core/theme/presentation/bloc/theme_state.dart';
 import 'package:lifeos_client/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:lifeos_client/features/auth/presentation/bloc/auth_event.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
@@ -31,6 +34,19 @@ class _OtherPageState extends State<OtherPage> {
               tooltip: 'Logout',
               onTap: () {
                 context.read<AuthBloc>().add(AuthLogoutRequested());
+              },
+            ),
+            BlocBuilder<ThemeBloc, ThemeState>(
+              builder: (context, themeState) {
+                return AppBarAction(
+                  icon: themeState.isDark
+                      ? HugeIcons.strokeRoundedSun01
+                      : HugeIcons.strokeRoundedMoon,
+                  tooltip: 'Change Theme',
+                  onTap: () {
+                    context.read<ThemeBloc>().add(ThemeToggled());
+                  },
+                );
               },
             ),
           ],
