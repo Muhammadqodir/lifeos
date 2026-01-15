@@ -65,7 +65,6 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
   }
 
   void _submitCompletion() {
-
     final completion = WorkoutCompletionDto(
       photoPath: widget.photoPath,
       bodyWeightKg: _bodyWeightController.text.isNotEmpty
@@ -125,12 +124,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
             context: context,
             location: ToastLocation.topCenter,
             builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Error',
-                state.message,
-              );
+              return Utils.buildToast(context, overlay, 'Error', state.message);
             },
           );
         }
@@ -270,7 +264,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                         controller: _bodyWeightController,
                         label: 'Body Weight',
                         unit: 'kg',
-                        icon: HugeIcons.strokeRoundedDumbbell02,
+                        icon: HugeIcons.strokeRoundedWeightScale,
                       ),
                       const SizedBox(height: 12),
 
@@ -278,7 +272,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                         controller: _heightController,
                         label: 'Height',
                         unit: 'cm',
-                        icon: HugeIcons.strokeRoundedArrowMoveUpRight,
+                        icon: HugeIcons.strokeRoundedRuler,
                       ),
                       const SizedBox(height: 12),
 
@@ -286,7 +280,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                         controller: _bicepsController,
                         label: 'Biceps',
                         unit: 'cm',
-                        icon: HugeIcons.strokeRoundedDumbbell02,
+                        icon: HugeIcons.strokeRoundedBodyPartMuscle,
                       ),
                       const SizedBox(height: 12),
 
@@ -294,7 +288,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                         controller: _chestController,
                         label: 'Chest',
                         unit: 'cm',
-                        icon: HugeIcons.strokeRoundedDumbbell01,
+                        icon: HugeIcons.strokeRoundedTapeMeasure,
                       ),
                       const SizedBox(height: 12),
 
@@ -302,7 +296,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                         controller: _waistController,
                         label: 'Waist',
                         unit: 'cm',
-                        icon: HugeIcons.strokeRoundedTarget01,
+                        icon: HugeIcons.strokeRoundedTapeMeasure,
                       ),
                       const SizedBox(height: 12),
 
@@ -310,7 +304,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                         controller: _thighsController,
                         label: 'Thighs',
                         unit: 'cm',
-                        icon: HugeIcons.strokeRoundedFootball,
+                        icon: HugeIcons.strokeRoundedTapeMeasure,
                       ),
                       const SizedBox(height: 12),
 
@@ -318,7 +312,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                         controller: _calfsController,
                         label: 'Calfs',
                         unit: 'cm',
-                        icon: HugeIcons.strokeRoundedSquare,
+                        icon: HugeIcons.strokeRoundedTapeMeasure,
                       ),
                       const SizedBox(height: 24),
 
@@ -331,10 +325,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                       ),
                       const SizedBox(height: 12),
 
-                      TextField(
-                        controller: _notesController,
-                        maxLines: 4,
-                      ),
+                      TextField(controller: _notesController, maxLines: 4),
                     ],
                   ),
                 ),
@@ -345,10 +336,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
                   border: Border(
-                    top: BorderSide(
-                      color: colorScheme.border,
-                      width: 1,
-                    ),
+                    top: BorderSide(color: colorScheme.border, width: 1),
                   ),
                 ),
                 child: BlocBuilder<WorkoutBloc, WorkoutState>(
@@ -370,7 +358,8 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
                                   const HugeIcon(
-                                    icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                                    icon: HugeIcons
+                                        .strokeRoundedCheckmarkCircle02,
                                     size: 18,
                                     strokeWidth: 2.5,
                                   ),
@@ -413,27 +402,29 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
           flex: 2,
           child: Text(
             label,
-            style: Theme.of(context).typography.small.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
+            style: Theme.of(
+              context,
+            ).typography.small.copyWith(fontWeight: FontWeight.w500),
           ),
         ),
-        Expanded( 
+        Expanded(
           flex: 3,
           child: Row(
             children: [
               Expanded(
                 child: TextField(
                   controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
               Text(
                 unit,
                 style: Theme.of(context).typography.small.copyWith(
-                      color: Theme.of(context).colorScheme.mutedForeground,
-                    ),
+                  color: Theme.of(context).colorScheme.mutedForeground,
+                ),
               ),
             ],
           ),

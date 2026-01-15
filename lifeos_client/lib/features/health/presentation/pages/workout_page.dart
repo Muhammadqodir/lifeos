@@ -84,6 +84,9 @@ class _WorkoutPageState extends State<WorkoutPage> {
     final currentState = context.read<WorkoutBloc>().state;
     if (currentState is! WorkoutInProgress) return;
     
+    // Capture the WorkoutBloc before navigation
+    final workoutBloc = context.read<WorkoutBloc>();
+    
     // Navigate to camera page
     // ignore: use_build_context_synchronously
     final String? photoPath = await Navigator.of(context).push<String>(
@@ -98,8 +101,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
       await Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => BlocProvider.value(
-            // ignore: use_build_context_synchronously
-            value: context.read<WorkoutBloc>(),
+            value: workoutBloc,
             child: WorkoutCompletionPage(
               photoPath: photoPath,
               workout: state.workout,

@@ -269,7 +269,7 @@ class AddTransactionBloc
 
     if (!currentState.isValid) return;
 
-    emit(const AddTransactionSubmitting());
+    emit(AddTransactionSubmitting(previousState: currentState));
 
     try {
       final request = _buildRequest(currentState);
@@ -283,7 +283,10 @@ class AddTransactionBloc
       } else {
         errorMessage = e.toString();
       }
-      emit(AddTransactionError(message: errorMessage));
+      emit(AddTransactionError(
+        message: errorMessage,
+        previousState: currentState,
+      ));
     }
   }
 

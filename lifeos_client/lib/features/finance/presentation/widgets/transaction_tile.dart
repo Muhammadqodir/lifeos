@@ -1,14 +1,24 @@
+import 'package:lifeos_client/core/theme/app_colors.dart';
 import 'package:lifeos_client/core/widgets/category_icon.dart';
+import 'package:lifeos_client/core/widgets/tappable.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
+import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:hugeicons/hugeicons.dart';
 
 import '../../data/models/transaction_dto.dart';
 
 class TransactionTile extends StatelessWidget {
   final TransactionDto transaction;
   final VoidCallback? onTap;
+  final VoidCallback? onDelete;
 
-  const TransactionTile({super.key, required this.transaction, this.onTap});
+  const TransactionTile({
+    super.key,
+    required this.transaction,
+    this.onTap,
+    this.onDelete,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -24,60 +34,96 @@ class TransactionTile extends StatelessWidget {
     final currencyCode = entry?.currency.code ?? '';
     final isPositive = amount >= 0;
 
-    return GestureDetector(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            // Category icon
-            CategoryIcon(
-              icon: transaction.category?.icon ?? '⭕️',
-              color: transaction.category?.color ?? '#000000',
-            ),
-            const SizedBox(width: 12),
-            // Transaction details
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    transaction.category?.title ??
-                        transaction.description ??
-                        _getTypeLabel(transaction.type),
-                    style: theme.typography.small.copyWith(
-                      fontWeight: FontWeight.w500,
-                      color: colorScheme.foreground,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    _formatDate(transaction.occurredAt),
-                    style: theme.typography.xSmall.copyWith(
-                      color: colorScheme.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 12),
-            // Amount
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.end,
+    return Slidable(
+      key: ValueKey(transaction.id),
+      endActionPane: ActionPane(
+        extentRatio: 0.2,
+        motion: const ScrollMotion(),
+        children: [
+          CustomSlidableAction(
+            onPressed: (context) async {
+              if (onDelete != null) {
+                onDelete!();
+              }
+            },
+            backgroundColor: AppColors.redColor,
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                MoneyText(
-                  amount: amount,
-                  currencyCode: currencyCode,
-                  size: MoneyTextSize.small,
-                  color: isPositive
-                      ? Colors.green.shade600
-                      : Colors.red.shade600,
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedDelete02,
+                  color: Colors.white,
+                  size: 24,
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  'Delete',
+                  style: theme.typography.xSmall.copyWith(color: Colors.white),
                 ),
               ],
             ),
-          ],
+          ),
+        ],
+      ),
+      child: Tappable(
+        onTap: () {
+          if (onTap != null) {
+            onTap!();
+          }
+        },
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          child: Row(
+            children: [
+              // Category icon
+              CategoryIcon(
+                icon: transaction.category?.icon ?? '⭕️',
+                color: transaction.category?.color ?? '#000000',
+              ),
+              const SizedBox(width: 12),
+              // Transaction details
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      transaction.category?.title ??
+                          transaction.description ??
+                          _getTypeLabel(transaction.type),
+                      style: theme.typography.small.copyWith(
+                        fontWeight: FontWeight.w500,
+                        color: colorScheme.foreground,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      _formatDate(transaction.occurredAt),
+                      style: theme.typography.xSmall.copyWith(
+                        color: colorScheme.mutedForeground,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 12),
+              // Amount
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  MoneyText(
+                    amount: amount,
+                    currencyCode: currencyCode,
+                    size: MoneyTextSize.small,
+                    color: isPositive
+                        ? Colors.green.shade600
+                        : Colors.red.shade600,
+                  ),
+                ],
+              ),
+            ],
+          ),
         ),
       ),
     );

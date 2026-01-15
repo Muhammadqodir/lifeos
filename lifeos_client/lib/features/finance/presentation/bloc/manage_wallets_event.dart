@@ -11,6 +11,10 @@ class ManageWalletsLoad extends ManageWalletsEvent {
   const ManageWalletsLoad();
 }
 
+class ManageWalletsRefresh extends ManageWalletsEvent {
+  const ManageWalletsRefresh();
+}
+
 class ManageWalletsDelete extends ManageWalletsEvent {
   final int walletId;
 

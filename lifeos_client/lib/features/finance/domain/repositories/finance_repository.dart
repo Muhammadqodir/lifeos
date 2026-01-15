@@ -35,6 +35,7 @@ abstract class FinanceRepository {
   Future<TransactionDto> createTransaction(
     CreateTransactionRequestDto request,
   );
+  Future<void> deleteTransaction(int transactionId);
   Future<AnalyticsSummaryDto> getAnalytics({
     DateTime? dateFrom,
     DateTime? dateTo,

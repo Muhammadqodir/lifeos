@@ -7,7 +7,7 @@ class BottomSheetModal {
     required BuildContext context,
     required WidgetBuilder builder,
   }) async {
-    final originalStyle = SystemChrome.latestStyle;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     
     SystemChrome.setSystemUIOverlayStyle(
       const SystemUiOverlayStyle(
@@ -39,18 +39,14 @@ class BottomSheetModal {
       },
     );
 
-    // Restore original style
-    if (originalStyle != null) {
-      SystemChrome.setSystemUIOverlayStyle(originalStyle);
-    } else {
-      SystemChrome.setSystemUIOverlayStyle(
-        const SystemUiOverlayStyle(
-          statusBarColor: Colors.transparent,
-          statusBarIconBrightness: Brightness.dark,
-          statusBarBrightness: Brightness.light,
-        ),
-      );
-    }
+    // Restore style based on current theme
+    SystemChrome.setSystemUIOverlayStyle(
+      SystemUiOverlayStyle(
+        statusBarColor: Colors.transparent,
+        statusBarIconBrightness: isDark ? Brightness.light : Brightness.dark,
+        statusBarBrightness: isDark ? Brightness.dark : Brightness.light,
+      ),
+    );
     
     return res;
   }

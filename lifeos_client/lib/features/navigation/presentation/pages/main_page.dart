@@ -1,12 +1,11 @@
 import 'package:lifeos_client/features/health/presentation/pages/health_main_page.dart';
+import 'package:lifeos_client/features/navigation/presentation/pages/other_page.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/fade_indexed_stack.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import '../../../../injection.dart';
-import '../../../finance/presentation/bloc/finance_home_bloc.dart';
-import '../../../finance/presentation/bloc/finance_home_event.dart';
 import '../../../finance/presentation/pages/finance_main_page.dart';
 import '../../../finance/presentation/providers/amount_visibility_provider.dart';
 import '../../../health/presentation/bloc/health_home_bloc.dart';
@@ -86,19 +85,14 @@ class _MainPageContent extends StatelessWidget {
       const _PlaceholderPage(title: 'Home'),
       ChangeNotifierProvider(
         create: (_) => AmountVisibilityProvider(),
-        child: BlocProvider(
-          create: (_) =>
-              getIt<FinanceHomeBloc>()..add(const FinanceHomeStarted()),
-          child: const FinanceMainPage(),
-        ),
+        child: const FinanceMainPage(),
       ),
       BlocProvider(
-        create: (_) =>
-            getIt<HealthHomeBloc>()..add(const HealthHomeStarted()),
+        create: (_) => getIt<HealthHomeBloc>()..add(const HealthHomeStarted()),
         child: const GymMainPage(),
       ),
       const _PlaceholderPage(title: 'Projects'),
-      const _PlaceholderPage(title: 'Other'),
+      const OtherPage(),
     ];
   }
 

@@ -1,3 +1,6 @@
+//TODO: increase loading speed, cache wallets and categories
+
+import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/finance/data/models/wallet_dto.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -62,8 +65,6 @@ class _AddTransactionPageContent extends StatelessWidget {
             },
             location: ToastLocation.topCenter,
           );
-
-          Navigator.of(context).pop(false);
         }
       },
       child: Scaffold(
@@ -82,7 +83,7 @@ class _AddTransactionPageContent extends StatelessWidget {
         child: BlocBuilder<AddTransactionBloc, AddTransactionState>(
           builder: (context, state) {
             if (state is AddTransactionLoadingData) {
-              return const Center(child: CircularProgressIndicator());
+              return LoadingState(message: 'Loading...');
             }
 
             if (state is AddTransactionLoadError) {
@@ -128,8 +129,21 @@ class _AddTransactionPageContent extends StatelessWidget {
               );
             }
 
-            if (state is AddTransactionReady) {
-              return _buildForm(outerContext, state, isSubmitting: false);
+            if (state is AddTransactionReady ||
+                state is AddTransactionSubmitting ||
+                state is AddTransactionError) {
+              final isSubmitting = state is AddTransactionSubmitting;
+              final formState = state is AddTransactionReady
+                  ? state
+                  : state is AddTransactionSubmitting
+                  ? state.previousState
+                  : (state as AddTransactionError).previousState;
+
+              return _buildForm(
+                outerContext,
+                formState,
+                isSubmitting: isSubmitting,
+              );
             }
 
             return const SizedBox.shrink();

@@ -14,6 +14,9 @@ class ThousandsSeparatorInputFormatter extends TextInputFormatter {
     // Remove all spaces
     String newText = newValue.text.replaceAll(' ', '');
 
+    // Normalize comma to dot for decimal separator
+    newText = newText.replaceAll(',', '.');
+
     // Only allow numbers and one decimal point
     if (!RegExp(r'^\d*\.?\d*$').hasMatch(newText)) {
       return oldValue;
@@ -132,7 +135,10 @@ class AmountInputField extends StatelessWidget {
         TextField(
           controller: controller,
           placeholder: Text(placeholder ?? 'Enter amount'),
-          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          keyboardType: const TextInputType.numberWithOptions(
+            decimal: true,
+            signed: false,
+          ),
           inputFormatters: [ThousandsSeparatorInputFormatter()],
           onSubmitted: (_) => FocusScope.of(context).unfocus(),
           onChanged: (formatted) {

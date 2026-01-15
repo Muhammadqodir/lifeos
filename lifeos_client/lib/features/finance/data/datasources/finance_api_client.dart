@@ -310,6 +310,26 @@ class FinanceApiClient {
     }
   }
 
+  /// Delete a transaction
+  Future<void> deleteTransaction(int transactionId) async {
+    try {
+      final response = await dio.delete(
+        '$baseUrl/transactions/$transactionId',
+      );
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e, s) {
+      print('Exception in deleteTransaction: $e');
+      print(s);
+      throw _handleError(e);
+    }
+  }
+
   Exception _handleError(dynamic error) {
     if (error is DioException) {
       if (error.response != null) {

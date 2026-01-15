@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/config/app_config.dart';
 import 'package:lifeos_client/core/widgets/tappable.dart';
@@ -39,13 +40,14 @@ class _ExerciseSetsState extends State<ExerciseSets> {
               children: [
                 ClipRRect(
                   borderRadius: BorderRadius.circular(8),
-                  child: Image.network(
-                    AppConfig.serverBaseUrl +
+                  child: CachedNetworkImage(
+                    imageUrl:
+                        AppConfig.serverBaseUrl +
                         (widget.exercise.exercise?.image ?? ''),
                     width: 32,
                     height: 32,
                     fit: BoxFit.cover,
-                    errorBuilder: (context, error, stackTrace) {
+                    errorWidget: (context, error, stackTrace) {
                       return Container(
                         width: 32,
                         height: 32,

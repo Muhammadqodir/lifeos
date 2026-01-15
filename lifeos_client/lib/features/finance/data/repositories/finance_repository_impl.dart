@@ -112,6 +112,11 @@ class FinanceRepositoryImpl implements FinanceRepository {
   }
 
   @override
+  Future<void> deleteTransaction(int transactionId) async {
+    return await apiClient.deleteTransaction(transactionId);
+  }
+
+  @override
   Future<AnalyticsSummaryDto> getAnalytics({
     DateTime? dateFrom,
     DateTime? dateTo,

@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
 import '../models/exercise_dto.dart';
@@ -340,8 +341,9 @@ class HealthApiClient {
     File? photoFile,
   ) async {
     try {
+      // Convert workout_data to JSON string for multipart
       FormData formData = FormData.fromMap({
-        'workout_data': workoutData,
+        'workout_data': jsonEncode(workoutData),
       });
 
       if (photoFile != null) {
@@ -435,7 +437,20 @@ class HealthApiClient {
         case DioExceptionType.badCertificate:
           return Exception('Certificate error.');
         case DioExceptionType.unknown:
-          return Exception('An unexpected error occurred.');
+          // Check if there's a response with more details
+          if (error.response != null) {
+            final statusCode = error.response?.statusCode;
+            final responseData = error.response?.data;
+            if (responseData is Map && responseData['message'] != null) {
+              return Exception(responseData['message'].toString());
+            }
+            return Exception('Request failed with status $statusCode');
+          }
+          // Check if there's an underlying error message
+          if (error.error != null) {
+            return Exception('Network error: ${error.error}');
+          }
+          return Exception('An unexpected error occurred. Please try again.');
       }
     }
     return Exception('An unexpected error occurred: $error');

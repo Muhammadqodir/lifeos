@@ -1,5 +1,6 @@
 import 'package:lifeos_client/core/extension/extensions.dart';
 import 'package:lifeos_client/core/theme/app_colors.dart';
+import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/finance/data/datasources/constants.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/toast.dart';
@@ -102,7 +103,7 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
         child: BlocBuilder<ManageWalletsBloc, ManageWalletsState>(
           builder: (context, state) {
             if (state is ManageWalletsLoading) {
-              return const Center(child: CircularProgressIndicator());
+              return LoadingState(message: 'Loading wallets...');
             }
 
             if (state is ManageWalletsError) {
@@ -148,6 +149,8 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
             final wallets = state is ManageWalletsLoaded
                 ? state.wallets
                 : state is ManageWalletsDeleting
+                ? state.wallets
+                : state is ManageWalletsDeleteSuccess
                 ? state.wallets
                 : state is ManageWalletsDeleteError
                 ? state.wallets

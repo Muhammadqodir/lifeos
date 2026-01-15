@@ -129,7 +129,12 @@ class AddTransactionReady extends AddTransactionState {
 
 /// Submitting transaction
 class AddTransactionSubmitting extends AddTransactionState {
-  const AddTransactionSubmitting();
+  final AddTransactionReady previousState;
+
+  const AddTransactionSubmitting({required this.previousState});
+
+  @override
+  List<Object?> get props => [previousState];
 }
 
 /// Transaction created successfully
@@ -145,9 +150,13 @@ class AddTransactionSuccess extends AddTransactionState {
 /// Submission failed
 class AddTransactionError extends AddTransactionState {
   final String message;
+  final AddTransactionReady previousState;
 
-  const AddTransactionError({required this.message});
+  const AddTransactionError({
+    required this.message,
+    required this.previousState,
+  });
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [message, previousState];
 }

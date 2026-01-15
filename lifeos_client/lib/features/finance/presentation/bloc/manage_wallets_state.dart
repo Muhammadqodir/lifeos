@@ -1,11 +1,22 @@
 import 'package:equatable/equatable.dart';
 import '../../data/models/wallet_dto.dart';
+import '../../data/models/finance_summary_dto.dart';
 
 abstract class ManageWalletsState extends Equatable {
   const ManageWalletsState();
 
   @override
   List<Object?> get props => [];
+}
+
+class ManageWalletsWithData extends ManageWalletsState {
+  final List<WalletDto> wallets;
+  final FinanceSummaryDto summary;
+
+  const ManageWalletsWithData({
+    required this.wallets,
+    required this.summary,
+  });
 }
 
 class ManageWalletsInitial extends ManageWalletsState {
@@ -16,13 +27,14 @@ class ManageWalletsLoading extends ManageWalletsState {
   const ManageWalletsLoading();
 }
 
-class ManageWalletsLoaded extends ManageWalletsState {
-  final List<WalletDto> wallets;
-
-  const ManageWalletsLoaded({required this.wallets});
+class ManageWalletsLoaded extends ManageWalletsWithData {
+  const ManageWalletsLoaded({
+    required super.wallets,
+    required super.summary,
+  });
 
   @override
-  List<Object?> get props => [wallets];
+  List<Object?> get props => [wallets, summary];
 }
 
 class ManageWalletsError extends ManageWalletsState {
@@ -34,37 +46,38 @@ class ManageWalletsError extends ManageWalletsState {
   List<Object?> get props => [message];
 }
 
-class ManageWalletsDeleting extends ManageWalletsState {
+class ManageWalletsDeleting extends ManageWalletsWithData {
   final int walletId;
-  final List<WalletDto> wallets;
 
   const ManageWalletsDeleting({
     required this.walletId,
-    required this.wallets,
+    required super.wallets,
+    required super.summary,
   });
 
   @override
-  List<Object?> get props => [walletId, wallets];
+  List<Object?> get props => [walletId, wallets, summary];
 }
 
-class ManageWalletsDeleteSuccess extends ManageWalletsState {
-  final List<WalletDto> wallets;
-
-  const ManageWalletsDeleteSuccess({required this.wallets});
+class ManageWalletsDeleteSuccess extends ManageWalletsWithData {
+  const ManageWalletsDeleteSuccess({
+    required super.wallets,
+    required super.summary,
+  });
 
   @override
-  List<Object?> get props => [wallets];
+  List<Object?> get props => [wallets, summary];
 }
 
-class ManageWalletsDeleteError extends ManageWalletsState {
+class ManageWalletsDeleteError extends ManageWalletsWithData {
   final String message;
-  final List<WalletDto> wallets;
 
   const ManageWalletsDeleteError({
     required this.message,
-    required this.wallets,
+    required super.wallets,
+    required super.summary,
   });
 
   @override
-  List<Object?> get props => [message, wallets];
+  List<Object?> get props => [message, wallets, summary];
 }

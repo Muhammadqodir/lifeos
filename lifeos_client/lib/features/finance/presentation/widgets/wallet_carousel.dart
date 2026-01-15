@@ -1,4 +1,5 @@
 import 'package:hugeicons/hugeicons.dart';
+import 'package:lifeos_client/core/widgets/empty_state.dart';
 import 'package:lifeos_client/core/widgets/tappable.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../../data/models/wallet_dto.dart';
@@ -30,6 +31,27 @@ class WalletCarousel extends StatelessWidget {
         itemBuilder: (context, index) {
           // Add card button at the start
           if (index == 0) {
+            if (wallets.length <= 1) {
+              return Row(
+                children: [
+                  _buildActions(context),
+                  SizedBox(width: 12),
+                  SizedBox(
+                    width: 250,
+                    child: EmptyState(
+                      padding: EdgeInsets.all(0),
+                      title: 'No Wallets Yet',
+                      description:
+                          'Start by adding your first wallet and transaction',
+                      icon: HugeIcon(
+                        icon: HugeIcons.strokeRoundedWallet03,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                ],
+              );
+            }
             return _buildActions(context);
           }
 

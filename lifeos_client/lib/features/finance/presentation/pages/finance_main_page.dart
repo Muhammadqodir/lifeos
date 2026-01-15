@@ -5,13 +5,20 @@ import 'package:lifeos_client/features/finance/presentation/pages/finance_settin
 import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/manage_wallets.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
+import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import '../bloc/finance_home_bloc.dart';
-import '../bloc/finance_home_event.dart';
-import '../bloc/finance_home_state.dart';
+import '../../../../injection.dart';
+import '../../data/models/wallet_dto.dart';
+import '../../data/models/transaction_dto.dart';
+import '../bloc/manage_wallets_bloc.dart';
+import '../bloc/manage_wallets_event.dart';
+import '../bloc/manage_wallets_state.dart';
+import '../bloc/manage_transactions_bloc.dart';
+import '../bloc/manage_transactions_event.dart';
+import '../bloc/manage_transactions_state.dart';
 import '../widgets/total_card.dart';
 import '../widgets/wallet_carousel.dart';
 import '../widgets/transaction_tile.dart';
@@ -27,14 +34,58 @@ class FinanceMainPage extends StatefulWidget {
 }
 
 class _FinanceMainPageState extends State<FinanceMainPage> {
+  late final ManageWalletsBloc _walletsBloc;
+  late final ManageTransactionsBloc _transactionsBloc;
+
+  @override
+  void initState() {
+    super.initState();
+    _walletsBloc = getIt<ManageWalletsBloc>()..add(const ManageWalletsLoad());
+    _transactionsBloc = getIt<ManageTransactionsBloc>()
+      ..add(const ManageTransactionsLoad());
+  }
+
+  @override
+  void dispose() {
+    _walletsBloc.close();
+    _transactionsBloc.close();
+    super.dispose();
+  }
+
   final GlobalKey<RefreshTriggerState> _refreshTriggerKey =
       GlobalKey<RefreshTriggerState>();
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<FinanceHomeBloc, FinanceHomeState>(
-      builder: (context, state) {
-        return Column(
+    return MultiBlocProvider(
+      providers: [
+        BlocProvider<ManageWalletsBloc>.value(value: _walletsBloc),
+        BlocProvider<ManageTransactionsBloc>.value(value: _transactionsBloc),
+      ],
+      child: MultiBlocListener(
+        listeners: [
+          BlocListener<ManageTransactionsBloc, ManageTransactionsState>(
+            listener: (context, state) {
+              // When transaction is deleted, refresh wallets to update balances
+              if (state is ManageTransactionsDeleteSuccess) {
+                _walletsBloc.add(const ManageWalletsRefresh());
+                showToast(
+                  context: context,
+                  location: ToastLocation.topCenter,
+                  builder: (context, overlay) {
+                    return Utils.buildToast(
+                      context,
+                      overlay,
+                      'Transaction Deleted',
+                      'The transaction has been deleted successfully.',
+                    );
+                  },
+                );
+              }
+            },
+          ),
+        ],
+        child: Column(
           children: [
             CustomAppBar(
               title: "Finances",
@@ -66,197 +117,201 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
               child: RefreshTrigger(
                 key: _refreshTriggerKey,
                 onRefresh: () async {
-                  context.read<FinanceHomeBloc>().add(
-                    const FinanceHomeRefreshed(),
-                  );
+                  _walletsBloc.add(const ManageWalletsRefresh());
+                  _transactionsBloc.add(const ManageTransactionsRefresh());
                   // Wait a bit for the refresh to complete
                   await Future.delayed(const Duration(milliseconds: 500));
                 },
-                child: _buildBody(context, state),
+                child: _buildBody(context),
               ),
             ),
           ],
-        );
-      },
+        ),
+      ),
     );
   }
 
-  Widget _buildBody(BuildContext context, FinanceHomeState state) {
+  Widget _buildBody(BuildContext context) {
     final theme = Theme.of(context);
     final colorScheme = theme.colorScheme;
 
-    if (state is FinanceHomeLoading || state is FinanceHomeInitial) {
-      return const LoadingState(message: "Loading...");
-    }
+    return BlocBuilder<ManageWalletsBloc, ManageWalletsState>(
+      builder: (context, walletsState) {
+        return BlocBuilder<ManageTransactionsBloc, ManageTransactionsState>(
+          builder: (context, transactionsState) {
+            // Get wallets data
+            final List<WalletDto> wallets =
+                walletsState is ManageWalletsWithData
+                ? walletsState.wallets
+                : [];
 
-    if (state is FinanceHomeFailure) {
-      return ErrorState(
-        message: state.message,
-        onRetry: () {
-          context.read<FinanceHomeBloc>().add(const FinanceHomeRetried());
-        },
-      );
-    }
+            final summary = walletsState is ManageWalletsWithData
+                ? walletsState.summary
+                : null;
 
-    if (state is FinanceHomeEmpty) {
-      return EmptyState(
-        title: 'No Finance Data',
-        description: 'Start by adding your first wallet and transaction',
-        icon: HugeIcon(icon: HugeIcons.strokeRoundedWallet03, size: 24),
-        action: PrimaryButton(
-          onPressed: () => _navigateToAddWallet(context),
-          child: const Text('Add Wallet'),
-        ),
-      );
-    }
+            // Get transactions data
+            final List<TransactionDto> transactions =
+                transactionsState is ManageTransactionsWithData
+                ? transactionsState.transactions
+                : [];
 
-    FinanceHomeSuccess successState = state as FinanceHomeSuccess;
-    return CustomScrollView(
-      slivers: [
-        // Total card
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 12),
-            child: TotalCard(
-              amount: successState.summary.totalBalance,
-              currencyCode: successState.summary.currencyCode,
-            ),
-          ),
-        ),
+            final hasMoreTransactions =
+                transactionsState is ManageTransactionsLoaded &&
+                transactionsState.hasMore;
+            final isLoadingMore =
+                transactionsState is ManageTransactionsLoaded &&
+                transactionsState.isLoadingMore;
 
-        // Wallets section
-        if (successState.wallets.isNotEmpty) ...[
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-              child: Text(
-                'Wallets',
-                style: theme.typography.normal.copyWith(
-                  fontWeight: FontWeight.w600,
-                  color: colorScheme.foreground,
+            return CustomScrollView(
+              slivers: [
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 12),
+                    child: TotalCard(
+                      amount: summary?.totalBalance ?? 0.0,
+                      currencyCode: summary?.currencyCode ?? '',
+                    ),
+                  ).asSkeleton(enabled: walletsState is ManageWalletsLoading),
                 ),
-              ),
-            ),
-          ),
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.only(bottom: 16),
-              child: WalletCarousel(
-                wallets: successState.wallets,
-                onAddWallet: () {
-                  _navigateToAddWallet(context);
-                },
-                onManageWallet: () {
-                  _navigateToManageWallet(context);
-                },
 
-                onWalletTap: (walletId) {
-                  // TODO: Navigate to wallet details
-                  _showComingSoonToast(context, 'Wallet Details #$walletId');
-                },
-              ),
-            ),
-          ),
-        ] else
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: EmptyState(
-                    title: 'No Wallets',
-                    description: 'Add your first wallet to start tracking',
-                    action: Button.ghost(
-                      onPressed: () => _navigateToAddWallet(context),
-                      child: const Text('Add Wallet'),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    child: Text(
+                      'Wallets',
+                      style: theme.typography.normal.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.foreground,
+                      ),
                     ),
                   ),
                 ),
-              ),
-            ),
-          ),
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: WalletCarousel(
+                      wallets: wallets,
+                      onAddWallet: () {
+                        _navigateToAddWallet(context);
+                      },
+                      onManageWallet: () {
+                        _navigateToManageWallet(context);
+                      },
+                      onWalletTap: (walletId) {
+                        // TODO: Navigate to wallet details
+                        _showComingSoonToast(
+                          context,
+                          'Wallet Details #$walletId',
+                        );
+                      },
+                    ),
+                  ).asSkeleton(enabled: walletsState is ManageWalletsLoading),
+                ),
 
-        // History section header
-        SliverToBoxAdapter(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
-            child: Text(
-              'History',
-              style: theme.typography.normal.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.foreground,
-              ),
-            ),
-          ),
-        ),
+                // History section header
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 8),
+                    child: Text(
+                      'History',
+                      style: theme.typography.normal.copyWith(
+                        fontWeight: FontWeight.w600,
+                        color: colorScheme.foreground,
+                      ),
+                    ),
+                  ),
+                ),
 
-        // Transactions list
-        if (successState.transactions.isNotEmpty)
-          SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              if (index < successState.transactions.length) {
-                final transaction = successState.transactions[index];
-                return TransactionTile(
-                  transaction: transaction,
-                  onTap: () {
-                    // TODO: Navigate to transaction details
-                    _showComingSoonToast(
-                      context,
-                      'Transaction Details #${transaction.id}',
-                    );
-                  },
-                );
-              } else {
-                // Load more button
-                return Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Center(
-                    child: successState.isLoadingMore
-                        ? const CircularProgressIndicator()
-                        : successState.hasMoreTransactions
-                        ? Button.outline(
-                            onPressed: () {
-                              context.read<FinanceHomeBloc>().add(
-                                const FinanceHomeLoadMoreHistory(),
-                              );
-                            },
-                            child: const Text('Load More'),
-                          )
-                        : Text(
-                            'No more transactions',
-                            style: Theme.of(context).typography.small.copyWith(
-                              color: colorScheme.mutedForeground,
-                            ),
+                // Transactions list
+                if (transactions.isNotEmpty)
+                  SliverList(
+                    delegate: SliverChildBuilderDelegate((context, index) {
+                      if (index < transactions.length) {
+                        final transaction = transactions[index];
+                        return TransactionTile(
+                          transaction: transaction,
+                          onTap: () {
+                            // TODO: Navigate to transaction details
+                            _showComingSoonToast(
+                              context,
+                              'Transaction Details #${transaction.id}',
+                            );
+                          },
+                          onDelete: () async {
+                            bool? confirmed = await Dialogs.showConfirmDialog(
+                              context: context,
+                              title: 'Delete Transaction',
+                              message:
+                                  'Are you sure you want to delete this transaction?',
+                            );
+                            if (confirmed == true) {
+                              if (context.mounted) {
+                                _transactionsBloc.add(
+                                  ManageTransactionsDelete(
+                                    transactionId: transaction.id,
+                                  ),
+                                );
+                              }
+                            }
+                          },
+                        );
+                      } else {
+                        // Load more button
+                        return Padding(
+                          padding: const EdgeInsets.all(16),
+                          child: Center(
+                            child: isLoadingMore
+                                ? const CircularProgressIndicator()
+                                : hasMoreTransactions
+                                ? Button.outline(
+                                    onPressed: () {
+                                      _transactionsBloc.add(
+                                        const ManageTransactionsLoadMore(),
+                                      );
+                                    },
+                                    child: const Text('Load More'),
+                                  )
+                                : Text(
+                                    'No more transactions',
+                                    style: Theme.of(context).typography.small
+                                        .copyWith(
+                                          color: colorScheme.mutedForeground,
+                                        ),
+                                  ),
                           ),
-                  ),
-                );
-              }
-            }, childCount: successState.transactions.length + 1),
-          )
-        else
-          SliverToBoxAdapter(
-            child: Padding(
-              padding: const EdgeInsets.all(16),
-              child: Card(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: EmptyState(
-                    title: 'No Transactions',
-                    description: 'Your transaction history will appear here',
-                    icon: HugeIcon(
-                      icon: HugeIcons.strokeRoundedListView,
-                      size: 24,
+                        );
+                      }
+                    }, childCount: transactions.length + 1),
+                  )
+                else
+                  SliverToBoxAdapter(
+                    child: Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: EmptyState(
+                          title: 'No Transactions',
+                          description:
+                              'Your transaction history will appear here',
+                          icon: HugeIcon(
+                            icon: HugeIcons.strokeRoundedListView,
+                            size: 24,
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                ),
-              ),
-            ),
-          ),
 
-        // Bottom padding
-        const SliverToBoxAdapter(child: SizedBox(height: 16)),
-      ],
+                // Bottom padding
+                const SliverToBoxAdapter(child: SizedBox(height: 16)),
+              ],
+            );
+          },
+        );
+      },
     );
   }
 
@@ -266,9 +321,10 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
       CupertinoPageRoute(builder: (_) => const AddTransactionPage()),
     );
 
-    // If wallet was created successfully, refresh the page
+    // If transaction was created successfully, refresh both blocs
     if (result == true && context.mounted) {
-      context.read<FinanceHomeBloc>().add(const FinanceHomeRefreshed());
+      _walletsBloc.add(const ManageWalletsRefresh());
+      _transactionsBloc.add(const ManageTransactionsRefresh());
     }
   }
 
@@ -277,9 +333,9 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
       context,
     ).push<bool>(CupertinoPageRoute(builder: (_) => const AddWalletPage()));
 
-    // If wallet was created successfully, refresh the page
+    // If wallet was created successfully, refresh wallets
     if (result == true && context.mounted) {
-      context.read<FinanceHomeBloc>().add(const FinanceHomeRefreshed());
+      _walletsBloc.add(const ManageWalletsRefresh());
     }
   }
 
@@ -288,9 +344,10 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
       context,
     ).push<bool>(CupertinoPageRoute(builder: (_) => const ManageWalletsPage()));
 
-    // If wallet was created successfully, refresh the page
+    // If wallet was deleted, refresh both blocs
     if (result == true && context.mounted) {
-      context.read<FinanceHomeBloc>().add(const FinanceHomeRefreshed());
+      _walletsBloc.add(const ManageWalletsRefresh());
+      _transactionsBloc.add(const ManageTransactionsRefresh());
     }
   }
 

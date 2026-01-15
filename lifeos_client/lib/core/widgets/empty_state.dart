@@ -1,11 +1,11 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
-
 class EmptyState extends StatelessWidget {
   final String title;
   final String description;
   final Widget? action;
   final Widget? icon;
+  final EdgeInsets padding;
 
   const EmptyState({
     super.key,
@@ -13,6 +13,7 @@ class EmptyState extends StatelessWidget {
     required this.description,
     this.action,
     this.icon,
+    this.padding = const EdgeInsets.all(32),
   });
 
   @override
@@ -22,7 +23,7 @@ class EmptyState extends StatelessWidget {
 
     return Center(
       child: Padding(
-        padding: const EdgeInsets.all(32),
+        padding: padding,
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [

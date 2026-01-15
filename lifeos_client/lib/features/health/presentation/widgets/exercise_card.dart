@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/config/app_config.dart';
 import 'package:lifeos_client/core/theme/app_colors.dart';
@@ -37,10 +38,10 @@ class ExerciseCard extends StatelessWidget {
             ),
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: Image.network(
-                AppConfig.serverBaseUrl + (exercise.image ?? ''),
+              child: CachedNetworkImage(
+                imageUrl: AppConfig.serverBaseUrl + (exercise.image ?? ''),
                 fit: BoxFit.cover,
-                errorBuilder: (context, error, stackTrace) {
+                errorWidget: (context, error, stackTrace) {
                   return const Center(
                     child: HugeIcon(
                       icon: HugeIcons.strokeRoundedDumbbell03,
