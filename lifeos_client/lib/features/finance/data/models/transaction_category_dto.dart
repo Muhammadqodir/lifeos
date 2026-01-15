@@ -1,7 +1,14 @@
 import 'package:equatable/equatable.dart';
+import 'package:hive/hive.dart';
 
+part 'transaction_category_dto.g.dart';
+
+@HiveType(typeId: 3)
 enum TransactionCategoryType {
+  @HiveField(0)
   income,
+  
+  @HiveField(1)
   expense;
 
   String toJson() {
@@ -25,15 +32,33 @@ enum TransactionCategoryType {
   }
 }
 
+@HiveType(typeId: 4)
 class TransactionCategoryDto extends Equatable {
+  @HiveField(0)
   final int id;
+  
+  @HiveField(1)
   final int? userId;
+  
+  @HiveField(2)
   final String title;
+  
+  @HiveField(3)
   final String icon;
+  
+  @HiveField(4)
   final String color;
+  
+  @HiveField(5)
   final TransactionCategoryType type;
+  
+  @HiveField(6)
   final bool isSystem;
+  
+  @HiveField(7)
   final DateTime createdAt;
+  
+  @HiveField(8)
   final DateTime updatedAt;
 
   const TransactionCategoryDto({

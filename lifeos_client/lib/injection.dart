@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'core/config/app_config.dart';
 import 'core/network/auth_interceptor.dart';
@@ -10,8 +11,14 @@ import 'features/auth/domain/repositories/auth_repository.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/navigation/presentation/bloc/navigation_bloc.dart';
 import 'features/finance/data/datasources/finance_api_client.dart';
+import 'features/finance/data/datasources/wallet_cache_service.dart';
+import 'features/finance/data/datasources/category_cache_service.dart';
+import 'features/finance/data/datasources/currency_cache_service.dart';
 import 'features/finance/data/repositories/finance_repository_impl.dart';
 import 'features/finance/domain/repositories/finance_repository.dart';
+import 'features/finance/data/models/currency_dto.dart';
+import 'features/finance/data/models/wallet_dto.dart';
+import 'features/finance/data/models/transaction_category_dto.dart';
 import 'features/finance/presentation/bloc/add_wallet_bloc.dart';
 import 'features/finance/presentation/bloc/manage_wallets_bloc.dart';
 import 'features/finance/presentation/bloc/manage_transactions_bloc.dart';
@@ -33,6 +40,16 @@ import 'features/health/presentation/bloc/wellbeing_entry_bloc.dart';
 final getIt = GetIt.instance;
 
 Future<void> setupDependencies() async {
+  // Initialize Hive
+  await Hive.initFlutter();
+  
+  // Register Hive TypeAdapters
+  Hive.registerAdapter(CurrencyDtoAdapter());
+  Hive.registerAdapter(WalletDtoAdapter());
+  Hive.registerAdapter(WalletTypeAdapter());
+  Hive.registerAdapter(TransactionCategoryDtoAdapter());
+  Hive.registerAdapter(TransactionCategoryTypeAdapter());
+  
   // External dependencies
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPreferences);
@@ -74,6 +91,19 @@ Future<void> setupDependencies() async {
     () => HealthApiClient(dio: getIt<Dio>(), baseUrl: AppConfig.apiBaseUrl),
   );
 
+  // Cache services
+  getIt.registerLazySingleton<WalletCacheService>(
+    () => WalletCacheService(),
+  );
+
+  getIt.registerLazySingleton<CategoryCacheService>(
+    () => CategoryCacheService(),
+  );
+
+  getIt.registerLazySingleton<CurrencyCacheService>(
+    () => CurrencyCacheService(),
+  );
+
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
@@ -83,7 +113,12 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerLazySingleton<FinanceRepository>(
-    () => FinanceRepositoryImpl(apiClient: getIt<FinanceApiClient>()),
+    () => FinanceRepositoryImpl(
+      apiClient: getIt<FinanceApiClient>(),
+      walletCache: getIt<WalletCacheService>(),
+      categoryCache: getIt<CategoryCacheService>(),
+      currencyCache: getIt<CurrencyCacheService>(),
+    ),
   );
 
   getIt.registerLazySingleton<HealthRepository>(

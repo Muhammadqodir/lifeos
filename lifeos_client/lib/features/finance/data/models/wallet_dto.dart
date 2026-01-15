@@ -1,10 +1,21 @@
 import 'package:equatable/equatable.dart';
+import 'package:hive/hive.dart';
 import 'currency_dto.dart';
 
+part 'wallet_dto.g.dart';
+
+@HiveType(typeId: 1)
 enum WalletType {
+  @HiveField(0)
   card,
+  
+  @HiveField(1)
   bankAccount,
+  
+  @HiveField(2)
   cash,
+  
+  @HiveField(3)
   other;
 
   String toJson() {
@@ -36,16 +47,36 @@ enum WalletType {
   }
 }
 
+@HiveType(typeId: 2)
 class WalletDto extends Equatable {
+  @HiveField(0)
   final int id;
+  
+  @HiveField(1)
   final int userId;
+  
+  @HiveField(2)
   final String name;
+  
+  @HiveField(3)
   final int currencyId;
+  
+  @HiveField(4)
   final CurrencyDto currency;
+  
+  @HiveField(5)
   final WalletType type;
+  
+  @HiveField(6)
   final bool isActive;
+  
+  @HiveField(7)
   final double? balance; // Coming from balance endpoint
+  
+  @HiveField(8)
   final DateTime createdAt;
+  
+  @HiveField(9)
   final DateTime updatedAt;
 
   const WalletDto({
