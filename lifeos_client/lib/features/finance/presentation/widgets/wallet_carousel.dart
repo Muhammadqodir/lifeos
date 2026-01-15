@@ -1,6 +1,5 @@
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/widgets/empty_state.dart';
-import 'package:lifeos_client/core/widgets/tappable.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../../data/models/wallet_dto.dart';
 import 'wallet_card.dart';

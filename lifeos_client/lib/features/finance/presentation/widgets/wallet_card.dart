@@ -69,24 +69,12 @@ class WalletCard extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: 4),
-              if (wallet.balance != null)
-                MoneyText(
-                  amount: wallet.balance!,
-                  currencyCode: wallet.currency.code,
-                  size: MoneyTextSize.large,
-                  isVisible: context
-                      .watch<AmountVisibilityProvider>()
-                      .isVisible,
-                )
-              else
-                Container(
-                  width: 100,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    color: colorScheme.muted,
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
+              MoneyText(
+                amount: wallet.balance,
+                currencyCode: wallet.currency.code,
+                size: MoneyTextSize.large,
+                isVisible: context.watch<AmountVisibilityProvider>().isVisible,
+              ),
             ],
           ),
         ),

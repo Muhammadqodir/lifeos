@@ -72,7 +72,10 @@ class _WalletSelectorState extends State<WalletSelector> {
               return Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
-                  HugeIcon(icon: FinanceConstants.getWalletTypeIcon(wallet.type), size: 18),
+                  HugeIcon(
+                    icon: FinanceConstants.getWalletTypeIcon(wallet.type),
+                    size: 18,
+                  ),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -117,15 +120,13 @@ class _WalletSelectorState extends State<WalletSelector> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(wallet.name),
-                              if (wallet.balance != null) ...[
-                                Text(
-                                  '${wallet.currency.icon} ${wallet.balance?.toMoneyFormat()}',
-                                  style: TextStyle(
-                                    fontSize: 12,
-                                    color: colorScheme.mutedForeground,
-                                  ),
+                              Text(
+                                '${wallet.currency.icon} ${wallet.balance.toMoneyFormat()}',
+                                style: TextStyle(
+                                  fontSize: 12,
+                                  color: colorScheme.mutedForeground,
                                 ),
-                              ],
+                              ),
                             ],
                           ),
                         ),

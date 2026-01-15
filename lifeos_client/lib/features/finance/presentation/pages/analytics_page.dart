@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
@@ -11,7 +12,6 @@ import '../bloc/analytics_state.dart';
 import '../widgets/pie_chart_section.dart';
 import '../../../../core/widgets/range_date_picker.dart';
 import '../widgets/analytics_summary_card.dart';
-import '../widgets/analytics_loading_skeleton.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
@@ -218,7 +218,7 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
       child: BlocBuilder<AnalyticsBloc, AnalyticsState>(
         builder: (context, state) {
           if (state is AnalyticsLoading || state is AnalyticsInitial) {
-            return const AnalyticsLoadingSkeleton();
+            return const LoadingState(message: 'Loading analytics data...');
           }
 
           if (state is AnalyticsFailure) {

@@ -66,6 +66,7 @@ class TransactionTile extends StatelessWidget {
         ],
       ),
       child: Tappable(
+        lowerBound: 0.98,
         onTap: () {
           if (onTap != null) {
             onTap!();
@@ -75,11 +76,18 @@ class TransactionTile extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
           child: Row(
             children: [
-              // Category icon
-              CategoryIcon(
-                icon: transaction.category?.icon ?? '⭕️',
-                color: transaction.category?.color ?? '#000000',
-              ),
+              if (transaction.type == TransactionType.transfer ||
+                  transaction.type == TransactionType.exchange)
+                CategoryIcon(
+                  icon: _getTypeIcon(transaction.type),
+                  color: '#858585',
+                )
+              else
+                // Category icon
+                CategoryIcon(
+                  icon: transaction.category?.icon ?? '⭕️',
+                  color: transaction.category?.color ?? '#000000',
+                ),
               const SizedBox(width: 12),
               // Transaction details
               Expanded(
@@ -120,6 +128,18 @@ class TransactionTile extends StatelessWidget {
                         ? Colors.green.shade600
                         : Colors.red.shade600,
                   ),
+                  if ((transaction.type == TransactionType.exchange || transaction.type == TransactionType.transfer) &&
+                      transaction.entries.length >= 2) ...[
+                    const SizedBox(height: 2),
+                    MoneyText(
+                      amount: transaction.entries[1].amount,
+                      currencyCode: transaction.entries[1].currency.code,
+                      size: MoneyTextSize.small,
+                      color: transaction.entries[1].amount > 0
+                          ? Colors.green.shade600
+                          : Colors.red.shade600,
+                    ),
+                  ],
                 ],
               ),
             ],
@@ -190,7 +210,7 @@ class TransactionTile extends StatelessWidget {
       case TransactionType.expense:
         return '💸';
       case TransactionType.transfer:
-        return '↔️';
+        return '🔁';
       case TransactionType.exchange:
         return '💱';
     }
@@ -207,12 +227,5 @@ class TransactionTile extends StatelessWidget {
       case TransactionType.exchange:
         return 'Exchange';
     }
-  }
-
-  Color _hexToColor(String hexString) {
-    final buffer = StringBuffer();
-    if (hexString.length == 6 || hexString.length == 7) buffer.write('ff');
-    buffer.write(hexString.replaceFirst('#', ''));
-    return Color(int.parse(buffer.toString(), radix: 16));
   }
 }

@@ -367,6 +367,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
     final nameController = TextEditingController();
     String selectedIcon = '📦';
     String selectedColor = 'FF6B7280';
+    String selectedType = 'expense';
 
     // Capture the bloc before showing the dialog
     final bloc = context.read<FinanceSettingsBloc>();
@@ -375,7 +376,6 @@ class _FinanceSettingsPageContent extends StatelessWidget {
       context: context,
       builder: (dialogContext) => StatefulBuilder(
         builder: (context, setState) {
-          String selectedType = 'expense';
 
           return SingleChildScrollView(
             physics: AlwaysScrollableScrollPhysics(
