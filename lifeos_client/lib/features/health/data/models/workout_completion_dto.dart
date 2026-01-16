@@ -1,6 +1,8 @@
 import 'package:equatable/equatable.dart';
 
 class WorkoutCompletionDto extends Equatable {
+  final int? id;
+  final int? workoutSessionId;
   final String? photoPath;
   final double? bodyWeightKg;
   final double? heightCm;
@@ -10,8 +12,12 @@ class WorkoutCompletionDto extends Equatable {
   final double? thighsCm;
   final double? calfsCm;
   final String? notes;
+  final DateTime? createdAt;
+  final DateTime? updatedAt;
 
   const WorkoutCompletionDto({
+    this.id,
+    this.workoutSessionId,
     this.photoPath,
     this.bodyWeightKg,
     this.heightCm,
@@ -21,10 +27,14 @@ class WorkoutCompletionDto extends Equatable {
     this.thighsCm,
     this.calfsCm,
     this.notes,
+    this.createdAt,
+    this.updatedAt,
   });
 
   factory WorkoutCompletionDto.fromJson(Map<String, dynamic> json) {
     return WorkoutCompletionDto(
+      id: json['id'] as int?,
+      workoutSessionId: json['workout_session_id'] as int?,
       photoPath: json['photo_path'] as String?,
       bodyWeightKg: json['body_weight_kg'] != null
           ? (json['body_weight_kg'] as num).toDouble()
@@ -48,11 +58,19 @@ class WorkoutCompletionDto extends Equatable {
           ? (json['calfs_cm'] as num).toDouble()
           : null,
       notes: json['notes'] as String?,
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
+          : null,
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
+          : null,
     );
   }
 
   Map<String, dynamic> toJson() {
     return {
+      if (id != null) 'id': id,
+      if (workoutSessionId != null) 'workout_session_id': workoutSessionId,
       'photo_path': photoPath,
       'body_weight_kg': bodyWeightKg,
       'height_cm': heightCm,
@@ -62,10 +80,14 @@ class WorkoutCompletionDto extends Equatable {
       'thighs_cm': thighsCm,
       'calfs_cm': calfsCm,
       'notes': notes,
+      if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
+      if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
   }
 
   WorkoutCompletionDto copyWith({
+    int? id,
+    int? workoutSessionId,
     String? photoPath,
     double? bodyWeightKg,
     double? heightCm,
@@ -75,8 +97,12 @@ class WorkoutCompletionDto extends Equatable {
     double? thighsCm,
     double? calfsCm,
     String? notes,
+    DateTime? createdAt,
+    DateTime? updatedAt,
   }) {
     return WorkoutCompletionDto(
+      id: id ?? this.id,
+      workoutSessionId: workoutSessionId ?? this.workoutSessionId,
       photoPath: photoPath ?? this.photoPath,
       bodyWeightKg: bodyWeightKg ?? this.bodyWeightKg,
       heightCm: heightCm ?? this.heightCm,
@@ -86,11 +112,15 @@ class WorkoutCompletionDto extends Equatable {
       thighsCm: thighsCm ?? this.thighsCm,
       calfsCm: calfsCm ?? this.calfsCm,
       notes: notes ?? this.notes,
+      createdAt: createdAt ?? this.createdAt,
+      updatedAt: updatedAt ?? this.updatedAt,
     );
   }
 
   @override
   List<Object?> get props => [
+        id,
+        workoutSessionId,
         photoPath,
         bodyWeightKg,
         heightCm,
@@ -100,5 +130,7 @@ class WorkoutCompletionDto extends Equatable {
         thighsCm,
         calfsCm,
         notes,
+        createdAt,
+        updatedAt,
       ];
 }

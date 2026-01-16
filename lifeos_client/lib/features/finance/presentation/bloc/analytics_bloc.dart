@@ -136,8 +136,8 @@ class AnalyticsBloc extends Bloc<AnalyticsEvent, AnalyticsState> {
       dateFrom = currentState.dateFrom;
       dateTo = currentState.dateTo;
     } else if (currentState is AnalyticsFailure) {
-      dateFrom = currentState.dateFrom ?? dateFrom;
-      dateTo = currentState.dateTo ?? dateTo;
+      dateFrom = currentState.dateFrom;
+      dateTo = currentState.dateTo;
     }
 
     add(

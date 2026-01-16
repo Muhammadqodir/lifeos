@@ -229,6 +229,8 @@ class HealthApiClient {
         queryParameters: queryParameters,
       );
 
+      print(response.data);
+
       if (response.statusCode == 200) {
         return WorkoutSummaryDto.fromJson(response.data);
       } else {

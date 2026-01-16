@@ -19,7 +19,8 @@ class WorkoutSessionController extends Controller
 {
     public function index(Request $request): AnonymousResourceCollection
     {
-        $query = WorkoutSession::where('user_id', auth()->id());
+        $query = WorkoutSession::where('user_id', auth()->id())
+            ->with(['workoutExercises.exercise', 'workoutExercises.sets', 'completion']);
 
         if ($request->filled('from')) {
             $query->where('started_at', '>=', $request->from);
@@ -209,7 +210,7 @@ class WorkoutSessionController extends Controller
     {
         $this->authorize('view', $workout);
 
-        $workout->load(['workoutExercises.exercise', 'workoutExercises.sets']);
+        $workout->load(['workoutExercises.exercise', 'workoutExercises.sets', 'completion']);
 
         return new WorkoutSessionResource($workout);
     }

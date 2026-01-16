@@ -15,6 +15,7 @@ class WorkoutSessionResource extends JsonResource
             'ended_at' => $this->ended_at->toISOString(),
             'note' => $this->note,
             'exercises' => WorkoutExerciseResource::collection($this->whenLoaded('workoutExercises')),
+            'completion' => new WorkoutCompletionResource($this->whenLoaded('completion')),
             'created_at' => $this->created_at->toISOString(),
             'updated_at' => $this->updated_at->toISOString(),
         ];

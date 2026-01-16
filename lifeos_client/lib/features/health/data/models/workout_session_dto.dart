@@ -1,4 +1,5 @@
 import 'package:lifeos_client/features/health/data/models/workout_exercise_dto.dart';
+import 'package:lifeos_client/features/health/data/models/workout_completion_dto.dart';
 
 class WorkoutSessionDto {
   final int? id;
@@ -7,6 +8,7 @@ class WorkoutSessionDto {
   final DateTime? endedAt;
   final String? note;
   final List<WorkoutExerciseDto> exercises;
+  final WorkoutCompletionDto? completion;
   final DateTime? createdAt;
   final DateTime? updatedAt;
 
@@ -17,6 +19,7 @@ class WorkoutSessionDto {
     this.endedAt,
     this.note,
     this.exercises = const [],
+    this.completion,
     this.createdAt,
     this.updatedAt,
   });
@@ -34,6 +37,9 @@ class WorkoutSessionDto {
               ?.map((e) => WorkoutExerciseDto.fromJson(e as Map<String, dynamic>))
               .toList() ??
           [],
+      completion: json['completion'] != null
+          ? WorkoutCompletionDto.fromJson(json['completion'] as Map<String, dynamic>)
+          : null,
       createdAt: json['created_at'] != null 
           ? DateTime.parse(json['created_at'] as String) 
           : null,
@@ -51,6 +57,7 @@ class WorkoutSessionDto {
       'ended_at': endedAt?.toIso8601String(),
       'note': note,
       'exercises': exercises.map((e) => e.toJson()).toList(),
+      if (completion != null) 'completion': completion!.toJson(),
       if (createdAt != null) 'created_at': createdAt!.toIso8601String(),
       if (updatedAt != null) 'updated_at': updatedAt!.toIso8601String(),
     };
@@ -63,6 +70,7 @@ class WorkoutSessionDto {
     DateTime? endedAt,
     String? note,
     List<WorkoutExerciseDto>? exercises,
+    WorkoutCompletionDto? completion,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -73,6 +81,7 @@ class WorkoutSessionDto {
       endedAt: endedAt ?? this.endedAt,
       note: note ?? this.note,
       exercises: exercises ?? this.exercises,
+      completion: completion ?? this.completion,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );
