@@ -5,7 +5,9 @@ use App\Http\Controllers\Api\V1\CurrencyController;
 use App\Http\Controllers\Api\V1\ExerciseController;
 use App\Http\Controllers\Api\V1\ExerciseProgressController;
 use App\Http\Controllers\Api\V1\FxRatesController;
+use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\SleepEntryController;
+use App\Http\Controllers\Api\V1\TodoController;
 use App\Http\Controllers\Api\V1\TransactionCategoryController;
 use App\Http\Controllers\Api\V1\TransactionController;
 use App\Http\Controllers\Api\V1\UserFinanceSettingsController;
@@ -105,5 +107,10 @@ Route::prefix('v1')->group(function () {
             Route::put('sets/{set}', [WorkoutSetController::class, 'update']);
             Route::delete('sets/{set}', [WorkoutSetController::class, 'destroy']);
         });
+
+        // Projects & Todos routes
+        Route::apiResource('projects', ProjectController::class);
+        Route::apiResource('todos', TodoController::class);
+        Route::patch('todos/{todo}/status', [TodoController::class, 'updateStatus']);
     });
 });

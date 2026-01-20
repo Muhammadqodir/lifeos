@@ -14,6 +14,7 @@ class SelectableGroup<T> extends StatefulWidget {
   final ValueChanged<T> onChanged;
   final double spacing;
   final double runSpacing;
+  final bool scrollable;
 
   const SelectableGroup({
     super.key,
@@ -22,6 +23,7 @@ class SelectableGroup<T> extends StatefulWidget {
     required this.onChanged,
     this.spacing = 8,
     this.runSpacing = 8,
+    this.scrollable = false,
   });
 
   @override
@@ -30,6 +32,9 @@ class SelectableGroup<T> extends StatefulWidget {
 
 class _SelectableGroupState<T> extends State<SelectableGroup<T>> {
   late T? _selectedValue;
+  final ScrollController _scrollController = ScrollController();
+  bool _showLeftShadow = false;
+  bool _showRightShadow = false;
 
   @override
   void initState() {
@@ -39,24 +44,49 @@ class _SelectableGroupState<T> extends State<SelectableGroup<T>> {
     } else if (widget.options.isNotEmpty) {
       _selectedValue = widget.options.first.value;
     }
+
+    if (widget.scrollable) {
+      _scrollController.addListener(_updateShadows);
+      WidgetsBinding.instance.addPostFrameCallback((_) => _updateShadows());
+    }
+  }
+
+  @override
+  void dispose() {
+    _scrollController.dispose();
+    super.dispose();
+  }
+
+  void _updateShadows() {
+    if (!mounted) return;
+    setState(() {
+      _showLeftShadow =
+          _scrollController.hasClients && _scrollController.offset > 0;
+      _showRightShadow =
+          _scrollController.hasClients &&
+          _scrollController.offset < _scrollController.position.maxScrollExtent;
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
+    final row = Row(
       spacing: widget.spacing,
-      runSpacing: widget.runSpacing,
       children: widget.options.map((option) {
         final isSelected = _selectedValue == option.value;
-        return Tappable(
-          lowerBound: 0.98,
-          onTap: () {
-            setState(() {
-              _selectedValue = option.value;
-            });
-            widget.onChanged(option.value);
-          },
-          child: IntrinsicWidth(
+        final child = Padding(
+          padding: EdgeInsets.only(
+            left: widget.options.first == option && widget.scrollable ? 12 : 0,
+            right: widget.options.last == option && widget.scrollable ? 12 : 0,
+          ),
+          child: Tappable(
+            lowerBound: 0.98,
+            onTap: () {
+              setState(() {
+                _selectedValue = option.value;
+              });
+              widget.onChanged(option.value);
+            },
             child: AnimatedContainer(
               duration: Duration(milliseconds: 200),
               decoration: BoxDecoration(
@@ -90,7 +120,61 @@ class _SelectableGroupState<T> extends State<SelectableGroup<T>> {
             ),
           ),
         );
+
+        return widget.scrollable ? child : Expanded(child: child);
       }).toList(),
     );
+
+    if (widget.scrollable) {
+      return Stack(
+        children: [
+          SingleChildScrollView(
+            controller: _scrollController,
+            scrollDirection: Axis.horizontal,
+            child: row,
+          ),
+          if (_showLeftShadow)
+            Positioned(
+              left: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 20,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerLeft,
+                    end: Alignment.centerRight,
+                    colors: [
+                      Theme.of(context).colorScheme.background,
+                      Theme.of(context).colorScheme.background.withOpacity(0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          if (_showRightShadow)
+            Positioned(
+              right: 0,
+              top: 0,
+              bottom: 0,
+              child: Container(
+                width: 20,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.centerRight,
+                    end: Alignment.centerLeft,
+                    colors: [
+                      Theme.of(context).colorScheme.background,
+                      Theme.of(context).colorScheme.background.withOpacity(0),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+        ],
+      );
+    }
+
+    return SizedBox(width: double.infinity, child: row);
   }
 }

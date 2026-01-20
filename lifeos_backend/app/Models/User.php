@@ -120,4 +120,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Exercise::class);
     }
+
+    /**
+     * Get the projects for the user.
+     */
+    public function projects(): HasMany
+    {
+        return $this->hasMany(Project::class);
+    }
+
+    /**
+     * Get the todos for the user.
+     */
+    public function todos(): HasMany
+    {
+        return $this->hasMany(Todo::class);
+    }
 }

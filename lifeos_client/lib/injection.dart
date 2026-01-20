@@ -29,6 +29,15 @@ import 'features/health/presentation/bloc/workout_bloc.dart';
 import 'features/health/presentation/bloc/exercise_bloc.dart';
 import 'features/health/presentation/bloc/sleep_entry_bloc.dart';
 import 'features/health/presentation/bloc/wellbeing_entry_bloc.dart';
+import 'features/projects/data/datasources/projects_api_client.dart';
+import 'features/projects/data/repositories/projects_repository_impl.dart';
+import 'features/projects/domain/repositories/projects_repository.dart';
+import 'features/projects/presentation/bloc/manage_projects_bloc.dart';
+import 'features/projects/presentation/bloc/add_project_bloc.dart';
+import 'features/projects/data/repositories/todos_repository_impl.dart';
+import 'features/projects/domain/repositories/todos_repository.dart';
+import 'features/projects/presentation/bloc/manage_todos_bloc.dart';
+import 'features/projects/presentation/bloc/create_todo_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -74,6 +83,10 @@ Future<void> setupDependencies() async {
     () => HealthApiClient(dio: getIt<Dio>(), baseUrl: AppConfig.apiBaseUrl),
   );
 
+  getIt.registerLazySingleton<ProjectsApiClient>(
+    () => ProjectsApiClient(dio: getIt<Dio>()),
+  );
+
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
@@ -99,6 +112,14 @@ Future<void> setupDependencies() async {
       apiClient: getIt<HealthApiClient>(),
       localStorage: getIt<WorkoutLocalStorage>(),
     ),
+  );
+
+  getIt.registerLazySingleton<ProjectsRepository>(
+    () => ProjectsRepositoryImpl(apiClient: getIt<ProjectsApiClient>()),
+  );
+
+  getIt.registerLazySingleton<TodosRepository>(
+    () => TodosRepositoryImpl(getIt<ProjectsApiClient>()),
   );
 
   // BLoCs
@@ -146,6 +167,22 @@ Future<void> setupDependencies() async {
 
   getIt.registerFactory<SleepEntryBloc>(
     () => SleepEntryBloc(healthRepository: getIt<HealthRepository>()),
+  );
+
+  getIt.registerFactory<ManageProjectsBloc>(
+    () => ManageProjectsBloc(projectsRepository: getIt<ProjectsRepository>()),
+  );
+
+  getIt.registerFactory<AddProjectBloc>(
+    () => AddProjectBloc(projectsRepository: getIt<ProjectsRepository>()),
+  );
+
+  getIt.registerFactory<ManageTodosBloc>(
+    () => ManageTodosBloc(getIt<TodosRepository>()),
+  );
+
+  getIt.registerFactory<CreateTodoBloc>(
+    () => CreateTodoBloc(getIt<TodosRepository>()),
   );
 
   getIt.registerFactory<WellbeingEntryBloc>(

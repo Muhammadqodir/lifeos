@@ -10,6 +10,9 @@ import '../../../finance/presentation/pages/finance_main_page.dart';
 import '../../../finance/presentation/providers/amount_visibility_provider.dart';
 import '../../../health/presentation/bloc/health_home_bloc.dart';
 import '../../../health/presentation/bloc/health_home_event.dart';
+import '../../../projects/presentation/pages/projects_main_page.dart';
+import '../../../projects/presentation/bloc/manage_projects_bloc.dart';
+import '../../../projects/presentation/bloc/manage_projects_event.dart';
 import '../bloc/navigation_bloc.dart';
 import '../bloc/navigation_event.dart';
 import '../bloc/navigation_state.dart';
@@ -55,15 +58,6 @@ class _MainPageContent extends StatelessWidget {
     ),
   ];
 
-  /// Page titles for each tab
-  static const List<String> _pageTitles = [
-    'Home',
-    'Finances',
-    'Health',
-    'Projects',
-    'Other',
-  ];
-
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<NavigationBloc, NavigationState>(
@@ -91,7 +85,10 @@ class _MainPageContent extends StatelessWidget {
         create: (_) => getIt<HealthHomeBloc>()..add(const HealthHomeStarted()),
         child: const GymMainPage(),
       ),
-      const _PlaceholderPage(title: 'Projects'),
+      BlocProvider(
+        create: (_) => getIt<ManageProjectsBloc>()..add(const ManageProjectsLoad()),
+        child: const ProjectsMainPage(),
+      ),
       const OtherPage(),
     ];
   }
