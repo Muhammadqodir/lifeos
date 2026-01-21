@@ -47,7 +47,7 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     _currentOrderDirection = event.orderDirection;
 
     try {
-      final todos = await _todosRepository.getTodos(
+      await _todosRepository.getTodos(
         projectId: event.projectId,
         status: event.status,
         tag: event.tag,
@@ -65,7 +65,12 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
         currentProjectId: event.projectId,
       ));
     } catch (e) {
-      emit(ManageTodosError(e.toString()));
+      emit(ManageTodosError(
+        message: e.toString(),
+        todosByStatus: const {},
+        currentPageByStatus: const {},
+        hasMoreByStatus: const {},
+      ));
     }
   }
 
@@ -108,7 +113,12 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
         currentProjectId: event.projectId,
       ));
     } catch (e) {
-      emit(ManageTodosError(e.toString()));
+      emit(ManageTodosError(
+        message: e.toString(),
+        todosByStatus: const {},
+        currentPageByStatus: const {},
+        hasMoreByStatus: const {},
+      ));
     }
   }
 
@@ -161,7 +171,24 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
         ));
       }
     } catch (e) {
-      emit(ManageTodosError(e.toString()));
+      final currentState = state;
+      if (currentState is ManageTodosLoaded) {
+        emit(ManageTodosError(
+          message: e.toString(),
+          todosByStatus: currentState.todosByStatus,
+          currentPageByStatus: currentState.currentPageByStatus,
+          hasMoreByStatus: currentState.hasMoreByStatus,
+          isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+          currentProjectId: currentState.currentProjectId,
+        ));
+      } else {
+        emit(ManageTodosError(
+          message: e.toString(),
+          todosByStatus: const {},
+          currentPageByStatus: const {},
+          hasMoreByStatus: const {},
+        ));
+      }
     }
   }
 
@@ -231,9 +258,16 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
           state.isLoadingMoreByStatus,
         );
         updatedLoadingMore[event.status] = false;
-        emit(state.copyWith(isLoadingMoreByStatus: updatedLoadingMore));
+        
+        emit(ManageTodosError(
+          message: e.toString(),
+          todosByStatus: state.todosByStatus,
+          currentPageByStatus: state.currentPageByStatus,
+          hasMoreByStatus: state.hasMoreByStatus,
+          isLoadingMoreByStatus: updatedLoadingMore,
+          currentProjectId: state.currentProjectId,
+        ));
       }
-      emit(ManageTodosError(e.toString()));
     }
   }
 
@@ -259,7 +293,17 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     DeleteTodo event,
     Emitter<ManageTodosState> emit,
   ) async {
-    emit(TodoDeleting(event.todoId));
+    final currentState = state;
+    if (currentState is! ManageTodosLoaded) return;
+
+    emit(TodoDeleting(
+      todoId: event.todoId,
+      todosByStatus: currentState.todosByStatus,
+      currentPageByStatus: currentState.currentPageByStatus,
+      hasMoreByStatus: currentState.hasMoreByStatus,
+      isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+      currentProjectId: currentState.currentProjectId,
+    ));
 
     try {
       await _todosRepository.deleteTodo(event.todoId);
@@ -267,7 +311,14 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
       // Refresh the list
       add(const RefreshTodos());
     } catch (e) {
-      emit(ManageTodosError(e.toString()));
+      emit(ManageTodosError(
+        message: e.toString(),
+        todosByStatus: currentState.todosByStatus,
+        currentPageByStatus: currentState.currentPageByStatus,
+        hasMoreByStatus: currentState.hasMoreByStatus,
+        isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+        currentProjectId: currentState.currentProjectId,
+      ));
 
       // Reload to restore previous state
       add(const RefreshTodos());
@@ -279,22 +330,49 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     Emitter<ManageTodosState> emit,
   ) async {
     final currentState = state;
+    if (currentState is! ManageTodosLoaded) return;
 
     emit(TodoStatusUpdating(
       todoId: event.todoId,
       newStatus: event.status,
+      todosByStatus: currentState.todosByStatus,
+      currentPageByStatus: currentState.currentPageByStatus,
+      hasMoreByStatus: currentState.hasMoreByStatus,
+      isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+      currentProjectId: currentState.currentProjectId,
     ));
 
     try {
-      final updatedTodo = await _todosRepository.updateTodoStatus(
+      await _todosRepository.updateTodoStatus(
         event.todoId,
         event.status,
       );
 
-      // Refresh affected statuses
-      add(const RefreshTodos());
+      // Refresh only affected statuses (old and new)
+      final statusesToRefresh = <String>{};
+      if (event.oldStatus != null) {
+        statusesToRefresh.add(event.oldStatus!);
+      }
+      statusesToRefresh.add(event.status);
+
+      if (currentState.currentProjectId != null) {
+        for (final status in statusesToRefresh) {
+          add(LoadTodosByStatus(
+            projectId: currentState.currentProjectId!,
+            status: status,
+            page: 1,
+          ));
+        }
+      }
     } catch (e) {
-      emit(ManageTodosError(e.toString()));
+      emit(ManageTodosError(
+        message: e.toString(),
+        todosByStatus: currentState.todosByStatus,
+        currentPageByStatus: currentState.currentPageByStatus,
+        hasMoreByStatus: currentState.hasMoreByStatus,
+        isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+        currentProjectId: currentState.currentProjectId,
+      ));
 
       // Reload to restore previous state
       add(const RefreshTodos());

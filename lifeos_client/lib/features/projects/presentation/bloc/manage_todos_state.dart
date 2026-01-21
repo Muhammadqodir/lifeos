@@ -8,22 +8,14 @@ abstract class ManageTodosState extends Equatable {
   List<Object?> get props => [];
 }
 
-class ManageTodosInitial extends ManageTodosState {
-  const ManageTodosInitial();
-}
-
-class ManageTodosLoading extends ManageTodosState {
-  const ManageTodosLoading();
-}
-
-class ManageTodosLoaded extends ManageTodosState {
+class ManageTodosWithData extends ManageTodosState {
   final Map<String, List<TodoDto>> todosByStatus;
   final Map<String, int> currentPageByStatus;
   final Map<String, bool> hasMoreByStatus;
   final Map<String, bool> isLoadingMoreByStatus;
   final int? currentProjectId;
 
-  const ManageTodosLoaded({
+  const ManageTodosWithData({
     required this.todosByStatus,
     required this.currentPageByStatus,
     required this.hasMoreByStatus,
@@ -39,6 +31,24 @@ class ManageTodosLoaded extends ManageTodosState {
         isLoadingMoreByStatus,
         currentProjectId,
       ];
+}
+
+class ManageTodosInitial extends ManageTodosState {
+  const ManageTodosInitial();
+}
+
+class ManageTodosLoading extends ManageTodosState {
+  const ManageTodosLoading();
+}
+
+class ManageTodosLoaded extends ManageTodosWithData {
+  const ManageTodosLoaded({
+    required super.todosByStatus,
+    required super.currentPageByStatus,
+    required super.hasMoreByStatus,
+    super.isLoadingMoreByStatus = const {},
+    super.currentProjectId,
+  });
 
   ManageTodosLoaded copyWith({
     Map<String, List<TodoDto>>? todosByStatus,
@@ -58,33 +68,74 @@ class ManageTodosLoaded extends ManageTodosState {
   }
 }
 
-class ManageTodosError extends ManageTodosState {
+class ManageTodosError extends ManageTodosWithData {
   final String message;
 
-  const ManageTodosError(this.message);
+  const ManageTodosError({
+    required this.message,
+    required super.todosByStatus,
+    required super.currentPageByStatus,
+    required super.hasMoreByStatus,
+    super.isLoadingMoreByStatus = const {},
+    super.currentProjectId,
+  });
 
   @override
-  List<Object?> get props => [message];
+  List<Object?> get props => [
+        message,
+        todosByStatus,
+        currentPageByStatus,
+        hasMoreByStatus,
+        isLoadingMoreByStatus,
+        currentProjectId,
+      ];
 }
 
-class TodoDeleting extends ManageTodosState {
+class TodoDeleting extends ManageTodosWithData {
   final int todoId;
 
-  const TodoDeleting(this.todoId);
+  const TodoDeleting({
+    required this.todoId,
+    required super.todosByStatus,
+    required super.currentPageByStatus,
+    required super.hasMoreByStatus,
+    super.isLoadingMoreByStatus = const {},
+    super.currentProjectId,
+  });
 
   @override
-  List<Object?> get props => [todoId];
+  List<Object?> get props => [
+        todoId,
+        todosByStatus,
+        currentPageByStatus,
+        hasMoreByStatus,
+        isLoadingMoreByStatus,
+        currentProjectId,
+      ];
 }
 
-class TodoStatusUpdating extends ManageTodosState {
+class TodoStatusUpdating extends ManageTodosWithData {
   final int todoId;
   final String newStatus;
 
   const TodoStatusUpdating({
     required this.todoId,
     required this.newStatus,
+    required super.todosByStatus,
+    required super.currentPageByStatus,
+    required super.hasMoreByStatus,
+    super.isLoadingMoreByStatus = const {},
+    super.currentProjectId,
   });
 
   @override
-  List<Object?> get props => [todoId, newStatus];
+  List<Object?> get props => [
+        todoId,
+        newStatus,
+        todosByStatus,
+        currentPageByStatus,
+        hasMoreByStatus,
+        isLoadingMoreByStatus,
+        currentProjectId,
+      ];
 }

@@ -18,6 +18,7 @@ import '../../../projects/presentation/bloc/manage_todos_state.dart';
 import '../../../projects/data/models/todo_dto.dart';
 import '../widgets/todo_card.dart';
 import 'create_todo_page.dart';
+import 'todo_details_page.dart';
 
 class ProjectDetailsPage extends StatefulWidget {
   final ProjectDto project;
@@ -125,11 +126,8 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                 return const Center(child: CircularProgressIndicator());
               }
 
-              if (state is ManageTodosError) {
-                return ErrorState(message: state.message);
-              }
-
-              if (state is ManageTodosLoaded) {
+              // Handle all WithData states
+              if (state is ManageTodosWithData) {
                 final todosByStatus = state.todosByStatus;
                 final hasMoreByStatus = state.hasMoreByStatus;
                 final isLoadingMoreByStatus = state.isLoadingMoreByStatus;
@@ -272,13 +270,21 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
         return TodoCard(
           todo: todo,
           onTap: () {
-            // TODO: Navigate to todo details
+            Navigator.of(context).push(
+              CupertinoPageRoute(
+                builder: (context) => TodoDetailsPage(todo: todo),
+              ),
+            );
           },
           onStatusChanged: ({required String status, DateTime? plannedDate}) {
             if(status == 'planned' && plannedDate != null) {
               
             }
-            _todosBloc.add(UpdateTodoStatus(todoId: todo.id, status: status));
+            _todosBloc.add(UpdateTodoStatus(
+              todoId: todo.id,
+              status: status,
+              oldStatus: todo.status,
+            ));
           },
           onDelete: () {
             _confirmDelete(context, todo);

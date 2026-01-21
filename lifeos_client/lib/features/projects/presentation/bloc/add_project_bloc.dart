@@ -16,7 +16,13 @@ class AddProjectBloc extends Bloc<AddProjectEvent, AddProjectState> {
     AddProjectSubmitted event,
     Emitter<AddProjectState> emit,
   ) async {
-    emit(const AddProjectSubmitting());
+    emit(AddProjectSubmitting(
+      title: event.title,
+      description: event.description ?? '',
+      color: event.color,
+      iconImage: event.iconImage,
+      tags: event.tags ?? [],
+    ));
 
     try {
       // Use FormData if there's an icon image to upload
@@ -63,11 +69,24 @@ class AddProjectBloc extends Bloc<AddProjectEvent, AddProjectState> {
         await projectsRepository.createProject(data);
       }
 
-      emit(const AddProjectSuccess());
+      emit(AddProjectSuccess(
+        title: event.title,
+        description: event.description ?? '',
+        color: event.color,
+        iconImage: event.iconImage,
+        tags: event.tags ?? [],
+      ));
     } catch (e, s) {
       print('Error creating project: $e');
       print('Stack trace: $s');
-      emit(AddProjectError(message: e.toString()));
+      emit(AddProjectError(
+        message: e.toString(),
+        title: event.title,
+        description: event.description ?? '',
+        color: event.color,
+        iconImage: event.iconImage,
+        tags: event.tags ?? [],
+      ));
     }
   }
 }

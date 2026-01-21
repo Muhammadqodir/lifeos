@@ -99,14 +99,16 @@ class DeleteTodo extends ManageTodosEvent {
 class UpdateTodoStatus extends ManageTodosEvent {
   final int todoId;
   final String status;
+  final String? oldStatus;
 
   const UpdateTodoStatus({
     required this.todoId,
     required this.status,
+    this.oldStatus,
   });
 
   @override
-  List<Object?> get props => [todoId, status];
+  List<Object?> get props => [todoId, status, oldStatus];
 }
 
 class SearchTodos extends ManageTodosEvent {

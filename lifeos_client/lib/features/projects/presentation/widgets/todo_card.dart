@@ -61,12 +61,7 @@ class TodoCard extends StatelessWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: Theme.of(context).typography.small
-                                  .copyWith(
-                                    fontWeight: FontWeight.w600,
-                                    decoration: todo.status == 'done'
-                                        ? TextDecoration.lineThrough
-                                        : null,
-                                  ),
+                                  .copyWith(fontWeight: FontWeight.w600),
                             ),
                           ),
                         ],
@@ -103,10 +98,7 @@ class TodoCard extends StatelessWidget {
       case 'low':
         return CustomBadge(label: "Low", color: AppColors.greenColor);
       case 'middle':
-        return CustomBadge(
-          label: "Medium",
-          color: AppColors.amberColor,
-        );
+        return CustomBadge(label: "Medium", color: AppColors.amberColor);
       case 'high':
         return CustomBadge(label: "Urgent", color: AppColors.redColor);
       default:
@@ -229,10 +221,7 @@ class TodoCard extends StatelessWidget {
           ],
         ).gap(8);
       default:
-        return HugeIcon(
-          icon: HugeIcons.strokeRoundedTickDouble02,
-          strokeWidth: 2,
-        );
+        return SizedBox.shrink();
     }
   }
 

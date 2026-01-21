@@ -32,7 +32,7 @@ class _AddProjectPageContent extends StatefulWidget {
 class _AddProjectPageContentState extends State<_AddProjectPageContent> {
   String _projectTitle = '';
   String _projectDescription = '';
-  String _selectedColor = 'FF6B7280'; // Default blue
+  String _selectedColor = 'FF6B7280';
   XFile? _selectedIconImage;
   final ChipEditingController<String> _tagsController = ChipEditingController();
   List<String> _tags = [];
@@ -44,7 +44,6 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
   }
 
   void _handleFormSubmit(BuildContext context) {
-    // Validate project title
     if (_projectTitle.trim().isEmpty) {
       showToast(
         context: context,
@@ -61,7 +60,6 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
       return;
     }
 
-    // Submit to BLoC
     context.read<AddProjectBloc>().add(
       AddProjectSubmitted(
         title: _projectTitle.trim(),
@@ -97,13 +95,17 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
           );
           Navigator.of(context).pop(true);
         } else if (state is AddProjectError) {
-          print(state.message);
           showToast(
             context: context,
             builder: (context, overlay) {
-              return Utils.buildToast(context, overlay, 'Error', state.message);
+              return Utils.buildToast(
+                context,
+                overlay,
+                'Error',
+                state.message,
+              );
             },
-            location: ToastLocation.bottomCenter,
+            location: ToastLocation.topCenter,
           );
         }
       },
