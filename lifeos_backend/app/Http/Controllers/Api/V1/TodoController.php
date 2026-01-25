@@ -68,6 +68,39 @@ class TodoController extends Controller
     }
 
     /**
+     * Get todo counts by status for a specific project
+     */
+    public function getCountsByStatus(Request $request): JsonResponse
+    {
+        $projectId = $request->get('project_id');
+
+        if (!$projectId) {
+            return response()->json(['error' => 'project_id is required'], 400);
+        }
+
+        $counts = Todo::where('user_id', $request->user()->id)
+            ->where('project_id', $projectId)
+            ->selectRaw('status, count(*) as count')
+            ->groupBy('status')
+            ->pluck('count', 'status')
+            ->map(fn($count) => (int) $count) // Cast to integer
+            ->toArray();
+
+        // Ensure all statuses are present with 0 count if not found
+        $allStatuses = ['inbox', 'planned', 'in_progress', 'blocked', 'done'];
+        $result = [];
+
+        foreach ($allStatuses as $status) {
+            $result[$status] = $counts[$status] ?? 0;
+        }
+
+        return response()->json([
+            'data' => $result,
+        ]);
+    }
+    }
+
+    /**
      * Store a newly created todo.
      */
     public function store(StoreTodoRequest $request): JsonResponse

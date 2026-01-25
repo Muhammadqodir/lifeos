@@ -59,4 +59,9 @@ class TodosRepositoryImpl implements TodosRepository {
   Future<void> deleteTodo(int id) async {
     return _apiClient.deleteTodo(id);
   }
+
+  @override
+  Future<Map<String, int>> getTodoCountsByStatus(int projectId) async {
+    return _apiClient.getTodoCountsByStatus(projectId);
+  }
 }

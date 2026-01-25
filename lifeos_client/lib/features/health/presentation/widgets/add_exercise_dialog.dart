@@ -31,6 +31,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+
     return SingleChildScrollView(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 18),
@@ -41,9 +44,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
             // Title
             Text(
               'Add Custom Exercise',
-              style: Theme.of(
-                context,
-              ).typography.large.copyWith(fontWeight: FontWeight.w600),
+              style: theme.typography.large.copyWith(
+                fontWeight: FontWeight.w600,
+                color: colorScheme.foreground,
+              ),
             ),
             const SizedBox(height: 24),
 
@@ -53,7 +57,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
               children: [
                 Text(
                   'Exercise Name *',
-                  style: Theme.of(context).typography.small,
+                  style: theme.typography.small.copyWith(
+                    color: colorScheme.foreground,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -69,7 +75,12 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Type *', style: Theme.of(context).typography.small),
+                Text(
+                  'Type *',
+                  style: theme.typography.small.copyWith(
+                    color: colorScheme.foreground,
+                  ),
+                ),
                 const SizedBox(height: 8),
                 SelectableGroup<String>(
                   initialValue: selectedType,
@@ -95,7 +106,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
               children: [
                 Text(
                   'Muscle Group (optional)',
-                  style: Theme.of(context).typography.small,
+                  style: theme.typography.small.copyWith(
+                    color: colorScheme.foreground,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 TextField(
@@ -113,7 +126,9 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
               children: [
                 Text(
                   'Exercise Image (optional)',
-                  style: Theme.of(context).typography.small,
+                  style: theme.typography.small.copyWith(
+                    color: colorScheme.foreground,
+                  ),
                 ),
                 const SizedBox(height: 8),
                 if (selectedImage != null)
@@ -122,7 +137,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                     width: double.infinity,
                     decoration: BoxDecoration(
                       border: Border.all(
-                        color: Theme.of(context).colorScheme.border,
+                        color: colorScheme.border,
                       ),
                       borderRadius: BorderRadius.circular(8),
                     ),
@@ -147,9 +162,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                             child: Container(
                               padding: const EdgeInsets.all(4),
                               decoration: BoxDecoration(
-                                color: Theme.of(
-                                  context,
-                                ).colorScheme.destructive,
+                                color: colorScheme.destructive,
                                 borderRadius: BorderRadius.circular(20),
                               ),
                               child: const HugeIcon(

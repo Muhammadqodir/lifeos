@@ -1,6 +1,7 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lifeos_client/core/widgets/category_icon.dart';
 import 'package:lifeos_client/core/widgets/loading_state.dart';
+import 'package:lifeos_client/features/finance/presentation/widgets/add_category.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/modal.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -12,8 +13,6 @@ import '../bloc/finance_settings_bloc.dart';
 import '../bloc/finance_settings_event.dart';
 import '../bloc/finance_settings_state.dart';
 import '../../data/models/transaction_category_dto.dart';
-import '../../../../core/widgets/selectable_group.dart';
-import '../../../../core/widgets/color_selector.dart';
 
 class FinanceSettingsPage extends StatelessWidget {
   const FinanceSettingsPage({super.key});
@@ -364,150 +363,11 @@ class _FinanceSettingsPageContent extends StatelessWidget {
   }
 
   void _showAddCategoryDialog(BuildContext context) {
-    final nameController = TextEditingController();
-    String selectedIcon = '📦';
-    String selectedColor = 'FF6B7280';
-    String selectedType = 'expense';
-
-    // Capture the bloc before showing the dialog
     final bloc = context.read<FinanceSettingsBloc>();
 
     BottomSheetModal.openSheet(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setState) {
-
-          return SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Add Category',
-                    style: Theme.of(
-                      context,
-                    ).typography.large.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                  const SizedBox(height: 24),
-                  Text(
-                    'Category Name:',
-                    style: Theme.of(dialogContext).typography.small,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: nameController,
-                    placeholder: const Text('Category name'),
-                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Type:',
-                    style: Theme.of(dialogContext).typography.small,
-                  ),
-                  const SizedBox(height: 8),
-                  SelectableGroup<String>(
-                    initialValue: selectedType,
-                    options: [
-                      SelectableGroupOption(
-                        value: 'expense',
-                        widget: Row(
-                          children: [
-                            HugeIcon(
-                              icon: HugeIcons.strokeRoundedArrowDown01,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Expense',
-                              style: Theme.of(dialogContext).typography.small,
-                            ),
-                          ],
-                        ),
-                      ),
-                      SelectableGroupOption(
-                        value: 'income',
-                        widget: Row(
-                          children: [
-                            HugeIcon(
-                              icon: HugeIcons.strokeRoundedArrowUp01,
-                              size: 18,
-                            ),
-                            const SizedBox(width: 8),
-                            Text(
-                              'Income',
-                              style: Theme.of(dialogContext).typography.small,
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                    onChanged: (value) {
-                      setState(() {
-                        selectedType = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Icon (emoji):',
-                    style: Theme.of(dialogContext).typography.small,
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    initialValue: selectedIcon,
-                    maxLength: 1,
-                    onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                    placeholder: const Text('Enter emoji'),
-                    onChanged: (value) => selectedIcon = value,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Color:',
-                    style: Theme.of(dialogContext).typography.small,
-                  ),
-                  const SizedBox(height: 8),
-                  ColorSelector(
-                    initialColor: selectedColor,
-                    onChanged: (value) {
-                      setState(() {
-                        selectedColor = value;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 24),
-                  SizedBox(
-                    width: double.infinity,
-                    child: PrimaryButton(
-                      onPressed: () {
-                        if (nameController.text.isNotEmpty) {
-                          Navigator.of(dialogContext).pop();
-                          bloc.add(
-                            FinanceSettingsAddCategory(
-                              title: nameController.text,
-                              type: selectedType,
-                              icon: selectedIcon,
-                              color: selectedColor,
-                            ),
-                          );
-                        }
-                      },
-                      child: Text(
-                        'Add',
-                        style: Theme.of(dialogContext).typography.small,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          );
-        },
-      ),
+      builder: (dialogContext) => AddCategorySheet(bloc: bloc),
     );
   }
 
@@ -530,6 +390,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
     }
   }
 }
+
 
 class SettingsSection extends StatelessWidget {
   const SettingsSection({

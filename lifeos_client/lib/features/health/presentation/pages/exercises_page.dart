@@ -40,6 +40,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
     return Scaffold(
       headers: [
         CustomAppBar(
+          showBorder: false,
           title: 'My Exercises',
           leftActions: [
             AppBarAction(
@@ -56,58 +57,52 @@ class _ExercisesPageState extends State<ExercisesPage> {
             ),
           ],
         ),
+        SizedBox(
+          width: double.infinity,
+          child: SelectableGroup(
+            scrollable: true,
+            onChanged: (value) {
+              setState(() {
+                _selectedType = value;
+              });
+              if (_selectedType == 'all') {
+                context.read<ExerciseBloc>().add(const FilterExercises());
+              } else {
+                context.read<ExerciseBloc>().add(FilterExercises(type: value));
+              }
+            },
+            options: [
+              SelectableGroupOption(
+                value: "all",
+                widget: Row(children: [Text('All')]),
+              ),
+              SelectableGroupOption(
+                value: "strength",
+                widget: Row(children: [Text('Strength')]),
+              ),
+              SelectableGroupOption(
+                value: "distance",
+                widget: Row(children: [Text('Distance')]),
+              ),
+              SelectableGroupOption(
+                value: "time",
+                widget: Row(children: [Text('Time')]),
+              ),
+            ],
+          ),
+        ),
+        SizedBox(height: 12),
+        Divider()
       ],
       child: Column(
         children: [
           Expanded(
             child: SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.only(left: 12, right: 12, bottom: 24),
               physics: AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              child: Column(
-                children: [
-                  SizedBox(
-                    width: double.infinity,
-                    child: SelectableGroup(
-                      onChanged: (value) {
-                        setState(() {
-                          _selectedType = value;
-                        });
-                        if (_selectedType == 'all') {
-                          context.read<ExerciseBloc>().add(
-                            const FilterExercises(),
-                          );
-                        } else {
-                          context.read<ExerciseBloc>().add(
-                            FilterExercises(type: value),
-                          );
-                        }
-                      },
-                      options: [
-                        SelectableGroupOption(
-                          value: "all",
-                          widget: Row(children: [Text('All')]),
-                        ),
-                        SelectableGroupOption(
-                          value: "strength",
-                          widget: Row(children: [Text('Strength')]),
-                        ),
-                        SelectableGroupOption(
-                          value: "distance",
-                          widget: Row(children: [Text('Distance')]),
-                        ),
-                        SelectableGroupOption(
-                          value: "time",
-                          widget: Row(children: [Text('Time')]),
-                        ),
-                      ],
-                    ),
-                  ),
-                  SizedBox(height: 16),
-                  _buildBody(outerContext),
-                ],
-              ),
+              child: Column(children: [_buildBody(outerContext)]),
             ),
           ),
         ],
@@ -239,10 +234,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
                 ...exercises.map(
                   (e) => Padding(
                     padding: const EdgeInsets.only(bottom: 6),
-                    child: ExerciseCard(
-                      exercise: e,
-                      showDeleteButton: true,
-                    ),
+                    child: ExerciseCard(exercise: e, showDeleteButton: true),
                   ),
                 ),
               ];

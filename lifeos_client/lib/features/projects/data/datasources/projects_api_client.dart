@@ -128,6 +128,17 @@ class ProjectsApiClient {
     return data.map((json) => TodoDto.fromJson(json)).toList();
   }
 
+  /// Get todo counts by status for a project
+  Future<Map<String, int>> getTodoCountsByStatus(int projectId) async {
+    final response = await dio.get(
+      '/todos/counts-by-status',
+      queryParameters: {'project_id': projectId},
+    );
+
+    final data = response.data['data'] as Map<String, dynamic>;
+    return data.map((key, value) => MapEntry(key, value as int));
+  }
+
   /// Create a new todo
   Future<TodoDto> createTodo(CreateTodoDto todo) async {
     try {

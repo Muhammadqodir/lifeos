@@ -34,7 +34,13 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     LoadTodos event,
     Emitter<ManageTodosState> emit,
   ) async {
-    emit(const ManageTodosLoading());
+    emit(ManageTodosLoading(
+      todosByStatus: const {},
+      currentPageByStatus: const {},
+      hasMoreByStatus: const {},
+      isLoadingMoreByStatus: const {},
+      countsByStatus: const {},
+    ));
 
     // Store current filters
     _currentProjectId = event.projectId;
@@ -70,6 +76,8 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
         todosByStatus: const {},
         currentPageByStatus: const {},
         hasMoreByStatus: const {},
+        isLoadingMoreByStatus: const {},
+        countsByStatus: const {},
       ));
     }
   }
@@ -78,32 +86,44 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     LoadAllStatuses event,
     Emitter<ManageTodosState> emit,
   ) async {
-    emit(const ManageTodosLoading());
+    emit(ManageTodosLoading(
+      todosByStatus: const {},
+      currentPageByStatus: const {},
+      hasMoreByStatus: const {},
+      isLoadingMoreByStatus: const {},
+      countsByStatus: const {},
+    ));
 
     try {
       final todosByStatus = <String, List<TodoDto>>{};
       final currentPageByStatus = <String, int>{};
       final hasMoreByStatus = <String, bool>{};
+      
+      // Fetch counts and todos in parallel
+      final results = await Future.wait([
+        _todosRepository.getTodoCountsByStatus(event.projectId),
+        Future.wait(
+          event.statuses.map((status) async {
+            final todos = await _todosRepository.getTodos(
+              projectId: event.projectId,
+              status: status,
+              page: 1,
+              perPage: event.perPage,
+            );
+            todosByStatus[status] = todos;
+            currentPageByStatus[status] = 1;
+            hasMoreByStatus[status] = todos.length >= event.perPage;
+          }),
+        ),
+      ]);
 
-      // Load all statuses in parallel
-      await Future.wait(
-        event.statuses.map((status) async {
-          final todos = await _todosRepository.getTodos(
-            projectId: event.projectId,
-            status: status,
-            page: 1,
-            perPage: event.perPage,
-          );
-          todosByStatus[status] = todos;
-          currentPageByStatus[status] = 1;
-          hasMoreByStatus[status] = todos.length >= event.perPage;
-        }),
-      );
+      final countsByStatus = results[0] as Map<String, int>;
 
       emit(ManageTodosLoaded(
         todosByStatus: todosByStatus,
         currentPageByStatus: currentPageByStatus,
         hasMoreByStatus: hasMoreByStatus,
+        countsByStatus: countsByStatus,
         currentProjectId: event.projectId,
       ));
     } catch (e) {
@@ -112,6 +132,8 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
         todosByStatus: const {},
         currentPageByStatus: const {},
         hasMoreByStatus: const {},
+        isLoadingMoreByStatus: const {},
+        countsByStatus: const {},
       ));
     }
   }
@@ -173,6 +195,7 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
           currentPageByStatus: currentState.currentPageByStatus,
           hasMoreByStatus: currentState.hasMoreByStatus,
           isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+          countsByStatus: currentState.countsByStatus,
           currentProjectId: currentState.currentProjectId,
         ));
       } else {
@@ -181,6 +204,8 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
           todosByStatus: const {},
           currentPageByStatus: const {},
           hasMoreByStatus: const {},
+          isLoadingMoreByStatus: const {},
+          countsByStatus: const {},
         ));
       }
     }
@@ -259,6 +284,7 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
           currentPageByStatus: state.currentPageByStatus,
           hasMoreByStatus: state.hasMoreByStatus,
           isLoadingMoreByStatus: updatedLoadingMore,
+          countsByStatus: state.countsByStatus,
           currentProjectId: state.currentProjectId,
         ));
       }
@@ -296,6 +322,7 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
       currentPageByStatus: currentState.currentPageByStatus,
       hasMoreByStatus: currentState.hasMoreByStatus,
       isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+      countsByStatus: currentState.countsByStatus,
       currentProjectId: currentState.currentProjectId,
     ));
 
@@ -311,6 +338,7 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
         currentPageByStatus: currentState.currentPageByStatus,
         hasMoreByStatus: currentState.hasMoreByStatus,
         isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+        countsByStatus: currentState.countsByStatus,
         currentProjectId: currentState.currentProjectId,
       ));
 
@@ -333,6 +361,7 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
       currentPageByStatus: currentState.currentPageByStatus,
       hasMoreByStatus: currentState.hasMoreByStatus,
       isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+      countsByStatus: currentState.countsByStatus,
       currentProjectId: currentState.currentProjectId,
     ));
 
@@ -365,6 +394,7 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
         currentPageByStatus: currentState.currentPageByStatus,
         hasMoreByStatus: currentState.hasMoreByStatus,
         isLoadingMoreByStatus: currentState.isLoadingMoreByStatus,
+        countsByStatus: currentState.countsByStatus,
         currentProjectId: currentState.currentProjectId,
       ));
 

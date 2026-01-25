@@ -135,6 +135,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                 final todosByStatus = state.todosByStatus;
                 final hasMoreByStatus = state.hasMoreByStatus;
                 final isLoadingMoreByStatus = state.isLoadingMoreByStatus;
+                final countsByStatus = state.countsByStatus;
 
                 return Column(
                   children: [
@@ -157,7 +158,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                             widget: _buildTabOption(
                               HugeIcons.strokeRoundedInboxDownload,
                               'Inbox',
-                              todosByStatus['inbox']?.length ?? 0,
+                              countsByStatus['inbox'] ?? 0,
                             ),
                           ),
                           SelectableGroupOption(
@@ -165,7 +166,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                             widget: _buildTabOption(
                               HugeIcons.strokeRoundedCalendar03,
                               'Planned',
-                              todosByStatus['planned']?.length ?? 0,
+                              countsByStatus['planned'] ?? 0,
                             ),
                           ),
                           SelectableGroupOption(
@@ -173,7 +174,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                             widget: _buildTabOption(
                               HugeIcons.strokeRoundedLoading03,
                               'In Progress',
-                              todosByStatus['in_progress']?.length ?? 0,
+                              countsByStatus['in_progress'] ?? 0,
                             ),
                           ),
                           SelectableGroupOption(
@@ -181,7 +182,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                             widget: _buildTabOption(
                               HugeIcons.strokeRoundedAlertCircle,
                               'Blocked',
-                              todosByStatus['blocked']?.length ?? 0,
+                              countsByStatus['blocked'] ?? 0,
                             ),
                           ),
                           SelectableGroupOption(
@@ -189,7 +190,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                             widget: _buildTabOption(
                               HugeIcons.strokeRoundedCheckmarkCircle02,
                               'Done',
-                              todosByStatus['done']?.length ?? 0,
+                              countsByStatus['done'] ?? 0,
                             ),
                           ),
                         ],

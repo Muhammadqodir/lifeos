@@ -13,6 +13,7 @@ class ManageTodosWithData extends ManageTodosState {
   final Map<String, int> currentPageByStatus;
   final Map<String, bool> hasMoreByStatus;
   final Map<String, bool> isLoadingMoreByStatus;
+  final Map<String, int> countsByStatus;
   final int? currentProjectId;
 
   const ManageTodosWithData({
@@ -20,6 +21,7 @@ class ManageTodosWithData extends ManageTodosState {
     required this.currentPageByStatus,
     required this.hasMoreByStatus,
     this.isLoadingMoreByStatus = const {},
+    this.countsByStatus = const {},
     this.currentProjectId,
   });
 
@@ -29,6 +31,7 @@ class ManageTodosWithData extends ManageTodosState {
         currentPageByStatus,
         hasMoreByStatus,
         isLoadingMoreByStatus,
+        countsByStatus,
         currentProjectId,
       ];
 }
@@ -37,8 +40,15 @@ class ManageTodosInitial extends ManageTodosState {
   const ManageTodosInitial();
 }
 
-class ManageTodosLoading extends ManageTodosState {
-  const ManageTodosLoading();
+class ManageTodosLoading extends ManageTodosWithData {
+  const ManageTodosLoading({
+    required super.todosByStatus,
+    required super.currentPageByStatus,
+    required super.hasMoreByStatus,
+    super.isLoadingMoreByStatus = const {},
+    super.countsByStatus = const {},
+    super.currentProjectId,
+  });
 }
 
 class ManageTodosLoaded extends ManageTodosWithData {
@@ -47,6 +57,7 @@ class ManageTodosLoaded extends ManageTodosWithData {
     required super.currentPageByStatus,
     required super.hasMoreByStatus,
     super.isLoadingMoreByStatus = const {},
+    super.countsByStatus = const {},
     super.currentProjectId,
   });
 
@@ -55,6 +66,7 @@ class ManageTodosLoaded extends ManageTodosWithData {
     Map<String, int>? currentPageByStatus,
     Map<String, bool>? hasMoreByStatus,
     Map<String, bool>? isLoadingMoreByStatus,
+    Map<String, int>? countsByStatus,
     int? currentProjectId,
   }) {
     return ManageTodosLoaded(
@@ -63,6 +75,7 @@ class ManageTodosLoaded extends ManageTodosWithData {
       hasMoreByStatus: hasMoreByStatus ?? this.hasMoreByStatus,
       isLoadingMoreByStatus:
           isLoadingMoreByStatus ?? this.isLoadingMoreByStatus,
+      countsByStatus: countsByStatus ?? this.countsByStatus,
       currentProjectId: currentProjectId ?? this.currentProjectId,
     );
   }
@@ -77,6 +90,7 @@ class ManageTodosError extends ManageTodosWithData {
     required super.currentPageByStatus,
     required super.hasMoreByStatus,
     super.isLoadingMoreByStatus = const {},
+    super.countsByStatus = const {},
     super.currentProjectId,
   });
 
@@ -87,6 +101,7 @@ class ManageTodosError extends ManageTodosWithData {
         currentPageByStatus,
         hasMoreByStatus,
         isLoadingMoreByStatus,
+        countsByStatus,
         currentProjectId,
       ];
 }
@@ -100,6 +115,7 @@ class TodoDeleting extends ManageTodosWithData {
     required super.currentPageByStatus,
     required super.hasMoreByStatus,
     super.isLoadingMoreByStatus = const {},
+    super.countsByStatus = const {},
     super.currentProjectId,
   });
 
@@ -110,6 +126,7 @@ class TodoDeleting extends ManageTodosWithData {
         currentPageByStatus,
         hasMoreByStatus,
         isLoadingMoreByStatus,
+        countsByStatus,
         currentProjectId,
       ];
 }
@@ -125,6 +142,7 @@ class TodoStatusUpdating extends ManageTodosWithData {
     required super.currentPageByStatus,
     required super.hasMoreByStatus,
     super.isLoadingMoreByStatus = const {},
+    super.countsByStatus = const {},
     super.currentProjectId,
   });
 
@@ -136,6 +154,7 @@ class TodoStatusUpdating extends ManageTodosWithData {
         currentPageByStatus,
         hasMoreByStatus,
         isLoadingMoreByStatus,
+        countsByStatus,
         currentProjectId,
       ];
 }

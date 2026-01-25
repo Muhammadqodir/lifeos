@@ -24,4 +24,6 @@ abstract class TodosRepository {
   Future<TodoDto> updateTodoStatus(int id, String status);
 
   Future<void> deleteTodo(int id);
+
+  Future<Map<String, int>> getTodoCountsByStatus(int projectId);
 }

@@ -321,6 +321,7 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                       ),
                       const SizedBox(height: 8),
                       SelectableGroup(
+                        scrollable: true,
                         initialValue: _selectedWalletType,
                         options: WalletType.values.map((type) {
                           return SelectableGroupOption(

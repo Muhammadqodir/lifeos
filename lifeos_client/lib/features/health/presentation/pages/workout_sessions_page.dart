@@ -63,11 +63,12 @@ class _WorkoutSessionsPageState extends State<WorkoutSessionsPage> {
   }
 
   Widget _buildBody(BuildContext context) {
+    BuildContext parentContext = context;
     return BlocConsumer<WorkoutSessionsBloc, WorkoutSessionsState>(
       listener: (context, state) {
         if (state is WorkoutSessionsDeleteSuccess) {
           showToast(
-            context: context,
+            context: parentContext,
             location: ToastLocation.topCenter,
             builder: (context, overlay) {
               return Utils.buildToast(
@@ -80,7 +81,7 @@ class _WorkoutSessionsPageState extends State<WorkoutSessionsPage> {
           );
         } else if (state is WorkoutSessionsDeleteError) {
           showToast(
-            context: context,
+            context: parentContext,
             location: ToastLocation.topCenter,
             builder: (context, overlay) {
               return Utils.buildToast(context, overlay, 'Error', state.message);
@@ -94,7 +95,6 @@ class _WorkoutSessionsPageState extends State<WorkoutSessionsPage> {
         }
 
         if (state is WorkoutSessionsFailure) {
-          print('WorkoutSessionsFailure: ${state.message}');
           return ErrorState(
             message: state.message,
             onRetry: () {
