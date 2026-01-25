@@ -141,9 +141,8 @@ class WorkoutSessionsBloc
       }
     } catch (e) {
       // Emit delete error state
-      print('Delete error in bloc: $e');
       emit(WorkoutSessionsDeleteError(
-        message: 'Failed to delete workout: ${e.toString()}',
+        message: 'Failed to delete workout',
         sessions: currentState.sessions,
         hasMore: currentState.hasMore,
         currentPage: currentState.currentPage,

@@ -63,12 +63,11 @@ class _WorkoutSessionsPageState extends State<WorkoutSessionsPage> {
   }
 
   Widget _buildBody(BuildContext context) {
-    BuildContext previousContext = context;
     return BlocConsumer<WorkoutSessionsBloc, WorkoutSessionsState>(
       listener: (context, state) {
         if (state is WorkoutSessionsDeleteSuccess) {
           showToast(
-            context: previousContext,
+            context: context,
             location: ToastLocation.topCenter,
             builder: (context, overlay) {
               return Utils.buildToast(
@@ -80,9 +79,8 @@ class _WorkoutSessionsPageState extends State<WorkoutSessionsPage> {
             },
           );
         } else if (state is WorkoutSessionsDeleteError) {
-          print(state.message);
           showToast(
-            context: previousContext,
+            context: context,
             location: ToastLocation.topCenter,
             builder: (context, overlay) {
               return Utils.buildToast(context, overlay, 'Error', state.message);

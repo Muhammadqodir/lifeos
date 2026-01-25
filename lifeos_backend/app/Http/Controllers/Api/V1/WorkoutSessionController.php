@@ -228,37 +228,12 @@ class WorkoutSessionController extends Controller
 
     public function destroy(WorkoutSession $workout): JsonResponse
     {
-        \Log::info('Delete workout request', [
-            'workout_id' => $workout->id,
-            'user_id' => auth()->id(),
-            'workout_user_id' => $workout->user_id,
-        ]);
+        $this->authorize('delete', $workout);
 
-        try {
-            $this->authorize('delete', $workout);
+        $workout->delete();
 
-            \Log::info('Authorization passed, deleting workout', ['workout_id' => $workout->id]);
+        return response()->json(['message' => 'Workout session deleted successfully']);
 
-            $workout->delete();
-
-            \Log::info('Workout deleted successfully', ['workout_id' => $workout->id]);
-
-            return response()->json(['message' => 'Workout session deleted successfully']);
-        } catch (\Exception $e) {
-            \Log::error('Error deleting workout', [
-                'workout_id' => $workout->id,
-                'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
-            ]);
-
-            return response()->json([
-                'message' => 'Failed to delete workout',
-                'error' => $e->getMessage(),
-                'class' => get_class($e),
-                'file' => $e->getFile(),
-                'line' => $e->getLine(),
-            ], 500);
-        }
     }
 
     public function summary(Request $request): JsonResponse
