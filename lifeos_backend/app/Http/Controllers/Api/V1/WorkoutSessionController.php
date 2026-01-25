@@ -9,6 +9,7 @@ use App\Http\Requests\UpdateWorkoutSessionRequest;
 use App\Http\Resources\WorkoutSessionResource;
 use App\Models\WorkoutCompletion;
 use App\Models\WorkoutSession;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
@@ -17,6 +18,7 @@ use Illuminate\Support\Facades\Storage;
 
 class WorkoutSessionController extends Controller
 {
+    use AuthorizesRequests;
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = WorkoutSession::where('user_id', auth()->id())
@@ -226,11 +228,37 @@ class WorkoutSessionController extends Controller
 
     public function destroy(WorkoutSession $workout): JsonResponse
     {
-        $this->authorize('delete', $workout);
+        \Log::info('Delete workout request', [
+            'workout_id' => $workout->id,
+            'user_id' => auth()->id(),
+            'workout_user_id' => $workout->user_id,
+        ]);
 
-        $workout->delete();
+        try {
+            $this->authorize('delete', $workout);
 
-        return response()->json(['message' => 'Workout session deleted successfully']);
+            \Log::info('Authorization passed, deleting workout', ['workout_id' => $workout->id]);
+
+            $workout->delete();
+
+            \Log::info('Workout deleted successfully', ['workout_id' => $workout->id]);
+
+            return response()->json(['message' => 'Workout session deleted successfully']);
+        } catch (\Exception $e) {
+            \Log::error('Error deleting workout', [
+                'workout_id' => $workout->id,
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString(),
+            ]);
+
+            return response()->json([
+                'message' => 'Failed to delete workout',
+                'error' => $e->getMessage(),
+                'class' => get_class($e),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+            ], 500);
+        }
     }
 
     public function summary(Request $request): JsonResponse

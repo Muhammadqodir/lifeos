@@ -15,6 +15,7 @@ class WorkoutSessionsBloc
     on<WorkoutSessionsLoad>(_onLoad);
     on<WorkoutSessionsRefresh>(_onRefresh);
     on<WorkoutSessionsLoadMore>(_onLoadMore);
+    on<WorkoutSessionsDelete>(_onDelete);
   }
 
   Future<void> _onLoad(
@@ -104,6 +105,51 @@ class WorkoutSessionsBloc
       ));
     } catch (e) {
       // On error, restore previous state
+      emit(currentState);
+    }
+  }
+
+  Future<void> _onDelete(
+    WorkoutSessionsDelete event,
+    Emitter<WorkoutSessionsState> emit,
+  ) async {
+    final currentState = state;
+    if (currentState is! WorkoutSessionsSuccess) {
+      return;
+    }
+
+    try {
+      await workoutRepository.deleteWorkoutSession(event.workoutId);
+
+      // Remove the deleted session from the list
+      final updatedSessions = currentState.sessions
+          .where((session) => session.id != event.workoutId)
+          .toList();
+
+      // Emit delete success state
+      emit(WorkoutSessionsDeleteSuccess(
+        sessions: updatedSessions,
+        hasMore: currentState.hasMore,
+        currentPage: currentState.currentPage,
+      ));
+
+      // Then emit regular state
+      if (updatedSessions.isEmpty) {
+        emit(const WorkoutSessionsEmpty());
+      } else {
+        emit(currentState.copyWith(sessions: updatedSessions));
+      }
+    } catch (e) {
+      // Emit delete error state
+      print('Delete error in bloc: $e');
+      emit(WorkoutSessionsDeleteError(
+        message: 'Failed to delete workout: ${e.toString()}',
+        sessions: currentState.sessions,
+        hasMore: currentState.hasMore,
+        currentPage: currentState.currentPage,
+      ));
+      
+      // Keep current state
       emit(currentState);
     }
   }

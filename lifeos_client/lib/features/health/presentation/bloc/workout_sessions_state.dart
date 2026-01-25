@@ -64,3 +64,35 @@ class WorkoutSessionsFailure extends WorkoutSessionsState {
   @override
   List<Object?> get props => [message];
 }
+
+class WorkoutSessionsDeleteSuccess extends WorkoutSessionsState {
+  final List<WorkoutSessionDto> sessions;
+  final bool hasMore;
+  final int currentPage;
+
+  const WorkoutSessionsDeleteSuccess({
+    required this.sessions,
+    this.hasMore = true,
+    this.currentPage = 1,
+  });
+
+  @override
+  List<Object?> get props => [sessions, hasMore, currentPage];
+}
+
+class WorkoutSessionsDeleteError extends WorkoutSessionsState {
+  final String message;
+  final List<WorkoutSessionDto> sessions;
+  final bool hasMore;
+  final int currentPage;
+
+  const WorkoutSessionsDeleteError({
+    required this.message,
+    required this.sessions,
+    this.hasMore = true,
+    this.currentPage = 1,
+  });
+
+  @override
+  List<Object?> get props => [message, sessions, hasMore, currentPage];
+}

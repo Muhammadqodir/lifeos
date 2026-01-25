@@ -24,6 +24,9 @@ abstract class WorkoutRepository {
     int page = 1,
   });
 
+  /// Delete a workout session
+  Future<void> deleteWorkoutSession(int workoutId);
+
   /// Save active workout locally (offline)
   Future<void> saveActiveWorkoutLocally(WorkoutSessionDto workout);
 

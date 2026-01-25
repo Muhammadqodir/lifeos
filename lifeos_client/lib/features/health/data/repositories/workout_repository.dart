@@ -56,6 +56,11 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
+  Future<void> deleteWorkoutSession(int workoutId) async {
+    await apiClient.deleteWorkoutSession(workoutId);
+  }
+
+  @override
   Future<void> saveActiveWorkoutLocally(WorkoutSessionDto workout) async {
     await localStorage.saveActiveWorkout(workout);
   }

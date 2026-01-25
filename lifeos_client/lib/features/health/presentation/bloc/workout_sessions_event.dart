@@ -27,3 +27,12 @@ class WorkoutSessionsRefresh extends WorkoutSessionsEvent {
 class WorkoutSessionsLoadMore extends WorkoutSessionsEvent {
   const WorkoutSessionsLoadMore();
 }
+
+class WorkoutSessionsDelete extends WorkoutSessionsEvent {
+  final int workoutId;
+
+  const WorkoutSessionsDelete({required this.workoutId});
+
+  @override
+  List<Object?> get props => [workoutId];
+}

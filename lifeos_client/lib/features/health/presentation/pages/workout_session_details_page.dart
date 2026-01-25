@@ -1,22 +1,20 @@
-import 'dart:io';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/features/health/data/models/workout_session_dto.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
+import 'package:lifeos_client/utils/server.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:intl/intl.dart';
 
 class WorkoutSessionDetailsPage extends StatelessWidget {
   final WorkoutSessionDto workout;
 
-  const WorkoutSessionDetailsPage({
-    super.key,
-    required this.workout,
-  });
+  const WorkoutSessionDetailsPage({super.key, required this.workout});
 
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
-    
+
     if (hours > 0) {
       return '${hours}h ${minutes}m';
     }
@@ -188,8 +186,8 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
                     children: [
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
-                        child: Image.file(
-                          File(workout.completion!.photoPath!),
+                        child: CachedNetworkImage(
+                          imageUrl: ServerUtills.getServerStorageUrl(workout.completion!.photoPath!),
                           height: 300,
                           width: double.infinity,
                           fit: BoxFit.cover,
@@ -361,7 +359,8 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
                             ),
                         ],
                       ),
-                      if (exercise.note != null && exercise.note!.isNotEmpty) ...[
+                      if (exercise.note != null &&
+                          exercise.note!.isNotEmpty) ...[
                         const SizedBox(height: 8),
                         Text(
                           exercise.note!,
@@ -444,35 +443,41 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
                                           vertical: 2,
                                         ),
                                         decoration: BoxDecoration(
-                                          color: _getRpeColor(set.rpe!, colorScheme)
-                                              .withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(4),
+                                          color: _getRpeColor(
+                                            set.rpe!,
+                                            colorScheme,
+                                          ).withOpacity(0.1),
+                                          borderRadius: BorderRadius.circular(
+                                            4,
+                                          ),
                                         ),
                                         child: Row(
                                           mainAxisSize: MainAxisSize.min,
                                           children: [
                                             Text(
                                               'RPE',
-                                              style: theme.typography.xSmall.copyWith(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w500,
-                                                color: _getRpeColor(
-                                                  set.rpe!,
-                                                  colorScheme,
-                                                ),
-                                              ),
+                                              style: theme.typography.xSmall
+                                                  .copyWith(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w500,
+                                                    color: _getRpeColor(
+                                                      set.rpe!,
+                                                      colorScheme,
+                                                    ),
+                                                  ),
                                             ),
                                             const SizedBox(width: 4),
                                             Text(
                                               '${set.rpe}',
-                                              style: theme.typography.xSmall.copyWith(
-                                                fontSize: 10,
-                                                fontWeight: FontWeight.w700,
-                                                color: _getRpeColor(
-                                                  set.rpe!,
-                                                  colorScheme,
-                                                ),
-                                              ),
+                                              style: theme.typography.xSmall
+                                                  .copyWith(
+                                                    fontSize: 10,
+                                                    fontWeight: FontWeight.w700,
+                                                    color: _getRpeColor(
+                                                      set.rpe!,
+                                                      colorScheme,
+                                                    ),
+                                                  ),
                                             ),
                                           ],
                                         ),
@@ -549,23 +554,12 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
         children: [
-          HugeIcon(
-            icon: icon,
-            size: 18,
-            color: colorScheme.mutedForeground,
-          ),
+          HugeIcon(icon: icon, size: 18, color: colorScheme.mutedForeground),
           const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: theme.typography.small,
-            ),
-          ),
+          Expanded(child: Text(label, style: theme.typography.small)),
           Text(
             value,
-            style: theme.typography.small.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
+            style: theme.typography.small.copyWith(fontWeight: FontWeight.w600),
           ),
         ],
       ),
@@ -584,9 +578,7 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
       ),
       child: Text(
         text,
-        style: theme.typography.small.copyWith(
-          fontWeight: FontWeight.w500,
-        ),
+        style: theme.typography.small.copyWith(fontWeight: FontWeight.w500),
       ),
     );
   }

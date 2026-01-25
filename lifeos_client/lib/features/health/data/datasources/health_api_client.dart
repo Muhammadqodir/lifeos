@@ -350,6 +350,33 @@ class HealthApiClient {
     }
   }
 
+  Future<void> deleteWorkoutSession(int workoutId) async {
+    try {
+      final response = await dio.delete('$baseUrl/gym/workouts/$workoutId');
+
+      if (response.statusCode != 200 && response.statusCode != 204) {
+        // Try to extract error details from response
+        String errorMessage = 'Unknown error';
+        if (response.data != null && response.data is Map) {
+          errorMessage = response.data['error'] ?? response.data['message'] ?? errorMessage;
+          print('Backend error details: ${response.data}');
+        }
+        throw Exception('Delete failed: $errorMessage');
+      }
+    } catch (e) {
+      print('Delete workout error: $e');
+      if (e is DioException && e.response?.data != null) {
+        print('Response data: ${e.response?.data}');
+        if (e.response?.data is Map) {
+          final errorData = e.response?.data as Map;
+          final message = errorData['error'] ?? errorData['message'] ?? e.message;
+          throw Exception(message);
+        }
+      }
+      throw _handleError(e);
+    }
+  }
+
   Future<WorkoutSessionDto> saveCompleteWorkout(
     Map<String, dynamic> workoutData,
   ) async {
