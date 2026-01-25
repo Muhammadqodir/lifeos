@@ -26,8 +26,8 @@ class WorkoutSessionDto {
 
   factory WorkoutSessionDto.fromJson(Map<String, dynamic> json) {
     return WorkoutSessionDto(
-      id: json['id'] as int?,
-      userId: json['user_id'] as int?,
+      id: (json['id'] as num?)?.toInt(),
+      userId: (json['user_id'] as num?)?.toInt(),
       startedAt: DateTime.parse(json['started_at'] as String),
       endedAt: json['ended_at'] != null 
           ? DateTime.parse(json['ended_at'] as String) 

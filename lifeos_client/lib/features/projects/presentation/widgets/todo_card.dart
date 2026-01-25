@@ -12,6 +12,7 @@ class TodoCard extends StatelessWidget {
   final Function({required String status, DateTime? plannedDate})
   onStatusChanged;
   final VoidCallback onDelete;
+  final bool isUpdating;
 
   const TodoCard({
     super.key,
@@ -19,6 +20,7 @@ class TodoCard extends StatelessWidget {
     required this.onTap,
     required this.onStatusChanged,
     required this.onDelete,
+    this.isUpdating = false,
   });
 
   @override
@@ -137,6 +139,20 @@ class TodoCard extends StatelessWidget {
   }
 
   Widget _buildActions() {
+    // Show loading indicator when updating
+    if (isUpdating) {
+      return Row(
+        children: [
+          SizedBox(width: 12),
+          const SizedBox(
+            width: 20,
+            height: 20,
+            child: CircularProgressIndicator(strokeWidth: 2),
+          ),
+        ],
+      );
+    }
+
     dynamic icon;
     Color color;
 

@@ -95,6 +95,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
       ),
     );
 
+    // Navigate to completion page if camera returned a result (photo or skip)
+    // Only skip if user pressed back button (photoPath == null)
     if (photoPath != null && mounted) {
       // Navigate to completion page
       // ignore: use_build_context_synchronously
@@ -103,7 +105,7 @@ class _WorkoutPageState extends State<WorkoutPage> {
           builder: (context) => BlocProvider.value(
             value: workoutBloc,
             child: WorkoutCompletionPage(
-              photoPath: photoPath,
+              photoPath: photoPath.isNotEmpty ? photoPath : null,
               workout: state.workout,
             ),
           ),

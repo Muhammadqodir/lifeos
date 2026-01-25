@@ -29,8 +29,8 @@ class WorkoutSetDto {
 
   factory WorkoutSetDto.fromJson(Map<String, dynamic> json) {
     return WorkoutSetDto(
-      id: json['id'] as int?,
-      workoutExerciseId: json['workout_exercise_id'] as int?,
+      id: (json['id'] as num?)?.toInt(),
+      workoutExerciseId: (json['workout_exercise_id'] as num?)?.toInt(),
       setIndex: (json['set_index'] as num?)?.toInt() ?? 0,
       weightKg: json['weight_kg'] != null ? (json['weight_kg'] as num).toDouble() : null,
       reps: (json['reps'] as num?)?.toInt(),

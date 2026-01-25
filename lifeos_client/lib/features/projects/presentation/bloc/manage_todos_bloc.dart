@@ -78,13 +78,7 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     LoadAllStatuses event,
     Emitter<ManageTodosState> emit,
   ) async {
-    // Initialize state
-    emit(ManageTodosLoaded(
-      todosByStatus: const {},
-      currentPageByStatus: const {},
-      hasMoreByStatus: const {},
-      currentProjectId: event.projectId,
-    ));
+    emit(const ManageTodosLoading());
 
     try {
       final todosByStatus = <String, List<TodoDto>>{};

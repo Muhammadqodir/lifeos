@@ -34,12 +34,17 @@ class _PieChartSectionState extends State<PieChartSection> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              widget.title,
-              style: theme.typography.small.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+            Row(
+              children: [
+                Text(
+                  widget.title,
+                  style: theme.typography.small.copyWith(
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
             ),
+
             const SizedBox(height: 40),
             Center(
               child: Column(
@@ -84,13 +89,13 @@ class _PieChartSectionState extends State<PieChartSection> {
             widget.title,
             style: theme.typography.small.copyWith(fontWeight: FontWeight.w600),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
           // Pie Chart Visualization
           SizedBox(
             height: 200,
             child: Center(child: _buildSimplePieChart(context, sorted)),
           ),
-          const SizedBox(height: 20),
+          const SizedBox(height: 24),
 
           // Legend
           Text(
@@ -188,6 +193,18 @@ class _PieChartSectionState extends State<PieChartSection> {
                   },
                 ),
               ),
+            ),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                MoneyText(
+                  amount: widget.totalAmount.abs(),
+                  currencyCode: widget.currencyIcon,
+                  size: MoneyTextSize.large,
+                  alignment: MainAxisAlignment.center,
+                ),
+              ],
             ),
           ],
         );

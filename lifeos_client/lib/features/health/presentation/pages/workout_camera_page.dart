@@ -221,6 +221,23 @@ class _WorkoutCameraPageState extends State<WorkoutCameraPage> {
             ),
           ),
         ),
+
+        // Skip button
+        Positioned(
+          top: 24,
+          right: 20,
+          child: SafeArea(
+            child: TextButton(
+              onPressed: () => Navigator.of(context).pop(''),
+              child: Text(
+                'Skip',
+                style: theme.typography.semiBold.copyWith(
+                  color: colorScheme.foreground,
+                ),
+              ),
+            ),
+          ),
+        ),
       ],
     );
   }

@@ -17,6 +17,13 @@ abstract class WorkoutRepository {
   /// Delete a custom exercise
   Future<void> deleteExercise(int exerciseId);
 
+  /// Get paginated list of workout sessions
+  Future<List<WorkoutSessionDto>> getWorkoutSessions({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int page = 1,
+  });
+
   /// Save active workout locally (offline)
   Future<void> saveActiveWorkoutLocally(WorkoutSessionDto workout);
 

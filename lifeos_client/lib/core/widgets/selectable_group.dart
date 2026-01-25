@@ -11,6 +11,7 @@ class SelectableGroupOption<T> {
 class SelectableGroup<T> extends StatefulWidget {
   final List<SelectableGroupOption<T>> options;
   final T? initialValue;
+  final T? value; // For controlled mode
   final ValueChanged<T> onChanged;
   final double spacing;
   final double runSpacing;
@@ -20,6 +21,7 @@ class SelectableGroup<T> extends StatefulWidget {
     super.key,
     required this.options,
     this.initialValue,
+    this.value,
     required this.onChanged,
     this.spacing = 8,
     this.runSpacing = 8,
@@ -39,7 +41,9 @@ class _SelectableGroupState<T> extends State<SelectableGroup<T>> {
   @override
   void initState() {
     super.initState();
-    if (widget.initialValue != null) {
+    if (widget.value != null) {
+      _selectedValue = widget.value;
+    } else if (widget.initialValue != null) {
       _selectedValue = widget.initialValue;
     } else if (widget.options.isNotEmpty) {
       _selectedValue = widget.options.first.value;
@@ -47,8 +51,49 @@ class _SelectableGroupState<T> extends State<SelectableGroup<T>> {
 
     if (widget.scrollable) {
       _scrollController.addListener(_updateShadows);
-      WidgetsBinding.instance.addPostFrameCallback((_) => _updateShadows());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _updateShadows();
+        _scrollToSelected();
+      });
     }
+  }
+
+  @override
+  void didUpdateWidget(SelectableGroup<T> oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Update selected value if controlled via value prop
+    if (widget.value != null && widget.value != _selectedValue) {
+      setState(() {
+        _selectedValue = widget.value;
+      });
+      if (widget.scrollable) {
+        WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToSelected());
+      }
+    }
+  }
+
+  void _scrollToSelected() {
+    if (!_scrollController.hasClients || _selectedValue == null) return;
+
+    final selectedIndex = widget.options.indexWhere((opt) => opt.value == _selectedValue);
+    if (selectedIndex == -1) return;
+
+    // Calculate approximate position
+    // This is a simple implementation; for more accuracy, you'd need to measure actual widget sizes
+    final viewportWidth = _scrollController.position.viewportDimension;
+    final maxScrollExtent = _scrollController.position.maxScrollExtent;
+    
+    if (maxScrollExtent <= 0) return;
+
+    // Estimate the scroll position based on the index
+    final estimatedPosition = (selectedIndex / widget.options.length) * (maxScrollExtent + viewportWidth);
+    final targetPosition = (estimatedPosition - viewportWidth / 2).clamp(0.0, maxScrollExtent);
+
+    _scrollController.animateTo(
+      targetPosition,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
   }
 
   @override

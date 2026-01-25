@@ -29,6 +29,7 @@ import 'features/health/presentation/bloc/workout_bloc.dart';
 import 'features/health/presentation/bloc/exercise_bloc.dart';
 import 'features/health/presentation/bloc/sleep_entry_bloc.dart';
 import 'features/health/presentation/bloc/wellbeing_entry_bloc.dart';
+import 'features/health/presentation/bloc/workout_sessions_bloc.dart';
 import 'features/projects/data/datasources/projects_api_client.dart';
 import 'features/projects/data/repositories/projects_repository_impl.dart';
 import 'features/projects/domain/repositories/projects_repository.dart';
@@ -151,6 +152,10 @@ Future<void> setupDependencies() async {
 
   getIt.registerFactory<ExerciseBloc>(
     () => ExerciseBloc(repository: getIt<WorkoutRepository>()),
+  );
+
+  getIt.registerFactory<WorkoutSessionsBloc>(
+    () => WorkoutSessionsBloc(workoutRepository: getIt<WorkoutRepository>()),
   );
 
   getIt.registerFactory<AnalyticsBloc>(

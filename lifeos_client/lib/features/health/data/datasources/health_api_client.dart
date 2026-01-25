@@ -314,6 +314,42 @@ class HealthApiClient {
     }
   }
 
+  Future<List<WorkoutSessionDto>> getWorkoutSessions({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int page = 1,
+  }) async {
+    try {
+      final queryParameters = <String, dynamic>{
+        'page': page,
+      };
+
+      if (dateFrom != null) {
+        queryParameters['from'] = dateFrom.toIso8601String().split('T')[0];
+      }
+      if (dateTo != null) {
+        queryParameters['to'] = dateTo.toIso8601String().split('T')[0];
+      }
+
+      final response = await dio.get(
+        '$baseUrl/gym/workouts',
+        queryParameters: queryParameters,
+      );
+
+      if (response.statusCode == 200) {
+        final data = response.data['data'] as List;
+        return data.map((json) => WorkoutSessionDto.fromJson(json)).toList();
+      } else {
+        throw DioException(
+          requestOptions: response.requestOptions,
+          response: response,
+        );
+      }
+    } catch (e) {
+      throw _handleError(e);
+    }
+  }
+
   Future<WorkoutSessionDto> saveCompleteWorkout(
     Map<String, dynamic> workoutData,
   ) async {

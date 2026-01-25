@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:lifeos_client/core/config/app_config.dart';
 import 'package:lifeos_client/core/widgets/error_state.dart';
+import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -31,6 +32,7 @@ class ProjectDetailsPage extends StatefulWidget {
 
 class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
   late final ManageTodosBloc _todosBloc;
+  late final PageController _pageController;
   int _selectedTabIndex = 0;
   final List<String> _statuses = [
     'inbox',
@@ -43,6 +45,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
   @override
   void initState() {
     super.initState();
+    _pageController = PageController(initialPage: _selectedTabIndex);
     _todosBloc = getIt<ManageTodosBloc>();
     // Load all tabs at once with a single event
     _todosBloc.add(
@@ -59,6 +62,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
 
   @override
   void dispose() {
+    _pageController.dispose();
     _todosBloc.close();
     super.dispose();
   }
@@ -123,7 +127,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
           child: BlocBuilder<ManageTodosBloc, ManageTodosState>(
             builder: (context, state) {
               if (state is ManageTodosLoading || state is ManageTodosInitial) {
-                return const Center(child: CircularProgressIndicator());
+                return const LoadingState(message: 'Loading todos...');
               }
 
               // Handle all WithData states
@@ -146,7 +150,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                       ),
                       child: SelectableGroup<int>(
                         scrollable: true,
-                        initialValue: _selectedTabIndex,
+                        value: _selectedTabIndex,
                         options: [
                           SelectableGroupOption(
                             value: 0,
@@ -190,16 +194,23 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                           ),
                         ],
                         onChanged: (v) {
-                          setState(() {
-                            _selectedTabIndex = v;
-                          });
-                          _loadCurrentTab();
+                          _pageController.animateToPage(
+                            v,
+                            duration: const Duration(milliseconds: 300),
+                            curve: Curves.easeInOut,
+                          );
                         },
                       ),
                     ),
                     Expanded(
-                      child: IndexedStack(
-                        index: _selectedTabIndex,
+                      child: PageView(
+                        controller: _pageController,
+                        onPageChanged: (index) {
+                          setState(() {
+                            _selectedTabIndex = index;
+                          });
+                          _loadCurrentTab();
+                        },
                         children: _statuses.map((status) {
                           final todos = todosByStatus[status] ?? [];
                           final hasMore = hasMoreByStatus[status] ?? false;
@@ -210,6 +221,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                             status,
                             hasMore,
                             isLoadingMore,
+                            state,
                           );
                         }).toList(),
                       ),
@@ -231,6 +243,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
     String status,
     bool hasMore,
     bool isLoadingMore,
+    ManageTodosState state,
   ) {
     if (todos.isEmpty) {
       return EmptyState(
@@ -238,6 +251,12 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
         title: 'No ${status.replaceAll('_', ' ')} todos',
         description: 'Start by creating a new todo',
       );
+    }
+
+    // Check if any todo is being updated
+    int? updatingTodoId;
+    if (state is TodoStatusUpdating) {
+      updatingTodoId = state.todoId;
     }
 
     return ListView.builder(
@@ -269,6 +288,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
         final todo = todos[index];
         return TodoCard(
           todo: todo,
+          isUpdating: updatingTodoId == todo.id,
           onTap: () {
             Navigator.of(context).push(
               CupertinoPageRoute(

@@ -248,17 +248,6 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
                     AnalyticsSummaryCard(analytics: state.analytics),
                     const SizedBox(height: 20),
 
-                    // Income by Category Pie Chart
-                    if (state.analytics.incomeByCategory.isNotEmpty) ...[
-                      PieChartSection(
-                        title: 'Income Distribution',
-                        categories: state.analytics.incomeByCategory,
-                        totalAmount: state.analytics.totalIncome,
-                        currencyIcon: state.analytics.currencyIcon,
-                      ),
-                      const SizedBox(height: 24),
-                    ],
-
                     // Expense by Category Pie Chart
                     if (state.analytics.expenseByCategory.isNotEmpty) ...[
                       const SizedBox(height: 12),
@@ -270,6 +259,18 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
                       ),
                       const SizedBox(height: 24),
                     ],
+                    
+                    // Income by Category Pie Chart
+                    if (state.analytics.incomeByCategory.isNotEmpty) ...[
+                      PieChartSection(
+                        title: 'Income Distribution',
+                        categories: state.analytics.incomeByCategory,
+                        totalAmount: state.analytics.totalIncome,
+                        currencyIcon: state.analytics.currencyIcon,
+                      ),
+                      const SizedBox(height: 24),
+                    ],
+
                   ],
                 ),
               ),

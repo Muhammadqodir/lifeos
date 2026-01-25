@@ -43,6 +43,19 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   }
 
   @override
+  Future<List<WorkoutSessionDto>> getWorkoutSessions({
+    DateTime? dateFrom,
+    DateTime? dateTo,
+    int page = 1,
+  }) async {
+    return await apiClient.getWorkoutSessions(
+      dateFrom: dateFrom,
+      dateTo: dateTo,
+      page: page,
+    );
+  }
+
+  @override
   Future<void> saveActiveWorkoutLocally(WorkoutSessionDto workout) async {
     await localStorage.saveActiveWorkout(workout);
   }

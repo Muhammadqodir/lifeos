@@ -5,6 +5,7 @@ import 'package:lifeos_client/features/health/presentation/bloc/exercise_bloc.da
 import 'package:lifeos_client/features/health/presentation/bloc/workout_bloc.dart';
 import 'package:lifeos_client/features/health/presentation/pages/exercises_page.dart';
 import 'package:lifeos_client/features/health/presentation/pages/workout_page.dart';
+import 'package:lifeos_client/features/health/presentation/pages/workout_sessions_page.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/injection.dart';
 import 'package:lifeos_client/utils/modal.dart';
@@ -70,7 +71,11 @@ class _GymMainPageState extends State<GymMainPage> {
                   icon: HugeIcons.strokeRoundedChartUp,
                   tooltip: 'Progress',
                   onTap: () {
-                    // _showComingSoonToast(context, 'Progress');
+                    Navigator.of(context).push(
+                      CupertinoPageRoute(
+                        builder: (context) => const WorkoutSessionsPage(),
+                      ),
+                    );
                   },
                 ),
                 AppBarAction(

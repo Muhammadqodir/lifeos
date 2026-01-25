@@ -11,7 +11,7 @@ import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class WorkoutCompletionPage extends StatefulWidget {
-  final String photoPath;
+  final String? photoPath;
   final WorkoutSessionDto workout;
 
   const WorkoutCompletionPage({
@@ -156,30 +156,31 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Photo Preview
-                      Card(
-                        child: Column(
-                          children: [
-                            ClipRRect(
-                              borderRadius: BorderRadius.circular(12),
-                              child: Image.file(
-                                File(widget.photoPath),
-                                height: 300,
-                                width: double.infinity,
-                                fit: BoxFit.cover,
+                      if (widget.photoPath != null) ...[
+                        Card(
+                          child: Column(
+                            children: [
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(12),
+                                child: Image.file(
+                                  File(widget.photoPath!),
+                                  height: 300,
+                                  width: double.infinity,
+                                  fit: BoxFit.cover,
+                                ),
                               ),
-                            ),
-                            const SizedBox(height: 12),
-                            Text(
-                              'Post-Workout Photo',
-                              style: theme.typography.small.copyWith(
-                                fontWeight: FontWeight.w600,
+                              const SizedBox(height: 12),
+                              Text(
+                                'Post-Workout Photo',
+                                style: theme.typography.small.copyWith(
+                                  fontWeight: FontWeight.w600,
+                                ),
                               ),
-                            ),
-                          ],
+                            ],
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 24),
-
+                        const SizedBox(height: 24),
+                      ],
                       // Total Weight Lifted
                       Card(
                         child: Column(

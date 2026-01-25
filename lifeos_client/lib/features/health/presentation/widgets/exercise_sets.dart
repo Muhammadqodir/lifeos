@@ -1,6 +1,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/config/app_config.dart';
+import 'package:lifeos_client/core/widgets/dropout.dart';
 import 'package:lifeos_client/core/widgets/tappable.dart';
 import 'package:lifeos_client/features/health/data/models/workout_exercise_dto.dart';
 import 'package:lifeos_client/features/health/data/models/workout_set_dto.dart';
@@ -24,162 +25,125 @@ class _ExerciseSetsState extends State<ExerciseSets> {
   bool isopen = true;
   @override
   Widget build(BuildContext context) {
-    return Card(
-      padding: EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return DropoutWidget(
+      title: Row(
         children: [
-          Tappable(
-            lowerBound: 0.98,
-            onTap: () {
-              setState(() {
-                isopen = !isopen;
-              });
-            },
-            child: Row(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
-                  child: CachedNetworkImage(
-                    imageUrl:
-                        AppConfig.serverBaseUrl +
-                        (widget.exercise.exercise?.image ?? ''),
-                    width: 32,
-                    height: 32,
-                    fit: BoxFit.cover,
-                    errorWidget: (context, error, stackTrace) {
-                      return Container(
-                        width: 32,
-                        height: 32,
-                        color: Theme.of(context).colorScheme.secondary,
-                        child: const Center(
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedDumbbell03,
-                            size: 16,
-                          ),
-                        ),
-                      );
-                    },
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8),
+            child: CachedNetworkImage(
+              imageUrl:
+                  AppConfig.serverBaseUrl +
+                  (widget.exercise.exercise?.image ?? ''),
+              width: 32,
+              height: 32,
+              fit: BoxFit.cover,
+              errorWidget: (context, error, stackTrace) {
+                return Container(
+                  width: 32,
+                  height: 32,
+                  color: Theme.of(context).colorScheme.secondary,
+                  child: const Center(
+                    child: HugeIcon(
+                      icon: HugeIcons.strokeRoundedDumbbell03,
+                      size: 16,
+                    ),
                   ),
-                ),
-                SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    widget.exercise.exercise?.name ?? 'Exercise',
-                    style: Theme.of(
-                      context,
-                    ).typography.normal.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                IconButton.ghost(
-                  size: ButtonSize.small,
-                  onPressed: () async {
-                    bool? confirmed = await Dialogs.showConfirmDialog(
-                      context: context,
-                      title: 'Confirm Delete',
-                      message: 'Are you sure you want to delete this exercise?',
-                    );
-                    if (confirmed == true) {
-                      if (mounted) {
-                        context.read<WorkoutBloc>().add(
-                          RemoveExercise(widget.exerciseIndex),
-                        );
-                      }
-                    }
-                  },
-                  icon: const HugeIcon(
-                    icon: HugeIcons.strokeRoundedDelete02,
-                    size: 16,
-                  ),
-                ),
-                IconButton.ghost(
-                  size: ButtonSize.small,
-                  onPressed: () {
-                    setState(() {
-                      isopen = !isopen;
-                    });
-                  },
-                  icon: HugeIcon(
-                    icon: isopen
-                        ? HugeIcons.strokeRoundedArrowUp01
-                        : HugeIcons.strokeRoundedArrowDown01,
-                    size: 16,
-                  ),
-                ),
-              ],
+                );
+              },
             ),
           ),
-          if (isopen)
-            Column(
-              children: [
-                SizedBox(height: 12),
-                if (widget.exercise.sets.isEmpty)
-                  SizedBox(
-                    width: double.infinity,
-                    height: 80,
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedAddCircleHalfDot,
-                          size: 22,
-                          color: Theme.of(context).colorScheme.mutedForeground,
-                        ),
-                        Text(
-                          'No sets yet',
-                          style: Theme.of(context).typography.small.copyWith(
-                            color: Theme.of(
-                              context,
-                            ).colorScheme.mutedForeground,
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  ...List.generate(
-                    widget.exercise.sets.length,
-                    (setIndex) => Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: _SetRow(
-                        exerciseIndex: widget.exerciseIndex,
-                        setIndex: setIndex,
-                        set: widget.exercise.sets[setIndex],
-                        exerciseType:
-                            widget.exercise.exercise?.type ?? 'strength',
-                      ),
-                    ),
-                  ),
-                const SizedBox(height: 8),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlineButton(
-                    size: ButtonSize.small,
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const HugeIcon(
-                          icon: HugeIcons.strokeRoundedAdd01,
-                          size: 14,
-                          strokeWidth: 2.5,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Add Set',
-                          style: Theme.of(context).typography.small,
-                        ),
-                      ],
-                    ),
-                    onPressed: () {
-                      context.read<WorkoutBloc>().add(
-                        AddSet(widget.exerciseIndex),
-                      );
-                    },
-                  ),
-                ),
-              ],
+          SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              widget.exercise.exercise?.name ?? 'Exercise',
+              style: Theme.of(
+                context,
+              ).typography.normal.copyWith(fontWeight: FontWeight.w600),
             ),
+          ),
+          IconButton.ghost(
+            size: ButtonSize.small,
+            onPressed: () async {
+              bool? confirmed = await Dialogs.showConfirmDialog(
+                context: context,
+                title: 'Confirm Delete',
+                message: 'Are you sure you want to delete this exercise?',
+              );
+              if (confirmed == true) {
+                if (mounted) {
+                  context.read<WorkoutBloc>().add(
+                    RemoveExercise(widget.exerciseIndex),
+                  );
+                }
+              }
+            },
+            icon: const HugeIcon(
+              icon: HugeIcons.strokeRoundedDelete02,
+              size: 16,
+            ),
+          ),
+        ],
+      ),
+      content: Column(
+        children: [
+          SizedBox(height: 12),
+          if (widget.exercise.sets.isEmpty)
+            SizedBox(
+              width: double.infinity,
+              height: 80,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  HugeIcon(
+                    icon: HugeIcons.strokeRoundedAddCircleHalfDot,
+                    size: 22,
+                    color: Theme.of(context).colorScheme.mutedForeground,
+                  ),
+                  Text(
+                    'No sets yet',
+                    style: Theme.of(context).typography.small.copyWith(
+                      color: Theme.of(context).colorScheme.mutedForeground,
+                    ),
+                  ),
+                ],
+              ),
+            )
+          else
+            ...List.generate(
+              widget.exercise.sets.length,
+              (setIndex) => Padding(
+                padding: const EdgeInsets.only(bottom: 8),
+                child: _SetRow(
+                  exerciseIndex: widget.exerciseIndex,
+                  setIndex: setIndex,
+                  set: widget.exercise.sets[setIndex],
+                  exerciseType: widget.exercise.exercise?.type ?? 'strength',
+                ),
+              ),
+            ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: OutlineButton(
+              size: ButtonSize.small,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const HugeIcon(
+                    icon: HugeIcons.strokeRoundedAdd01,
+                    size: 14,
+                    strokeWidth: 2.5,
+                  ),
+                  const SizedBox(width: 4),
+                  Text('Add Set', style: Theme.of(context).typography.small),
+                ],
+              ),
+              onPressed: () {
+                context.read<WorkoutBloc>().add(AddSet(widget.exerciseIndex));
+              },
+            ),
+          ),
         ],
       ),
     );
