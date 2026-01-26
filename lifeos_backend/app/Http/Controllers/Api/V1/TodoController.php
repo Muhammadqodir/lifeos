@@ -98,7 +98,6 @@ class TodoController extends Controller
             'data' => $result,
         ]);
     }
-    }
 
     /**
      * Store a newly created todo.

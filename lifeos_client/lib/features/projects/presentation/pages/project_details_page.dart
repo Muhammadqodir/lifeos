@@ -74,6 +74,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
       child: BlocListener<ManageTodosBloc, ManageTodosState>(
         listener: (context, state) {
           if (state is ManageTodosError) {
+            print(state.message);
             showToast(
               context: context,
               location: ToastLocation.topCenter,
