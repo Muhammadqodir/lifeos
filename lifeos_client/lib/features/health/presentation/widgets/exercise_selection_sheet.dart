@@ -76,11 +76,38 @@ class _ExerciseSelectionSheetState extends State<ExerciseSelectionSheet> {
                   return Center(
                     child: Padding(
                       padding: const EdgeInsets.all(16),
-                      child: Text(
-                        state.message,
-                        style: Theme.of(context).typography.small.copyWith(
-                          color: Theme.of(context).colorScheme.destructive,
-                        ),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.error_outline,
+                            size: 48,
+                            color: Theme.of(context).colorScheme.destructive,
+                          ),
+                          const SizedBox(height: 16),
+                          Text(
+                            'Error Loading Exercises',
+                            style: Theme.of(context).typography.base.copyWith(
+                              fontWeight: FontWeight.w600,
+                              color: Theme.of(context).colorScheme.foreground,
+                            ),
+                          ),
+                          const SizedBox(height: 8),
+                          Text(
+                            state.message,
+                            textAlign: TextAlign.center,
+                            style: Theme.of(context).typography.small.copyWith(
+                              color: Theme.of(context).colorScheme.mutedForeground,
+                            ),
+                          ),
+                          const SizedBox(height: 16),
+                          OutlineButton(
+                            onPressed: () {
+                              context.read<ExerciseBloc>().add(LoadExercises());
+                            },
+                            child: const Text('Retry'),
+                          ),
+                        ],
                       ),
                     ),
                   );

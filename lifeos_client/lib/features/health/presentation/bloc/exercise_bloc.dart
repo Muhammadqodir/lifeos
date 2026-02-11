@@ -32,7 +32,12 @@ class ExerciseBloc extends Bloc<ExerciseEvent, ExerciseState> {
         filteredExercises: userExercises,
       ));
     } catch (e) {
-      emit(ExerciseError(e.toString()));
+      // Extract clean error message
+      String errorMessage = e.toString();
+      if (errorMessage.startsWith('Exception: ')) {
+        errorMessage = errorMessage.substring('Exception: '.length);
+      }
+      emit(ExerciseError(errorMessage));
     }
   }
 

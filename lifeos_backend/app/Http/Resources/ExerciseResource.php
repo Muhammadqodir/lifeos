@@ -20,7 +20,9 @@ class ExerciseResource extends JsonResource
                 $request->has('include_last_session') && auth()->check(),
                 function () {
                     $lastSets = $this->getLastSessionSets(auth()->id());
-                    return $lastSets ? WorkoutSetResource::collection($lastSets) : [];
+                    return $lastSets && $lastSets->isNotEmpty()
+                        ? WorkoutSetResource::collection($lastSets)
+                        : [];
                 }
             ),
             'created_at' => $this->created_at->toISOString(),

@@ -57,11 +57,11 @@ class Exercise extends Model
         // Find the most recent completed session with this exercise
         $lastSession = WorkoutSession::query()
             ->where('user_id', $userId)
-            ->whereNotNull('completed_at')
+            ->whereNotNull('ended_at')
             ->whereHas('workoutExercises', function ($query) {
                 $query->where('exercise_id', $this->id);
             })
-            ->orderBy('completed_at', 'desc')
+            ->orderBy('ended_at', 'desc')
             ->first();
 
         if (!$lastSession) {
