@@ -47,7 +47,10 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
     super.initState();
     _pageController = PageController(initialPage: _selectedTabIndex);
     _todosBloc = getIt<ManageTodosBloc>();
-    // Load all tabs at once with a single event
+    _loadAllData();
+  }
+
+  void _loadAllData() {
     _todosBloc.add(
       LoadAllStatuses(projectId: widget.project.id, statuses: _statuses),
     );
@@ -74,19 +77,10 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
       child: BlocListener<ManageTodosBloc, ManageTodosState>(
         listener: (context, state) {
           if (state is ManageTodosError) {
-            print(state.message);
-            showToast(
-              context: context,
-              location: ToastLocation.topCenter,
-              builder: (context, overlay) {
-                return Utils.buildToast(
-                  context,
-                  overlay,
-                  'Error',
-                  state.message,
-                );
-              },
-            );
+            _showErrorToast(state.message);
+          } else if (state is TodoStatusUpdated) {
+            // Refresh all data after successful status update
+            _loadAllData();
           }
         },
         child: Scaffold(
@@ -299,9 +293,6 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
             );
           },
           onStatusChanged: ({required String status, DateTime? plannedDate}) {
-            if(status == 'planned' && plannedDate != null) {
-              
-            }
             _todosBloc.add(UpdateTodoStatus(
               todoId: todo.id,
               status: status,
@@ -338,6 +329,16 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
     if (confirmed == true) {
       _todosBloc.add(DeleteTodo(todo.id));
     }
+  }
+
+  void _showErrorToast(String message) {
+    showToast(
+      context: context,
+      location: ToastLocation.topCenter,
+      builder: (context, overlay) {
+        return Utils.buildToast(context, overlay, 'Error', message);
+      },
+    );
   }
 
   Widget _buildTabOption(List<List<dynamic>> icon, String label, int count) {

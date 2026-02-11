@@ -245,9 +245,12 @@ class HealthApiClient {
   }
 
   // Workout endpoints
-  Future<List<ExerciseDto>> getExercises() async {
+  Future<List<ExerciseDto>> getExercises({bool includeLastSession = false}) async {
     try {
-      final response = await dio.get('$baseUrl/gym/exercises');
+      final response = await dio.get(
+        '$baseUrl/gym/exercises',
+        queryParameters: includeLastSession ? {'include_last_session': '1'} : null,
+      );
 
       if (response.statusCode == 200) {
         final data = response.data['data'] as List;

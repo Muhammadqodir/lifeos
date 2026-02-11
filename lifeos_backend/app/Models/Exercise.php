@@ -47,4 +47,37 @@ class Exercise extends Model
     {
         return is_null($this->user_id);
     }
+
+    /**
+     * Get the most recent completed sets for this exercise
+     * Used to show hints when creating new sets
+     */
+    public function getLastSessionSets(int $userId)
+    {
+        // Find the most recent completed session with this exercise
+        $lastSession = WorkoutSession::query()
+            ->where('user_id', $userId)
+            ->whereNotNull('completed_at')
+            ->whereHas('workoutExercises', function ($query) {
+                $query->where('exercise_id', $this->id);
+            })
+            ->orderBy('completed_at', 'desc')
+            ->first();
+
+        if (!$lastSession) {
+            return collect([]);
+        }
+
+        // Get the workout exercise for this exercise in that session
+        $workoutExercise = $lastSession->workoutExercises()
+            ->where('exercise_id', $this->id)
+            ->first();
+
+        if (!$workoutExercise) {
+            return collect([]);
+        }
+
+        // Return the sets for that workout exercise
+        return $workoutExercise->sets()->orderBy('set_index')->get();
+    }
 }

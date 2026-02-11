@@ -16,8 +16,8 @@ class WorkoutRepositoryImpl implements WorkoutRepository {
   });
 
   @override
-  Future<List<ExerciseDto>> getExercises() async {
-    return await apiClient.getExercises();
+  Future<List<ExerciseDto>> getExercises({bool includeLastSession = false}) async {
+    return await apiClient.getExercises(includeLastSession: includeLastSession);
   }
 
   @override

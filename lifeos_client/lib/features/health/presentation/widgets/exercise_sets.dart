@@ -2,7 +2,6 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/config/app_config.dart';
 import 'package:lifeos_client/core/widgets/dropout.dart';
-import 'package:lifeos_client/core/widgets/tappable.dart';
 import 'package:lifeos_client/features/health/data/models/workout_exercise_dto.dart';
 import 'package:lifeos_client/features/health/data/models/workout_set_dto.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/workout_event.dart';
@@ -119,6 +118,7 @@ class _ExerciseSetsState extends State<ExerciseSets> {
                   setIndex: setIndex,
                   set: widget.exercise.sets[setIndex],
                   exerciseType: widget.exercise.exercise?.type ?? 'strength',
+                  lastSessionSets: widget.exercise.exercise?.lastSessionSets,
                 ),
               ),
             ),
@@ -155,12 +155,14 @@ class _SetRow extends StatefulWidget {
   final int setIndex;
   final WorkoutSetDto set;
   final String exerciseType;
+  final List<WorkoutSetDto>? lastSessionSets;
 
   const _SetRow({
     required this.exerciseIndex,
     required this.setIndex,
     required this.set,
     required this.exerciseType,
+    this.lastSessionSets,
   });
 
   @override
@@ -214,6 +216,43 @@ class _SetRowState extends State<_SetRow> {
     );
   }
 
+  Text? _getLastSessionHint(String field) {
+    if (widget.lastSessionSets == null || widget.lastSessionSets!.isEmpty) {
+      return null;
+    }
+
+    // Get the set at the same index from last session, or the last set if index is beyond
+    final lastSet = widget.setIndex < widget.lastSessionSets!.length
+        ? widget.lastSessionSets![widget.setIndex]
+        : widget.lastSessionSets!.last;
+
+    String? hintValue;
+    switch (field) {
+      case 'weight':
+        hintValue = lastSet.weightKg?.toString();
+        break;
+      case 'reps':
+        hintValue = lastSet.reps?.toString();
+        break;
+      case 'duration':
+        hintValue = lastSet.durationSeconds?.toString();
+        break;
+      case 'distance':
+        hintValue = lastSet.distanceMeters?.toString();
+        break;
+    }
+
+    if (hintValue == null) return null;
+
+    return Text(
+      'Last: $hintValue',
+      style: TextStyle(
+        fontSize: 12,
+        color: const Color(0xFF71717A), // muted foreground
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final isStrength = widget.exerciseType == 'strength';
@@ -255,6 +294,7 @@ class _SetRowState extends State<_SetRow> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  placeholder: _getLastSessionHint('weight'),
                   onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   onChanged: (_) => _updateSet(),
                 ),
@@ -270,6 +310,7 @@ class _SetRowState extends State<_SetRow> {
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   controller: repsController,
                   keyboardType: TextInputType.number,
+                  placeholder: _getLastSessionHint('reps'),
                   onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   onChanged: (_) => _updateSet(),
                 ),
@@ -286,6 +327,7 @@ class _SetRowState extends State<_SetRow> {
                   padding: EdgeInsets.symmetric(vertical: 8, horizontal: 8),
                   controller: durationController,
                   keyboardType: TextInputType.number,
+                  placeholder: _getLastSessionHint('duration'),
                   onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   onChanged: (_) => _updateSet(),
                 ),
@@ -303,6 +345,7 @@ class _SetRowState extends State<_SetRow> {
                   keyboardType: const TextInputType.numberWithOptions(
                     decimal: true,
                   ),
+                  placeholder: _getLastSessionHint('distance'),
                   onSubmitted: (_) => FocusScope.of(context).unfocus(),
                   onChanged: (_) => _updateSet(),
                 ),

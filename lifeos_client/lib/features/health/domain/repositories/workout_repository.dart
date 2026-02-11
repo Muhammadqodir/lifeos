@@ -4,7 +4,7 @@ import '../../data/models/workout_session_dto.dart';
 
 abstract class WorkoutRepository {
   /// Get all exercises (system + user's custom)
-  Future<List<ExerciseDto>> getExercises();
+  Future<List<ExerciseDto>> getExercises({bool includeLastSession = false});
 
   /// Create a new custom exercise
   Future<ExerciseDto> createExercise({

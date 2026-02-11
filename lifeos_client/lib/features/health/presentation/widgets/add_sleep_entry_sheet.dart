@@ -1,7 +1,7 @@
+import 'package:flutter/cupertino.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import '../../../../core/widgets/time_range_picker.dart';
 import '../bloc/sleep_entry_bloc.dart';
 import '../bloc/sleep_entry_event.dart';
 import '../bloc/sleep_entry_state.dart';
@@ -17,7 +17,8 @@ class AddSleepEntrySheet extends StatefulWidget {
 
 class _AddSleepEntrySheetState extends State<AddSleepEntrySheet> {
   DateTime _selectedDate = DateTime.now();
-  TimeRangeSelection? _selectedTimeRange;
+  DateTime _sleepStartTime = DateTime(2001, 7, 30, 22, 30);
+  DateTime _sleepEndTime = DateTime(2001, 7, 30, 7, 30);
   int _quality = 3; // Default quality (1-5 scale)
 
   String _formatDateTime(DateTime date, TimeOfDay time) {
@@ -28,24 +29,23 @@ class _AddSleepEntrySheetState extends State<AddSleepEntrySheet> {
   }
 
   void _submitSleepEntry(BuildContext context) {
-    if (_selectedTimeRange == null) return;
-
     // Check if end time is before start time (overnight sleep)
-    final startMinutes =
-        _selectedTimeRange!.start.hour * 60 + _selectedTimeRange!.start.minute;
-    final endMinutes =
-        _selectedTimeRange!.end.hour * 60 + _selectedTimeRange!.end.minute;
+    final startMinutes = _sleepStartTime.hour * 60 + _sleepStartTime.minute;
+    final endMinutes = _sleepEndTime.hour * 60 + _sleepEndTime.minute;
     final isOvernight = endMinutes <= startMinutes;
 
     final sleepStart = _formatDateTime(
       _selectedDate,
-      _selectedTimeRange!.start,
+      TimeOfDay(hour: _sleepStartTime.hour, minute: _sleepStartTime.minute),
     );
     // Add 1 day to end date if overnight
     final endDate = isOvernight
         ? _selectedDate.add(const Duration(days: 1))
         : _selectedDate;
-    final sleepEnd = _formatDateTime(endDate, _selectedTimeRange!.end);
+    final sleepEnd = _formatDateTime(
+      endDate,
+      TimeOfDay(hour: _sleepEndTime.hour, minute: _sleepEndTime.minute),
+    );
     final dateStr = _selectedDate.toIso8601String().split('T')[0];
 
     context.read<SleepEntryBloc>().add(
@@ -156,23 +156,97 @@ class _AddSleepEntrySheetState extends State<AddSleepEntrySheet> {
               ),
               const SizedBox(height: 24),
 
-              // Time Range Picker
-              Text(
-                'Sleep Time',
-                style: theme.typography.small.copyWith(
-                  fontWeight: FontWeight.w500,
-                  color: colorScheme.foreground,
-                ),
-              ),
-              TimeRangePicker(
-                startTime: const TimeOfDay(hour: 0, minute: 0),
-                endTime: const TimeOfDay(hour: 24, minute: 0),
-                stepMinutes: 30,
-                onChanged: (range) {
-                  setState(() {
-                    _selectedTimeRange = range;
-                  });
-                },
+              Row(
+                children: [
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Sleep Start Time',
+                          style: theme.typography.small.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.foreground,
+                          ),
+                        ),
+                        CupertinoTheme(
+                          data: CupertinoThemeData(
+                            brightness: theme.brightness == Brightness.dark
+                                ? Brightness.dark
+                                : Brightness.light,
+                            textTheme: CupertinoTextThemeData(
+                              dateTimePickerTextStyle: theme.typography.small
+                                  .copyWith(
+                                    color: colorScheme.foreground,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                              pickerTextStyle: theme.typography.small.copyWith(
+                                color: colorScheme.foreground,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          child: SizedBox(
+                            height: 130,
+                            child: CupertinoDatePicker(
+                              initialDateTime: _sleepStartTime,
+                              onDateTimeChanged: (value) {
+                                setState(() {
+                                  _sleepStartTime = value;
+                                });
+                              },
+                              mode: CupertinoDatePickerMode.time,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Sleep End Time',
+                          style: theme.typography.small.copyWith(
+                            fontWeight: FontWeight.w500,
+                            color: colorScheme.foreground,
+                          ),
+                        ),
+                        CupertinoTheme(
+                          data: CupertinoThemeData(
+                            brightness: theme.brightness == Brightness.dark
+                                ? Brightness.dark
+                                : Brightness.light,
+                            textTheme: CupertinoTextThemeData(
+                              dateTimePickerTextStyle: theme.typography.small
+                                  .copyWith(
+                                    color: colorScheme.foreground,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                              pickerTextStyle: theme.typography.small.copyWith(
+                                color: colorScheme.foreground,
+                                fontWeight: FontWeight.w500,
+                              ),
+                            ),
+                          ),
+                          child: SizedBox(
+                            height: 130,
+                            child: CupertinoDatePicker(
+                              initialDateTime: _sleepEndTime,
+                              onDateTimeChanged: (value) {
+                                setState(() {
+                                  _sleepEndTime = value;
+                                });
+                              },
+                              mode: CupertinoDatePickerMode.time,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 32),
 
@@ -182,7 +256,7 @@ class _AddSleepEntrySheetState extends State<AddSleepEntrySheet> {
                 children: [
                   Expanded(
                     child: PrimaryButton(
-                      onPressed: _selectedTimeRange != null && !isLoading
+                      onPressed: !isLoading
                           ? () => _submitSleepEntry(context)
                           : null,
                       child: isLoading

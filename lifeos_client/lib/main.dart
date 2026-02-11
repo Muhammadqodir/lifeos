@@ -1,4 +1,5 @@
 import 'package:flutter/services.dart';
+import 'package:lifeos_client/features/auth/presentation/pages/splash_page.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'core/theme/custom_theme.dart';
@@ -43,8 +44,9 @@ class MyApp extends StatelessWidget {
                 if (state is AuthAuthenticated) {
                   return const MainPage();
                 }
-
-                // Show LoginPage for all other states (Initial, Unauthenticated, Error, Loading)
+                if (state is AuthChecking) {
+                  return const SplashPage();
+                }
                 return const LoginPage();
               },
             ),

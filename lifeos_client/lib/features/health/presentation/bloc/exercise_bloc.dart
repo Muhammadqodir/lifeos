@@ -21,7 +21,8 @@ class ExerciseBloc extends Bloc<ExerciseEvent, ExerciseState> {
     emit(ExerciseLoading());
 
     try {
-      final exercises = await repository.getExercises();
+      // Load exercises with last session data for workout hints
+      final exercises = await repository.getExercises(includeLastSession: true);
       
       // Filter to only show user's custom exercises (not system)
       final userExercises = exercises.where((e) => !e.isSystem).toList();

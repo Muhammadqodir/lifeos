@@ -49,7 +49,6 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.white,
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {

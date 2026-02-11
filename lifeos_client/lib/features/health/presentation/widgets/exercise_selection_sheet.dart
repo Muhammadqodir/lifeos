@@ -39,9 +39,10 @@ class _ExerciseSelectionSheetState extends State<ExerciseSelectionSheet> {
                 // Title
                 Text(
                   'Add Exercise',
-                  style: Theme.of(
-                    context,
-                  ).typography.large.copyWith(fontWeight: FontWeight.w600),
+                  style: Theme.of(context).typography.large.copyWith(
+                    fontWeight: FontWeight.w600,
+                    color: Theme.of(context).colorScheme.foreground,
+                  ),
                 ),
                 SizedBox(height: 8),
                 TextField(
