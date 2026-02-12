@@ -21,7 +21,8 @@ class ProjectResource extends JsonResource
             'color' => $this->color,
             'icon' => $this->icon,
             'tags' => $this->tags ?? [],
-            'todos_count' => $this->whenCounted('todos'),
+            'pending_todos_count' => $this->whenCounted('pendingTodosCount') ?? 0,
+            'completed_todos_count' => $this->whenCounted('completedTodosCount') ?? 0,
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];

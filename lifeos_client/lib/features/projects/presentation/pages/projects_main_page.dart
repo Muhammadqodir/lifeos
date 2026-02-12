@@ -123,10 +123,12 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
         final totalProjects = projects.length;
         final activeTodos = projects.fold<int>(
           0,
-          (sum, project) => sum + project.todosCount,
+          (sum, project) => sum + project.pendingTodosCount,
         );
-        // Note: completedTodos would need to come from API
-        final completedTodos = 0;
+        final completedTodos = projects.fold<int>(
+          0,
+          (sum, project) => sum + project.completedTodosCount,
+        );
 
         return CustomScrollView(
           slivers: [

@@ -226,7 +226,7 @@ class _SetRowState extends State<_SetRow> {
         ? widget.lastSessionSets![widget.setIndex]
         : widget.lastSessionSets!.last;
 
-    String? hintValue;
+    String? hintValue = "default";
     switch (field) {
       case 'weight':
         hintValue = lastSet.weightKg?.toString();
@@ -245,12 +245,34 @@ class _SetRowState extends State<_SetRow> {
     if (hintValue == null) return null;
 
     return Text(
-      'Last: $hintValue',
+      hintValue,
       style: TextStyle(
         fontSize: 12,
         color: const Color(0xFF71717A), // muted foreground
       ),
     );
+  }
+
+  int _getInitialRpe() {
+    // If the current set already has an RPE, use it
+    if (widget.set.rpe != null) {
+      return widget.set.rpe!;
+    }
+
+    // Otherwise, try to get RPE from last session
+    if (widget.lastSessionSets != null && widget.lastSessionSets!.isNotEmpty) {
+      final lastSet = widget.setIndex < widget.lastSessionSets!.length
+          ? widget.lastSessionSets![widget.setIndex]
+          : widget.lastSessionSets!.last;
+
+      if (lastSet.rpe != null) {
+        _updateSet(rpe: lastSet.rpe);
+        return lastSet.rpe!;
+      }
+    }
+
+    // Default to 1 if no previous data
+    return 1;
   }
 
   @override
@@ -353,7 +375,7 @@ class _SetRowState extends State<_SetRow> {
             ],
             const SizedBox(width: 8),
             RPESelector(
-              initialRpe: widget.set.rpe ?? 1,
+              initialRpe: _getInitialRpe(),
               onUpdate: (rpe) {
                 _updateSet(rpe: rpe);
               },

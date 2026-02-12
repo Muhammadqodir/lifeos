@@ -7,7 +7,8 @@ class ProjectDto extends Equatable {
   final String color;
   final String? icon;
   final List<String> tags;
-  final int todosCount;
+  final int pendingTodosCount;
+  final int completedTodosCount;
   final DateTime createdAt;
   final DateTime updatedAt;
 
@@ -18,7 +19,8 @@ class ProjectDto extends Equatable {
     required this.color,
     this.icon,
     required this.tags,
-    required this.todosCount,
+    required this.pendingTodosCount,
+    required this.completedTodosCount,
     required this.createdAt,
     required this.updatedAt,
   });
@@ -34,7 +36,8 @@ class ProjectDto extends Equatable {
               ?.map((e) => e.toString())
               .toList() ??
           [],
-      todosCount: json['todos_count'] as int? ?? 0,
+      pendingTodosCount: json['pending_todos_count'] as int? ?? 0,
+      completedTodosCount: json['completed_todos_count'] as int? ?? 0,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );
@@ -48,7 +51,8 @@ class ProjectDto extends Equatable {
       'color': color,
       'icon': icon,
       'tags': tags,
-      'todos_count': todosCount,
+      'pending_todos_count': pendingTodosCount,
+      'completed_todos_count': completedTodosCount,
       'created_at': createdAt.toIso8601String(),
       'updated_at': updatedAt.toIso8601String(),
     };
@@ -62,7 +66,8 @@ class ProjectDto extends Equatable {
         color,
         icon,
         tags,
-        todosCount,
+        pendingTodosCount,
+        completedTodosCount,
         createdAt,
         updatedAt,
       ];

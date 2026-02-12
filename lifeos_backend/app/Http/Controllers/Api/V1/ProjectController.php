@@ -21,7 +21,14 @@ class ProjectController extends Controller
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = Project::where('user_id', $request->user()->id)
-            ->withCount('todos');
+            ->withCount([
+                'todos as pending_todos_count' => function ($query) {
+                    $query->where('status', '!=', 'done');
+                },
+                'todos as completed_todos_count' => function ($query) {
+                    $query->where('status', 'done');
+                },
+            ]);
 
         // Search by title
         if ($request->filled('search')) {
@@ -62,8 +69,15 @@ class ProjectController extends Controller
 
         $project = Project::create($data);
 
-        // Load the todos count for the response
-        $project->loadCount('todos');
+        // Load the todos counts for the response
+        $project->loadCount([
+            'todos as pending_todos_count' => function ($query) {
+                $query->where('status', '!=', 'done');
+            },
+            'todos as completed_todos_count' => function ($query) {
+                $query->where('status', 'done');
+            },
+        ]);
 
         return response()->json([
             'data' => new ProjectResource($project),
@@ -78,7 +92,14 @@ class ProjectController extends Controller
     {
         $this->authorize('view', $project);
 
-        $project->loadCount('todos');
+        $project->loadCount([
+            'todos as pending_todos_count' => function ($query) {
+                $query->where('status', '!=', 'done');
+            },
+            'todos as completed_todos_count' => function ($query) {
+                $query->where('status', 'done');
+            },
+        ]);
 
         return response()->json([
             'data' => new ProjectResource($project),

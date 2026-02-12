@@ -150,7 +150,7 @@ class WorkoutBloc extends Bloc<WorkoutEvent, WorkoutState> {
         reps: lastSet?.reps,
         durationSeconds: lastSet?.durationSeconds,
         distanceMeters: lastSet?.distanceMeters,
-        rpe: lastSet?.rpe ?? 1,
+        rpe: null,
         isDone: true,
       ),
     );

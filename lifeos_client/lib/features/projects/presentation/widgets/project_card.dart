@@ -133,7 +133,7 @@ class ProjectCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${project.todosCount} ${project.todosCount == 1 ? 'task' : 'tasks'}',
+                        '${project.pendingTodosCount} ${project.pendingTodosCount == 1 ? 'task' : 'tasks'}',
                         style: theme.typography.small.copyWith(
                           color: colorScheme.mutedForeground,
                         ),
