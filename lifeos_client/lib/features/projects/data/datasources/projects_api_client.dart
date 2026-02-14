@@ -50,10 +50,6 @@ class ProjectsApiClient {
       ),
     );
     
-    // Debug: Print the actual response
-    print('Response status: ${response.statusCode}');
-    print('Response data: ${response.data}');
-    
     // Check if response has data
     if (response.data == null) {
       throw Exception('Empty response from server');
@@ -147,11 +143,6 @@ class ProjectsApiClient {
         data: todo.toJson(),
       );
 
-      print('=== CREATE TODO API RESPONSE ===');
-      print('Response data: ${response.data}');
-      print('Response status: ${response.statusCode}');
-      print('================================');
-
       // Handle both direct object and wrapped data response
       final data = response.data is Map && response.data.containsKey('data')
           ? response.data['data']
@@ -163,10 +154,6 @@ class ProjectsApiClient {
 
       return TodoDto.fromJson(data as Map<String, dynamic>);
     } on DioException catch (e) {
-      print('=== DIO ERROR ===');
-      print('Status: ${e.response?.statusCode}');
-      print('Data: ${e.response?.data}');
-      print('=================');
       
       // Handle validation errors (422)
       if (e.response?.statusCode == 422) {

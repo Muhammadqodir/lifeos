@@ -13,6 +13,7 @@ class TodoCard extends StatelessWidget {
   onStatusChanged;
   final VoidCallback onDelete;
   final bool isUpdating;
+  final EdgeInsets padding;
 
   const TodoCard({
     super.key,
@@ -21,6 +22,7 @@ class TodoCard extends StatelessWidget {
     required this.onStatusChanged,
     required this.onDelete,
     this.isUpdating = false,
+    this.padding = const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
   });
 
   @override
@@ -30,7 +32,7 @@ class TodoCard extends StatelessWidget {
       lowerBound: 0.98,
       onTap: onTap,
       child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
+        padding: padding,
 
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -72,7 +74,7 @@ class TodoCard extends StatelessWidget {
                         children: [
                           if (todo.plannedDate != null)
                             Text(
-                              _formatDate(todo.plannedDate!),
+                              _formatDate(todo.plannedDate!, todo.plannedTime),
                               style: Theme.of(context).typography.xSmall
                                   .copyWith(color: colorScheme.mutedForeground),
                               maxLines: 1,
@@ -241,13 +243,17 @@ class TodoCard extends StatelessWidget {
     }
   }
 
-  String _formatDate(DateTime date) {
+  String _formatDate(DateTime date, String? plannedTime) {
     final now = DateTime.now();
     final today = DateTime(now.year, now.month, now.day);
     final tomorrow = today.add(const Duration(days: 1));
     final dateOnly = DateTime(date.year, date.month, date.day);
 
     if (dateOnly == today) {
+      if (plannedTime != null) {
+        final time = DateFormat('HH:mm:ss').parse(plannedTime);
+        return 'Today at ${DateFormat('h:mm a').format(time)}';
+      }
       return 'Today';
     } else if (dateOnly == tomorrow) {
       return 'Tomorrow';

@@ -23,7 +23,6 @@ class ExerciseCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    print(AppConfig.serverBaseUrl + (exercise.image ?? ''));
     return Card(
       padding: EdgeInsets.all(8),
       child: Row(

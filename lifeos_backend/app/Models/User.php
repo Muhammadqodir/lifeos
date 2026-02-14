@@ -122,6 +122,14 @@ class User extends Authenticatable
     }
 
     /**
+     * Get the habits for the user.
+     */
+    public function habits(): HasMany
+    {
+        return $this->hasMany(Habit::class);
+    }
+
+    /**
      * Get the projects for the user.
      */
     public function projects(): HasMany

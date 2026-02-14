@@ -285,7 +285,26 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     Emitter<ManageTodosState> emit,
   ) async {
     final currentState = state;
-    if (currentState is! ManageTodosWithData) return;
+    if (currentState is! ManageTodosWithData) {
+      try {
+        await _todosRepository.deleteTodo(event.todoId);
+        
+        emit(const ManageTodosLoaded(
+          todosByStatus: {},
+          currentPageByStatus: {},
+          hasMoreByStatus: {},
+        ));
+        return;
+      } catch (e) {
+        emit(ManageTodosError(
+          message: e.toString(),
+          todosByStatus: {},
+          currentPageByStatus: {},
+          hasMoreByStatus: {},
+        ));
+        return;
+      }
+    }
 
     emit(TodoDeleting(
       todoId: event.todoId,
@@ -318,7 +337,30 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     Emitter<ManageTodosState> emit,
   ) async {
     final currentState = state;
-    if (currentState is! ManageTodosWithData) return;
+    if (currentState is! ManageTodosWithData) {
+      // Handle update even if bloc hasn't been loaded with project data
+      try {
+        await _todosRepository.updateTodoStatus(event.todoId, event.status);
+        
+        emit(TodoStatusUpdated(
+          todoId: event.todoId,
+          newStatus: event.status,
+          oldStatus: event.oldStatus ?? 'unknown',
+          todosByStatus: {},
+          currentPageByStatus: {},
+          hasMoreByStatus: {},
+        ));
+        return;
+      } catch (e) {
+        emit(ManageTodosError(
+          message: e.toString(),
+          todosByStatus: {},
+          currentPageByStatus: {},
+          hasMoreByStatus: {},
+        ));
+        return;
+      }
+    }
 
     emit(TodoStatusUpdating(
       todoId: event.todoId,
@@ -334,7 +376,6 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     try {
       await _todosRepository.updateTodoStatus(event.todoId, event.status);
 
-      // Emit success state first
       emit(TodoStatusUpdated(
         todoId: event.todoId,
         newStatus: event.status,

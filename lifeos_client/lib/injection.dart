@@ -39,6 +39,15 @@ import 'features/projects/data/repositories/todos_repository_impl.dart';
 import 'features/projects/domain/repositories/todos_repository.dart';
 import 'features/projects/presentation/bloc/manage_todos_bloc.dart';
 import 'features/projects/presentation/bloc/create_todo_bloc.dart';
+import 'features/habits/data/datasources/habits_api_client.dart';
+import 'features/habits/data/repositories/habits_repository_impl.dart';
+import 'features/habits/domain/repositories/habits_repository.dart';
+import 'features/habits/presentation/bloc/habits_list_bloc.dart';
+import 'features/habits/presentation/bloc/create_habit_bloc.dart';
+import 'features/habits/presentation/bloc/log_entry_bloc.dart';
+import 'features/home/data/repositories/home_repository_impl.dart';
+import 'features/home/domain/repositories/home_repository.dart';
+import 'features/home/presentation/bloc/home_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -88,6 +97,10 @@ Future<void> setupDependencies() async {
     () => ProjectsApiClient(dio: getIt<Dio>()),
   );
 
+  getIt.registerLazySingleton<HabitsApiClient>(
+    () => HabitsApiClient(dio: getIt<Dio>(), baseUrl: AppConfig.apiBaseUrl),
+  );
+
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
@@ -119,8 +132,19 @@ Future<void> setupDependencies() async {
     () => ProjectsRepositoryImpl(apiClient: getIt<ProjectsApiClient>()),
   );
 
+  getIt.registerLazySingleton<HabitsRepository>(
+    () => HabitsRepositoryImpl(apiClient: getIt<HabitsApiClient>()),
+  );
+
   getIt.registerLazySingleton<TodosRepository>(
     () => TodosRepositoryImpl(getIt<ProjectsApiClient>()),
+  );
+
+  getIt.registerLazySingleton<HomeRepository>(
+    () => HomeRepositoryImpl(
+      todosRepository: getIt<TodosRepository>(),
+      habitsRepository: getIt<HabitsRepository>(),
+    ),
   );
 
   // BLoCs
@@ -190,8 +214,24 @@ Future<void> setupDependencies() async {
     () => CreateTodoBloc(getIt<TodosRepository>()),
   );
 
+  getIt.registerFactory<HabitsListBloc>(
+    () => HabitsListBloc(habitsRepository: getIt<HabitsRepository>()),
+  );
+
+  getIt.registerFactory<CreateHabitBloc>(
+    () => CreateHabitBloc(habitsRepository: getIt<HabitsRepository>()),
+  );
+
+  getIt.registerFactory<LogEntryBloc>(
+    () => LogEntryBloc(habitsRepository: getIt<HabitsRepository>()),
+  );
+
   getIt.registerFactory<WellbeingEntryBloc>(
     () => WellbeingEntryBloc(healthRepository: getIt<HealthRepository>()),
+  );
+
+  getIt.registerFactory<HomeBloc>(
+    () => HomeBloc(homeRepository: getIt<HomeRepository>()),
   );
 
   getIt.registerSingleton<ThemeBloc>(ThemeBloc(getIt<SharedPreferences>()));

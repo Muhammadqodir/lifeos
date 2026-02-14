@@ -181,11 +181,9 @@ class FinanceApiClient {
             } else {
               // If conversion fails, skip this currency
               // In production, you might want to handle this differently
-              print('Failed to get FX rate for $currencyCode to ${baseCurrency.code}');
             }
           } catch (e) {
             // If FX rate fetch fails, skip this currency
-            print('Error fetching FX rate for $currencyCode: $e');
           }
         }
       }
@@ -302,11 +300,6 @@ class FinanceApiClient {
         );
       }
     } catch (e, s) {
-      print('Exception in createTransaction: $e'); // Debug log
-      print(s);
-      if (e is! DioException) {
-        print('Stack trace: ${StackTrace.current}'); // Debug log
-      }
       throw _handleError(e);
     }
   }
@@ -325,8 +318,6 @@ class FinanceApiClient {
         );
       }
     } catch (e, s) {
-      print('Exception in deleteTransaction: $e');
-      print(s);
       throw _handleError(e);
     }
   }
@@ -393,7 +384,6 @@ class FinanceApiClient {
 
       if (response.statusCode == 200) {
         final data = response.data['data'];
-        print(data);
         return AnalyticsSummaryDto.fromJson(data as Map<String, dynamic>);
       } else {
         throw DioException(
@@ -402,12 +392,6 @@ class FinanceApiClient {
         );
       }
     } catch (e, s) {
-      print("Analytics API error: $e");
-      print("Stack trace: $s");
-      if (e is DioException && e.response != null) {
-        print("Response status: ${e.response!.statusCode}");
-        print("Response data: ${e.response!.data}");
-      }
       throw _handleError(e);
     }
   }

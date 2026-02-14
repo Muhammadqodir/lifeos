@@ -85,10 +85,8 @@ class _DateSelectState extends State<DateSelect> {
                 initialViewType: CalendarViewType.date,
                 selectionMode: CalendarSelectionMode.single,
                 onChanged: (v) {
-                  print(v);
                   if (v != null) {
                     tempDate = v.toSingle().date;
-                    print(tempDate);
                   }
                 },
               ),

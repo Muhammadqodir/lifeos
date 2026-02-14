@@ -77,8 +77,6 @@ class AddProjectBloc extends Bloc<AddProjectEvent, AddProjectState> {
         tags: event.tags ?? [],
       ));
     } catch (e, s) {
-      print('Error creating project: $e');
-      print('Stack trace: $s');
       emit(AddProjectError(
         message: e.toString(),
         title: event.title,

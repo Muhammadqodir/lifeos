@@ -125,7 +125,6 @@ class _GymMainPageState extends State<GymMainPage> {
     }
 
     if (state is HealthHomeFailure) {
-      print('HealthHomeFailure: ${state.message}');
       return ErrorState(
         message: state.message,
         onRetry: () {

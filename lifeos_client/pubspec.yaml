@@ -63,6 +63,7 @@ dependencies:
   path: ^1.9.0
   cached_network_image: ^3.4.1
   flutter_slidable: ^4.0.3
+  contributions_chart: ^1.0.0+4
 
 dev_dependencies:
   flutter_test:

@@ -17,6 +17,8 @@ use App\Http\Controllers\Api\V1\WorkoutExerciseController;
 use App\Http\Controllers\Api\V1\WorkoutSessionController;
 use App\Http\Controllers\Api\V1\WorkoutSetController;
 use App\Http\Controllers\Auth\AuthController;
+use App\Http\Controllers\HabitController;
+use App\Http\Controllers\HabitEntryController;
 use Illuminate\Support\Facades\Route;
 
 // API v1
@@ -113,5 +115,17 @@ Route::prefix('v1')->group(function () {
         Route::get('todos/counts-by-status', [TodoController::class, 'getCountsByStatus']);
         Route::apiResource('todos', TodoController::class);
         Route::patch('todos/{todo}/status', [TodoController::class, 'updateStatus']);
+
+        // Habits routes
+        Route::get('habits/today', [HabitController::class, 'todayStatus']);
+        Route::get('habits/{habit}/stats', [HabitController::class, 'stats']);
+        Route::apiResource('habits', HabitController::class);
+
+        // Habit entries routes
+        Route::get('habit-entries/calendar', [HabitEntryController::class, 'calendar']);
+        Route::get('habit-entries', [HabitEntryController::class, 'index']);
+        Route::post('habits/{habit}/entries', [HabitEntryController::class, 'store']);
+        Route::get('habit-entries/{habitEntry}', [HabitEntryController::class, 'show']);
+        Route::delete('habit-entries/{habitEntry}', [HabitEntryController::class, 'destroy']);
     });
 });

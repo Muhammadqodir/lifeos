@@ -229,8 +229,6 @@ class HealthApiClient {
         queryParameters: queryParameters,
       );
 
-      print(response.data);
-
       if (response.statusCode == 200) {
         return WorkoutSummaryDto.fromJson(response.data);
       } else {
@@ -245,33 +243,29 @@ class HealthApiClient {
   }
 
   // Workout endpoints
-  Future<List<ExerciseDto>> getExercises({bool includeLastSession = false}) async {
+  Future<List<ExerciseDto>> getExercises({
+    bool includeLastSession = false,
+  }) async {
     try {
-      final queryParams = includeLastSession ? {'include_last_session': '1'} : null;
-      print('Fetching exercises from: $baseUrl/gym/exercises with params: $queryParams');
-      
+      final queryParams = includeLastSession
+          ? {'include_last_session': '1'}
+          : null;
+
       final response = await dio.get(
         '$baseUrl/gym/exercises',
         queryParameters: queryParams,
       );
 
-      print('Response status: ${response.statusCode}');
-      print('Response data type: ${response.data.runtimeType}');
-      
       if (response.statusCode == 200) {
         final data = response.data['data'] as List;
-        print('Successfully loaded ${data.length} exercises');
         return data.map((json) => ExerciseDto.fromJson(json)).toList();
       } else {
-        print('Unexpected status code: ${response.statusCode}');
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,
         );
       }
     } catch (e, stackTrace) {
-      print('Error fetching exercises: $e');
-      print('Stack trace: $stackTrace');
       throw _handleError(e);
     }
   }
@@ -333,9 +327,7 @@ class HealthApiClient {
     int page = 1,
   }) async {
     try {
-      final queryParameters = <String, dynamic>{
-        'page': page,
-      };
+      final queryParameters = <String, dynamic>{'page': page};
 
       if (dateFrom != null) {
         queryParameters['from'] = dateFrom.toIso8601String().split('T')[0];
@@ -388,7 +380,6 @@ class HealthApiClient {
       );
 
       if (response.statusCode == 201) {
-        print(response.data);
         return WorkoutSessionDto.fromJson(response.data['data']);
       } else {
         throw DioException(
@@ -397,7 +388,6 @@ class HealthApiClient {
         );
       }
     } catch (e, s) {
-      print('Error: $e\nStack trace: $s');
       throw _handleError(e);
     }
   }
@@ -427,11 +417,7 @@ class HealthApiClient {
       final response = await dio.post(
         '$baseUrl/gym/workouts/complete-with-photo',
         data: formData,
-        options: Options(
-          headers: {
-            'Content-Type': 'multipart/form-data',
-          },
-        ),
+        options: Options(headers: {'Content-Type': 'multipart/form-data'}),
       );
 
       if (response.statusCode == 201) {
@@ -443,7 +429,6 @@ class HealthApiClient {
         );
       }
     } catch (e, s) {
-      print('Error: $e\nStack trace: $s');
       throw _handleError(e);
     }
   }
@@ -458,7 +443,7 @@ class HealthApiClient {
         case DioExceptionType.badResponse:
           final statusCode = error.response?.statusCode;
           final responseData = error.response?.data;
-          
+
           // Handle specific status codes
           if (statusCode == 401) {
             return Exception('Unauthorized. Please login again.');
@@ -470,7 +455,8 @@ class HealthApiClient {
             // Validation error - extract message
             if (responseData is Map) {
               // Check for Laravel validation errors
-              if (responseData['errors'] != null && responseData['errors'] is Map) {
+              if (responseData['errors'] != null &&
+                  responseData['errors'] is Map) {
                 final errors = responseData['errors'] as Map;
                 if (errors.isNotEmpty) {
                   final firstError = errors.values.first;
@@ -488,11 +474,15 @@ class HealthApiClient {
           } else if (statusCode! >= 500) {
             // Extract server error message if available
             if (responseData is Map && responseData['message'] != null) {
-              return Exception('Server Error ($statusCode): ${responseData['message']}');
+              return Exception(
+                'Server Error ($statusCode): ${responseData['message']}',
+              );
             }
-            return Exception('Server error ($statusCode). Please try again later.');
+            return Exception(
+              'Server error ($statusCode). Please try again later.',
+            );
           }
-          
+
           // For other errors, try to extract message
           if (responseData is Map && responseData['message'] != null) {
             return Exception(responseData['message'].toString());
@@ -513,7 +503,9 @@ class HealthApiClient {
             final responseData = error.response?.data;
             if (responseData is Map && responseData['message'] != null) {
               if (statusCode != null && statusCode >= 500) {
-                return Exception('Server Error ($statusCode): ${responseData['message']}');
+                return Exception(
+                  'Server Error ($statusCode): ${responseData['message']}',
+                );
               }
               return Exception(responseData['message'].toString());
             }
@@ -525,11 +517,16 @@ class HealthApiClient {
           if (error.error != null) {
             final errorMsg = error.error.toString();
             // Provide more context for common network errors
-            if (errorMsg.contains('SocketException') || errorMsg.contains('Connection refused')) {
-              return Exception('Cannot connect to server. Please check if the server is running and the URL is correct.');
+            if (errorMsg.contains('SocketException') ||
+                errorMsg.contains('Connection refused')) {
+              return Exception(
+                'Cannot connect to server. Please check if the server is running and the URL is correct.',
+              );
             }
             if (errorMsg.contains('Failed host lookup')) {
-              return Exception('Cannot resolve server address. Please check your internet connection.');
+              return Exception(
+                'Cannot resolve server address. Please check your internet connection.',
+              );
             }
             return Exception('Network error: ${error.error}');
           }

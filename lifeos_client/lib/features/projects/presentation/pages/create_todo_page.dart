@@ -68,7 +68,6 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
             );
             Navigator.of(context).pop(true);
           } else if (state is CreateTodoError) {
-            print(state.message);
             showToast(
               context: context,
               location: ToastLocation.topCenter,
@@ -139,7 +138,6 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                       textInputAction: TextInputAction.next,
                     ),
                     const SizedBox(height: 12),
-
                     // Comment
                     Text(
                       'Description',
@@ -281,9 +279,14 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                             setState(() {
                               _selectedTime = value;
                             });
-                            // Format TimeOfDay as HH:mm
-                            final formattedTime = '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
-                            _bloc.add(PlannedTimeChanged(formattedTime));
+                            if (value != null) {
+                              // Format TimeOfDay as HH:mm
+                              final formattedTime =
+                                  '${value.hour.toString().padLeft(2, '0')}:${value.minute.toString().padLeft(2, '0')}';
+                              _bloc.add(PlannedTimeChanged(formattedTime));
+                            } else {
+                              _bloc.add(PlannedTimeChanged(null));
+                            }
                           },
                         ),
                       ],

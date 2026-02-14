@@ -4,7 +4,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class TimeSelect extends StatefulWidget {
   const TimeSelect({super.key, this.onTimeChanged});
-  final ValueChanged<TimeOfDay>? onTimeChanged;
+  final ValueChanged<TimeOfDay?>? onTimeChanged;
 
   @override
   State<TimeSelect> createState() => _TimeSelectState();
@@ -31,16 +31,6 @@ class _TimeSelectState extends State<TimeSelect> {
       child: TextField(
         controller: _controller,
         readOnly: true,
-        onChanged: (value) {
-          if (widget.onTimeChanged != null) {
-            final parts = value.split(':');
-            if (parts.length == 2) {
-              final hour = int.tryParse(parts[0]) ?? 0;
-              final minute = int.tryParse(parts[1]) ?? 0;
-              widget.onTimeChanged!(TimeOfDay(hour: hour, minute: minute));
-            }
-          }
-        },
         style: Theme.of(
           context,
         ).typography.small.copyWith(fontWeight: FontWeight.w500),
@@ -103,6 +93,13 @@ class _TimeSelectState extends State<TimeSelect> {
                       setState(() {
                         _controller.text = _formatTime(tempDate);
                       });
+                      // Notify parent of the time change
+                      if (widget.onTimeChanged != null) {
+                        widget.onTimeChanged!(TimeOfDay(
+                          hour: tempDate.hour,
+                          minute: tempDate.minute,
+                        ));
+                      }
                       Navigator.of(context).pop();
                     },
                     child: const Text('OK'),

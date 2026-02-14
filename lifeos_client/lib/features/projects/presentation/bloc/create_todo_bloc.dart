@@ -154,29 +154,10 @@ class CreateTodoBloc extends Bloc<CreateTodoEvent, CreateTodoState> {
         tags: currentState.tags,
       );
 
-      print('=== CREATE TODO DEBUG ===');
-      print('DTO: $dto');
-      print('JSON: ${dto.toJson()}');
-      print('Project ID: ${event.projectId}');
-      print('Title: ${currentState.title}');
-      print('Comment: ${currentState.comment}');
-      print('Priority: ${currentState.priority}');
-      print('Urgency: ${currentState.urgency}');
-      print('Energy: ${currentState.energy}');
-      print('Planned Date: ${currentState.plannedDate}');
-      print('Planned Time: ${currentState.plannedTime}');
-      print('Tags: ${currentState.tags}');
-      print('========================');
-
       final todo = await _todosRepository.createTodo(dto);
 
       emit(CreateTodoSuccess(todo));
     } catch (e, stackTrace) {
-      print('=== CREATE TODO ERROR ===');
-      print('Error: $e');
-      print('Stack trace:');
-      print(stackTrace);
-      print('========================');
       emit(CreateTodoError(e.toString()));
       
       // Return to form state with data preserved

@@ -21,7 +21,6 @@ class AuthApiClient {
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuthResponseDto.fromJson(response.data);
       } else {
-        print(response);
         // Handle error responses
         throw DioException(
           requestOptions: response.requestOptions,
@@ -29,7 +28,6 @@ class AuthApiClient {
         );
       }
     } catch (e) {
-      print(e);
       throw _handleError(e);
     }
   }
@@ -58,7 +56,6 @@ class AuthApiClient {
       );
       return AuthResponseDto.fromJson(response.data);
     } catch (e) {
-      print(e);
       throw _handleError(e);
     }
   }

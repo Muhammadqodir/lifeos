@@ -1,4 +1,7 @@
 import 'package:lifeos_client/features/health/presentation/pages/health_main_page.dart';
+import 'package:lifeos_client/features/home/presentation/bloc/home_bloc.dart';
+import 'package:lifeos_client/features/home/presentation/bloc/home_event.dart';
+import 'package:lifeos_client/features/home/presentation/pages/home_page.dart';
 import 'package:lifeos_client/features/navigation/presentation/pages/other_page.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/fade_indexed_stack.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -13,6 +16,7 @@ import '../../../health/presentation/bloc/health_home_event.dart';
 import '../../../projects/presentation/pages/projects_main_page.dart';
 import '../../../projects/presentation/bloc/manage_projects_bloc.dart';
 import '../../../projects/presentation/bloc/manage_projects_event.dart';
+import '../../../projects/presentation/bloc/manage_todos_bloc.dart';
 import '../bloc/navigation_bloc.dart';
 import '../bloc/navigation_event.dart';
 import '../bloc/navigation_state.dart';
@@ -76,7 +80,17 @@ class _MainPageContent extends StatelessWidget {
   /// Builds all pages once and maintains their state
   List<Widget> _buildPages() {
     return [
-      const _PlaceholderPage(title: 'Home'),
+      MultiBlocProvider(
+        providers: [
+          BlocProvider(
+            create: (_) => getIt<HomeBloc>()..add(const HomeStarted()),
+          ),
+          BlocProvider(
+            create: (_) => getIt<ManageTodosBloc>(),
+          ),
+        ],
+        child: const HomePage(),
+      ),
       ChangeNotifierProvider(
         create: (_) => AmountVisibilityProvider(),
         child: const FinanceMainPage(),
@@ -105,17 +119,5 @@ class _MainPageContent extends StatelessWidget {
       },
       items: _navigationItems,
     );
-  }
-}
-
-/// Placeholder page for testing navigation
-class _PlaceholderPage extends StatelessWidget {
-  final String title;
-
-  const _PlaceholderPage({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(child: Text(title, style: Theme.of(context).typography.p));
   }
 }
