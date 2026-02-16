@@ -8,7 +8,6 @@ import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_bloc.d
 import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_event.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_state.dart';
 import 'package:lifeos_client/features/habits/presentation/widgets/habit_card.dart';
-import 'package:lifeos_client/features/habits/presentation/widgets/log_entry_sheet.dart';
 import 'package:lifeos_client/features/home/presentation/bloc/home_bloc.dart';
 import 'package:lifeos_client/features/home/presentation/bloc/home_event.dart';
 import 'package:lifeos_client/features/home/presentation/bloc/home_state.dart';
@@ -17,8 +16,12 @@ import 'package:lifeos_client/features/habits/presentation/pages/habits_main_pag
 import 'package:lifeos_client/features/projects/presentation/bloc/manage_todos_bloc.dart';
 import 'package:lifeos_client/features/projects/presentation/bloc/manage_todos_event.dart';
 import 'package:lifeos_client/features/projects/presentation/bloc/manage_todos_state.dart';
+import 'package:lifeos_client/features/projects/presentation/bloc/manage_projects_bloc.dart';
+import 'package:lifeos_client/features/projects/presentation/pages/create_todo_page.dart';
 import 'package:lifeos_client/features/projects/presentation/widgets/todo_card.dart';
+import 'package:lifeos_client/features/home/presentation/widgets/projects_list_sheet.dart';
 import 'package:lifeos_client/injection.dart';
+import 'package:lifeos_client/utils/modal.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:intl/intl.dart';
 
@@ -46,18 +49,12 @@ class _HomePageState extends State<HomePage> {
             _updatingTodoId = state.todoId;
           });
         } else if (state is TodoStatusUpdated) {
-          setState(() {
-            _updatingTodoId = null;
-          });
           context.read<HomeBloc>().add(const HomeRefreshed());
         } else if (state is TodoDeleting) {
           setState(() {
             _deletingTodoId = state.todoId;
           });
         } else if (state is ManageTodosLoaded) {
-          setState(() {
-            _deletingTodoId = null;
-          });
           context.read<HomeBloc>().add(const HomeRefreshed());
         } else if (state is ManageTodosError) {
           setState(() {
@@ -66,31 +63,41 @@ class _HomePageState extends State<HomePage> {
           });
         }
       },
-      child: BlocBuilder<HomeBloc, HomeState>(
-        builder: (context, state) {
-          return Scaffold(
-            headers: [
-              CustomAppBar(
-                title: _getGreeting(),
-                rightActions: [
-                  AppBarAction(
-                    icon: HugeIcons.strokeRoundedAdd01,
-                    tooltip: 'Quick Add',
-                    onTap: () => _showQuickAddMenu(context),
-                  ),
-                ],
-              ),
-            ],
-            child: RefreshTrigger(
-              key: _refreshTriggerKey,
-              onRefresh: () async {
-                context.read<HomeBloc>().add(const HomeRefreshed());
-                await Future.delayed(const Duration(milliseconds: 500));
-              },
-              child: _buildBody(context, state),
-            ),
-          );
+      child: BlocListener<HomeBloc, HomeState>(
+        listener: (context, state) {
+          if (state is HomeSuccess) {
+            setState(() {
+              _deletingTodoId = null;
+              _updatingTodoId = null;
+            });
+          }
         },
+        child: BlocBuilder<HomeBloc, HomeState>(
+          builder: (context, state) {
+            return Scaffold(
+              headers: [
+                CustomAppBar(
+                  title: _getGreeting(),
+                  rightActions: [
+                    AppBarAction(
+                      icon: HugeIcons.strokeRoundedAdd01,
+                      tooltip: 'Quick Add',
+                      onTap: () => _showQuickAddMenu(context),
+                    ),
+                  ],
+                ),
+              ],
+              child: RefreshTrigger(
+                key: _refreshTriggerKey,
+                onRefresh: () async {
+                  context.read<HomeBloc>().add(const HomeRefreshed());
+                  await Future.delayed(const Duration(milliseconds: 500));
+                },
+                child: _buildBody(context, state),
+              ),
+            );
+          },
+        ),
       ),
     );
   }
@@ -304,7 +311,36 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showQuickAddMenu(BuildContext context) {}
+  void _showQuickAddMenu(BuildContext context) {
+    BottomSheetModal.openSheet(
+      context: context,
+      builder: (context) {
+        return BlocProvider(
+          create: (_) => getIt<ManageProjectsBloc>(),
+          child: const ProjectsListSheet(),
+        );
+      },
+    ).then((selectedProject) {
+      if (selectedProject != null && mounted) {
+        _navigateToCreateTodo(context, selectedProject.id);
+      }
+    });
+  }
+
+  Future<void> _navigateToCreateTodo(
+    BuildContext context,
+    int projectId,
+  ) async {
+    final result = await Navigator.of(context).push<bool>(
+      CupertinoPageRoute(
+        builder: (context) => CreateTodoPage(projectId: projectId),
+      ),
+    );
+
+    if (result == true && mounted) {
+      context.read<HomeBloc>().add(const HomeRefreshed());
+    }
+  }
 
   List<Widget> _buildTodoSection(
     BuildContext context,

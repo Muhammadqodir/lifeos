@@ -66,6 +66,15 @@ class _HabitStatPageState extends State<HabitStatPage> {
                 onTap: () => Navigator.of(context).pop(),
               ),
             ],
+            rightActions: [
+              AppBarAction(
+                icon: HugeIcons.strokeRoundedArchive,
+                tooltip: "Archive",
+                onTap: () {
+                  //realize archive functionality here
+                },
+              ),
+            ],
           ),
         ],
         child: SingleChildScrollView(
