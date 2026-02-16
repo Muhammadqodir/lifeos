@@ -5,6 +5,7 @@ import 'package:lifeos_client/core/widgets/empty_state.dart';
 import 'package:lifeos_client/core/widgets/error_state.dart';
 import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_bloc.dart';
+import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_event.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_state.dart';
 import 'package:lifeos_client/features/habits/presentation/widgets/habit_card.dart';
 import 'package:lifeos_client/features/habits/presentation/widgets/log_entry_sheet.dart';
@@ -32,14 +33,37 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<RefreshTriggerState> _refreshTriggerKey =
       GlobalKey<RefreshTriggerState>();
 
+  int? _updatingTodoId;
+  int? _deletingTodoId;
+  int? _updatingHabitId;
+
   @override
   Widget build(BuildContext context) {
     return BlocListener<ManageTodosBloc, ManageTodosState>(
       listener: (context, state) {
-        if (state is TodoStatusUpdated) {
+        if (state is TodoStatusUpdating) {
+          setState(() {
+            _updatingTodoId = state.todoId;
+          });
+        } else if (state is TodoStatusUpdated) {
+          setState(() {
+            _updatingTodoId = null;
+          });
           context.read<HomeBloc>().add(const HomeRefreshed());
+        } else if (state is TodoDeleting) {
+          setState(() {
+            _deletingTodoId = state.todoId;
+          });
         } else if (state is ManageTodosLoaded) {
+          setState(() {
+            _deletingTodoId = null;
+          });
           context.read<HomeBloc>().add(const HomeRefreshed());
+        } else if (state is ManageTodosError) {
+          setState(() {
+            _updatingTodoId = null;
+            _deletingTodoId = null;
+          });
         }
       },
       child: BlocBuilder<HomeBloc, HomeState>(
@@ -115,6 +139,9 @@ class _HomePageState extends State<HomePage> {
     final colorScheme = theme.colorScheme;
 
     return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
       padding: const EdgeInsets.all(16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,6 +149,9 @@ class _HomePageState extends State<HomePage> {
           // Date display
           _buildDateCard(context, theme, colorScheme),
           const SizedBox(height: 12),
+
+          // Overdue Todos
+          ..._buildTodoSection(context, theme, 'Overdue', state.overdueTodos),
 
           // Todos for Today
           ..._buildTodoSection(
@@ -140,12 +170,7 @@ class _HomePageState extends State<HomePage> {
           ),
 
           // Inbox Todos
-          ..._buildTodoSection(
-            context,
-            theme,
-            'Inbox',
-            state.inboxTodos,
-          ),
+          ..._buildTodoSection(context, theme, 'Inbox', state.inboxTodos),
 
           // Habits for Today
           if (state.habitsToday.isNotEmpty) ...[
@@ -161,12 +186,21 @@ class _HomePageState extends State<HomePage> {
             ),
             const SizedBox(height: 12),
             ...state.habitsToday.map((habit) {
+              final isUpdating = _updatingHabitId == habit.id;
+
               return Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: HabitCard(
                   habit: habit,
+                  isUpdating: isUpdating,
                   onCheckIn: () {
-                    _toggleHabitCompletion(context, habit.id, habit.isCompletedToday ?? false);
+                    if (!isUpdating) {
+                      _toggleHabitCompletion(
+                        context,
+                        habit.id,
+                        habit.isCompletedToday ?? false,
+                      );
+                    }
                   },
                 ),
               );
@@ -177,6 +211,7 @@ class _HomePageState extends State<HomePage> {
           // Empty state if all sections are empty
           if (state.habitsToday.isEmpty &&
               state.todosToday.isEmpty &&
+              state.overdueTodos.isEmpty &&
               state.inProgressTodos.isEmpty &&
               state.inboxTodos.isEmpty) ...[
             const SizedBox(height: 40),
@@ -269,9 +304,7 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  void _showQuickAddMenu(BuildContext context) {
-    //Show add todo dialog
-  }
+  void _showQuickAddMenu(BuildContext context) {}
 
   List<Widget> _buildTodoSection(
     BuildContext context,
@@ -285,25 +318,34 @@ class _HomePageState extends State<HomePage> {
       _buildSectionHeader(context, theme, title),
       const SizedBox(height: 12),
       ...todos.map((todo) {
+        final isUpdating =
+            _updatingTodoId == todo.id || _deletingTodoId == todo.id;
+
         return Padding(
           padding: const EdgeInsets.only(bottom: 8),
           child: TodoCard(
             padding: const EdgeInsets.all(0),
             todo: todo,
+            showProject: true,
+            isUpdating: isUpdating,
             onTap: () {
               // TODO: Navigate to todo details page
             },
             onStatusChanged: ({plannedDate, required status}) {
-              _handleTodoStatusChanged(
-                context,
-                todo.id,
-                todo.status,
-                status,
-                plannedDate,
-              );
+              if (!isUpdating) {
+                _handleTodoStatusChanged(
+                  context,
+                  todo.id,
+                  todo.status,
+                  status,
+                  plannedDate,
+                );
+              }
             },
             onDelete: () {
-              _handleTodoDelete(context, todo.id);
+              if (!isUpdating) {
+                _handleTodoDelete(context, todo.id);
+              }
             },
           ),
         );
@@ -319,13 +361,58 @@ class _HomePageState extends State<HomePage> {
     String newStatus,
     DateTime? plannedDate,
   ) {
-    context.read<ManageTodosBloc>().add(
-          UpdateTodoStatus(
-            todoId: todoId,
-            status: newStatus,
-            oldStatus: oldStatus,
-          ),
-        );
+    if (newStatus == 'planned' && plannedDate == null) {
+      // Show date picker before changing status to planned
+      showDialog<DateTime>(
+        context: context,
+        builder: (context) {
+          DateTime selectedDate = DateTime.now();
+          return AlertDialog(
+            title: Text("Select Planned Date"),
+            content: DatePickerDialog(
+              initialViewType: CalendarViewType.date,
+              selectionMode: CalendarSelectionMode.single,
+              onChanged: (value) {
+                if (value is DateTime) {
+                  Navigator.of(context).pop(value);
+                }
+              },
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: const Text('Cancel'),
+              ),
+              PrimaryButton(
+                child: const Text('Select'),
+                onPressed: () {
+                  Navigator.of(context).pop(selectedDate);
+                },
+              ),
+            ],
+          );
+        },
+      ).then((selectedDate) {
+        if (selectedDate != null) {
+          context.read<ManageTodosBloc>().add(
+            UpdateTodoStatus(
+              todoId: todoId,
+              status: newStatus,
+              oldStatus: oldStatus,
+              plannedDate: selectedDate,
+            ),
+          );
+        }
+      });
+    } else {
+      context.read<ManageTodosBloc>().add(
+        UpdateTodoStatus(
+          todoId: todoId,
+          status: newStatus,
+          oldStatus: oldStatus,
+        ),
+      );
+    }
   }
 
   void _handleTodoDelete(BuildContext context, int todoId) {
@@ -355,24 +442,62 @@ class _HomePageState extends State<HomePage> {
     BuildContext context,
     int habitId,
     bool isCompleted,
-  ) {
-    showCupertinoModalPopup(
-      context: context,
-      builder: (modalContext) {
-        return BlocProvider<LogEntryBloc>(
-          create: (context) => getIt<LogEntryBloc>(),
-          child: BlocListener<LogEntryBloc, LogEntryState>(
-            listener: (context, state) {
-              if (state is LogEntrySuccess) {
-                // Refresh home page data
-                Navigator.of(modalContext).pop();
-                context.read<HomeBloc>().add(const HomeRefreshed());
-              }
-            },
-            child: LogEntrySheet(habitId: habitId),
-          ),
-        );
-      },
-    );
+  ) async {
+    setState(() {
+      _updatingHabitId = habitId;
+    });
+
+    try {
+      final logEntryBloc = getIt<LogEntryBloc>();
+
+      // Create log entry for today
+      final now = DateTime.now();
+      final dateString =
+          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
+      // Backend expects completed_at in "Y-m-d H:i:s" format
+      final completedAtString =
+          '$dateString ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
+
+      logEntryBloc.add(
+        LogEntrySubmitted(
+          habitId: habitId,
+          date: dateString,
+          completedAt: completedAtString,
+          note: null,
+        ),
+      );
+
+      // Wait for the result
+      await for (final state in logEntryBloc.stream) {
+        if (state is LogEntrySuccess) {
+          setState(() {
+            _updatingHabitId = null;
+          });
+          context.read<HomeBloc>().add(const HomeRefreshed());
+          break;
+        } else if (state is LogEntryFailure) {
+          setState(() {
+            _updatingHabitId = null;
+          });
+          if (mounted) {
+            // ScaffoldMessenger.of(context).showSnackBar(
+            //   SnackBar(content: Text('Failed to update habit: ${state.message}')),
+            // );
+          }
+          break;
+        }
+      }
+
+      logEntryBloc.close();
+    } catch (e) {
+      setState(() {
+        _updatingHabitId = null;
+      });
+      if (mounted) {
+        // ScaffoldMessenger.of(context).showSnackBar(
+        //   SnackBar(content: Text('Error: $e')),
+        // );
+      }
+    }
   }
 }

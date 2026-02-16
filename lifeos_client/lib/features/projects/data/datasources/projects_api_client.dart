@@ -197,10 +197,23 @@ class ProjectsApiClient {
   }
 
   /// Update todo status only
-  Future<TodoDto> updateTodoStatus(int id, String status) async {
+  Future<TodoDto> updateTodoStatus(
+    int id,
+    String status, {
+    DateTime? plannedDate,
+  }) async {
+    final data = {'status': status};
+    
+    if (plannedDate != null) {
+      // Format date as YYYY-MM-DD for the backend
+      final formattedDate =
+          '${plannedDate.year}-${plannedDate.month.toString().padLeft(2, '0')}-${plannedDate.day.toString().padLeft(2, '0')}';
+      data['planned_date'] = formattedDate;
+    }
+
     final response = await dio.patch(
       '/todos/$id/status',
-      data: {'status': status},
+      data: data,
     );
 
     return TodoDto.fromJson(response.data['data']);

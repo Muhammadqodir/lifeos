@@ -8,8 +8,14 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 class HabitCard extends StatelessWidget {
   final HabitDto habit;
   final VoidCallback onCheckIn;
+  final bool isUpdating;
 
-  const HabitCard({super.key, required this.habit, required this.onCheckIn});
+  const HabitCard({
+    super.key,
+    required this.habit,
+    required this.onCheckIn,
+    this.isUpdating = false,
+  });
 
   Color _getColorFromHex(String hexColor) {
     final hex = hexColor.replaceAll('#', '');
@@ -22,23 +28,22 @@ class HabitCard extends StatelessWidget {
     final colorScheme = theme.colorScheme;
     final habitColor = _getColorFromHex(habit.color);
     final isCompleted = habit.isCompletedToday ?? false;
+    print(habit);
 
     return Tappable(
       lowerBound: 0.98,
       onTap: () {
         Navigator.of(context).push(
-          CupertinoPageRoute(
-            builder: (context) => HabitStatPage(habit: habit),
-          ),
+          CupertinoPageRoute(builder: (context) => HabitStatPage(habit: habit)),
         );
       },
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Color indicator
           Container(
             width: 4,
-            height: 48,
+            height: 42,
             decoration: BoxDecoration(
               color: habitColor,
               borderRadius: BorderRadius.circular(4),
@@ -90,19 +95,30 @@ class HabitCard extends StatelessWidget {
               ],
             ),
           ),
-
-          // Check-in button
-          IconButton.primary(
-            size: ButtonSize.normal,
-            onPressed: isCompleted ? null : onCheckIn,
-            icon: HugeIcon(
-              icon: isCompleted
-                  ? HugeIcons.strokeRoundedCheckmarkCircle02
-                  : HugeIcons.strokeRoundedCheckmarkCircle01,
-              size: 20,
-              color: isCompleted ? colorScheme.primary : colorScheme.background,
+          if (!isUpdating) ...[
+            IconButton.ghost(
+              size: ButtonSize.xSmall,
+              icon: HugeIcon(
+                icon: isCompleted
+                    ? HugeIcons.strokeRoundedCheckmarkSquare02
+                    : HugeIcons.strokeRoundedSquare,
+                color: colorScheme.primary,
+                strokeWidth: 2,
+              ),
+              onPressed: isCompleted ? null : onCheckIn,
             ),
-          ),
+          ] else ...[
+            Row(
+              children: [
+                SizedBox(width: 12),
+                const SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ],
+            ),
+          ],
         ],
       ),
     );

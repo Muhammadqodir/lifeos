@@ -205,6 +205,7 @@ class HabitsApiClient {
         '$baseUrl/habits/today',
         queryParameters: {
           'with_stats': '1',
+          'with_today': '1',
         },
       );
 

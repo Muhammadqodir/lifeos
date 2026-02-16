@@ -28,6 +28,11 @@ class UpdateTodoStatusRequest extends FormRequest
                 'required',
                 Rule::in(Todo::getAllowedStatuses()),
             ],
+            'planned_date' => [
+                'nullable',
+                'date',
+                'date_format:Y-m-d',
+            ],
         ];
     }
 }

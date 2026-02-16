@@ -160,9 +160,16 @@ class TodoController extends Controller
     {
         $this->authorize('update', $todo);
 
-        $todo->update([
+        $updateData = [
             'status' => $request->status,
-        ]);
+        ];
+
+        // If planned_date is provided, update it
+        if ($request->has('planned_date')) {
+            $updateData['planned_date'] = $request->planned_date;
+        }
+
+        $todo->update($updateData);
 
         $todo->load('project');
 

@@ -100,15 +100,17 @@ class UpdateTodoStatus extends ManageTodosEvent {
   final int todoId;
   final String status;
   final String? oldStatus;
+  final DateTime? plannedDate;
 
   const UpdateTodoStatus({
     required this.todoId,
     required this.status,
     this.oldStatus,
+    this.plannedDate,
   });
 
   @override
-  List<Object?> get props => [todoId, status, oldStatus];
+  List<Object?> get props => [todoId, status, oldStatus, plannedDate];
 }
 
 class SearchTodos extends ManageTodosEvent {

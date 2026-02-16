@@ -12,6 +12,10 @@ abstract class HomeRepository {
   /// Get in-progress todos (todos with status 'in_progress')
   Future<List<TodoDto>> getInProgressTodos({int limit = 5});
 
+  /// Get overdue todos (planned for any past date but not completed)
+  /// This fetches ALL overdue todos, not just from yesterday
+  Future<List<TodoDto>> getOverdueTodos({int limit = 50});
+
   /// Get habits for today
   Future<List<HabitDto>> getHabitsForToday();
 }

@@ -21,7 +21,11 @@ abstract class TodosRepository {
 
   Future<TodoDto> updateTodo(int id, Map<String, dynamic> data);
 
-  Future<TodoDto> updateTodoStatus(int id, String status);
+  Future<TodoDto> updateTodoStatus(
+    int id,
+    String status, {
+    DateTime? plannedDate,
+  });
 
   Future<void> deleteTodo(int id);
 

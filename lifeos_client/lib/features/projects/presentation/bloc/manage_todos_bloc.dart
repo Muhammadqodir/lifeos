@@ -340,7 +340,11 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     if (currentState is! ManageTodosWithData) {
       // Handle update even if bloc hasn't been loaded with project data
       try {
-        await _todosRepository.updateTodoStatus(event.todoId, event.status);
+        await _todosRepository.updateTodoStatus(
+          event.todoId,
+          event.status,
+          plannedDate: event.plannedDate,
+        );
         
         emit(TodoStatusUpdated(
           todoId: event.todoId,
@@ -374,7 +378,11 @@ class ManageTodosBloc extends Bloc<ManageTodosEvent, ManageTodosState> {
     ));
 
     try {
-      await _todosRepository.updateTodoStatus(event.todoId, event.status);
+      await _todosRepository.updateTodoStatus(
+        event.todoId,
+        event.status,
+        plannedDate: event.plannedDate,
+      );
 
       emit(TodoStatusUpdated(
         todoId: event.todoId,

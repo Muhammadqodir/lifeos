@@ -1,8 +1,10 @@
 import 'package:equatable/equatable.dart';
+import 'project_dto.dart';
 
 class TodoDto extends Equatable {
   final int id;
   final int projectId;
+  final ProjectDto? project;
   final String title;
   final String? comment;
   final String status; // inbox, planned, in_progress, blocked, done
@@ -20,6 +22,7 @@ class TodoDto extends Equatable {
   const TodoDto({
     required this.id,
     required this.projectId,
+    this.project,
     required this.title,
     this.comment,
     required this.status,
@@ -39,6 +42,9 @@ class TodoDto extends Equatable {
     return TodoDto(
       id: json['id'] as int,
       projectId: json['project_id'] as int,
+      project: json['project'] != null
+          ? ProjectDto.fromJson(json['project'] as Map<String, dynamic>)
+          : null,
       title: json['title'] as String,
       comment: json['comment'] as String?,
       status: json['status'] as String,
@@ -66,6 +72,7 @@ class TodoDto extends Equatable {
     return {
       'id': id,
       'project_id': projectId,
+      'project': project?.toJson(),
       'title': title,
       'comment': comment,
       'status': status,
@@ -86,6 +93,7 @@ class TodoDto extends Equatable {
   List<Object?> get props => [
         id,
         projectId,
+        project,
         title,
         comment,
         status,

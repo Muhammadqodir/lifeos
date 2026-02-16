@@ -3,12 +3,12 @@ class AppConfig {
   // Private constructor to prevent instantiation
   AppConfig._();
 
-  static const String serverBaseUrl = 'http://127.0.0.1:8000';
+  static const String serverBaseUrl = 'https://lifeos.alfocus.uz/';
 
   /// API base URL - can be overridden using --dart-define
   static const String apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:8000/api/v1',
+    defaultValue: 'https://lifeos.alfocus.uz/api/v1',
   );
 
   /// API connection timeout in seconds

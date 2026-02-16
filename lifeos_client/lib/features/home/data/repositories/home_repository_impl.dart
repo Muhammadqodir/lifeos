@@ -51,6 +51,22 @@ class HomeRepositoryImpl implements HomeRepository {
   }
 
   @override
+  Future<List<TodoDto>> getOverdueTodos({int limit = 50}) async {
+    final today = DateTime.now();
+    final startOfToday = DateTime(today.year, today.month, today.day);
+
+    // Get all todos with status 'planned' that have a planned_date before today
+    // This will fetch ALL overdue todos (from any past date), not just yesterday
+    return await todosRepository.getTodos(
+      status: 'planned',
+      plannedTo: startOfToday.subtract(const Duration(seconds: 1)),
+      orderBy: 'planned_date',
+      orderDirection: 'asc', // Oldest first
+      perPage: limit,
+    );
+  }
+
+  @override
   Future<List<HabitDto>> getHabitsForToday() async {
     return await habitsRepository.getHabitsWithTodayStatus();
   }

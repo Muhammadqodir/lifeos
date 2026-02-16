@@ -1,4 +1,6 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:intl/intl.dart';
+import 'package:lifeos_client/core/config/app_config.dart';
 import 'package:lifeos_client/core/theme/app_colors.dart';
 import 'package:lifeos_client/core/widgets/badge.dart';
 import 'package:lifeos_client/core/widgets/tappable.dart';
@@ -14,6 +16,7 @@ class TodoCard extends StatelessWidget {
   final VoidCallback onDelete;
   final bool isUpdating;
   final EdgeInsets padding;
+  final bool showProject;
 
   const TodoCard({
     super.key,
@@ -22,6 +25,7 @@ class TodoCard extends StatelessWidget {
     required this.onStatusChanged,
     required this.onDelete,
     this.isUpdating = false,
+    this.showProject = false,
     this.padding = const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
   });
 
@@ -33,7 +37,6 @@ class TodoCard extends StatelessWidget {
       onTap: onTap,
       child: Container(
         padding: padding,
-
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -51,6 +54,28 @@ class TodoCard extends StatelessWidget {
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
+                SizedBox(width: 8),
+                if (showProject && todo.project != null) ...[
+                  todo.project!.icon == null
+                      ? Container(
+                          width: 6,
+                          height: 6,
+                          decoration: BoxDecoration(
+                            color: _parseColor(todo.project!.color),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        )
+                      : ClipRRect(
+                          borderRadius: BorderRadius.circular(12),
+                          child: CachedNetworkImage(
+                            fit: BoxFit.cover,
+                            imageUrl:
+                                "${AppConfig.serverBaseUrl}/storage/${todo.project!.icon ?? ''}",
+                            width: 32,
+                            height: 32,
+                          ),
+                        ),
+                ],
                 SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -138,6 +163,21 @@ class TodoCard extends StatelessWidget {
         ),
       ).toList(),
     );
+  }
+
+  Color _parseColor(String hexColor) {
+    try {
+      // Remove # if present
+      String hex = hexColor.replaceAll('#', '');
+      // Add FF for full opacity if not present
+      if (hex.length == 6) {
+        hex = 'FF$hex';
+      }
+      return Color(int.parse(hex, radix: 16));
+    } catch (e) {
+      // Return a default color if parsing fails
+      return const Color(0xFF6B7280);
+    }
   }
 
   Widget _buildActions() {

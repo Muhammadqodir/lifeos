@@ -51,8 +51,12 @@ class TodosRepositoryImpl implements TodosRepository {
   }
 
   @override
-  Future<TodoDto> updateTodoStatus(int id, String status) async {
-    return _apiClient.updateTodoStatus(id, status);
+  Future<TodoDto> updateTodoStatus(
+    int id,
+    String status, {
+    DateTime? plannedDate,
+  }) async {
+    return _apiClient.updateTodoStatus(id, status, plannedDate: plannedDate);
   }
 
   @override
