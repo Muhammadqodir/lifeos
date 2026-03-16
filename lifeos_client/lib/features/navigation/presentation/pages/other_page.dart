@@ -8,6 +8,7 @@ import 'package:lifeos_client/features/auth/presentation/bloc/auth_event.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habits_list_bloc.dart';
 import 'package:lifeos_client/features/habits/presentation/pages/habits_main_page.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
+import 'package:lifeos_client/features/security/presentation/pages/security_settings_page.dart';
 import 'package:lifeos_client/injection.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -128,7 +129,13 @@ class _OtherPageState extends State<OtherPage> {
                 ActionListItem(
                   title: "Passcode",
                   description: "Manage your passcode settings",
-                  onTap: () {},
+                  onTap: () {
+                    Navigator.of(context).push(
+                      CupertinoPageRoute(
+                        builder: (context) => const SecuritySettingsPage(),
+                      ),
+                    );
+                  },
                   icon: HugeIcon(
                     icon: HugeIcons.strokeRoundedLock,
                     size: 18,

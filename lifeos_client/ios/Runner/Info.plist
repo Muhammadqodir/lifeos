@@ -49,5 +49,7 @@
     <string>LifeOS needs access to your camera to take post-workout photos</string>
     <key>NSPhotoLibraryUsageDescription</key>
     <string>LifeOS needs access to your photo library to save workout photos</string>
+    <key>NSFaceIDUsageDescription</key>
+    <string>LifeOS uses Face ID to unlock the app</string>
   </dict>
 </plist>

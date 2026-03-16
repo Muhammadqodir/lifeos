@@ -1,6 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:get_it/get_it.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:local_auth/local_auth.dart';
 import 'core/config/app_config.dart';
 import 'core/network/auth_interceptor.dart';
 import 'core/theme/presentation/bloc/theme_bloc.dart';
@@ -48,6 +49,10 @@ import 'features/habits/presentation/bloc/log_entry_bloc.dart';
 import 'features/home/data/repositories/home_repository_impl.dart';
 import 'features/home/domain/repositories/home_repository.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
+import 'features/security/data/datasources/security_local_storage.dart';
+import 'features/security/data/repositories/security_repository_impl.dart';
+import 'features/security/domain/repositories/security_repository.dart';
+import 'features/security/presentation/bloc/security_bloc.dart';
 
 final getIt = GetIt.instance;
 
@@ -101,6 +106,18 @@ Future<void> setupDependencies() async {
     () => HabitsApiClient(dio: getIt<Dio>(), baseUrl: AppConfig.apiBaseUrl),
   );
 
+  // Local Auth
+  getIt.registerLazySingleton<LocalAuthentication>(
+    () => LocalAuthentication(),
+  );
+
+  getIt.registerLazySingleton<SecurityLocalStorage>(
+    () => SecurityLocalStorage(
+      prefs: getIt<SharedPreferences>(),
+      localAuth: getIt<LocalAuthentication>(),
+    ),
+  );
+
   // Repositories
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
@@ -145,6 +162,10 @@ Future<void> setupDependencies() async {
       todosRepository: getIt<TodosRepository>(),
       habitsRepository: getIt<HabitsRepository>(),
     ),
+  );
+
+  getIt.registerLazySingleton<SecurityRepository>(
+    () => SecurityRepositoryImpl(localStorage: getIt<SecurityLocalStorage>()),
   );
 
   // BLoCs
@@ -232,6 +253,10 @@ Future<void> setupDependencies() async {
 
   getIt.registerFactory<HomeBloc>(
     () => HomeBloc(homeRepository: getIt<HomeRepository>()),
+  );
+
+  getIt.registerFactory<SecurityBloc>(
+    () => SecurityBloc(repository: getIt<SecurityRepository>()),
   );
 
   getIt.registerSingleton<ThemeBloc>(ThemeBloc(getIt<SharedPreferences>()));

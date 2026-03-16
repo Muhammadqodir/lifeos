@@ -7,6 +7,7 @@ import 'core/theme/presentation/bloc/theme_state.dart';
 import 'features/auth/presentation/bloc/auth_bloc.dart';
 import 'features/auth/presentation/bloc/auth_event.dart';
 import 'features/auth/presentation/bloc/auth_state.dart';
+import 'features/security/presentation/bloc/security_bloc.dart';
 import 'features/navigation/presentation/pages/main_page.dart';
 import 'features/auth/presentation/pages/login_page.dart';
 import 'injection.dart';
@@ -29,6 +30,7 @@ class MyApp extends StatelessWidget {
           create: (_) => getIt<AuthBloc>()..add(AuthCheckRequested()),
         ),
         BlocProvider(create: (_) => getIt<ThemeBloc>()),
+        BlocProvider(create: (_) => getIt<SecurityBloc>()),
       ],
       child: BlocBuilder<ThemeBloc, ThemeState>(
         builder: (context, themeState) {
