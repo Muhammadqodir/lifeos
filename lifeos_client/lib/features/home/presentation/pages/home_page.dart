@@ -4,21 +4,16 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/widgets/empty_state.dart';
 import 'package:lifeos_client/core/widgets/error_state.dart';
 import 'package:lifeos_client/core/widgets/loading_state.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_bloc.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_event.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_state.dart';
-import 'package:lifeos_client/features/habits/presentation/widgets/habit_card.dart';
 import 'package:lifeos_client/features/home/presentation/bloc/home_bloc.dart';
 import 'package:lifeos_client/features/home/presentation/bloc/home_event.dart';
 import 'package:lifeos_client/features/home/presentation/bloc/home_state.dart';
+import 'package:lifeos_client/features/home/presentation/widgets/home_habits_section.dart';
+import 'package:lifeos_client/features/home/presentation/widgets/todos_list.dart';
 import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
-import 'package:lifeos_client/features/habits/presentation/pages/habits_main_page.dart';
-import 'package:lifeos_client/features/projects/presentation/bloc/manage_todos_bloc.dart';
-import 'package:lifeos_client/features/projects/presentation/bloc/manage_todos_event.dart';
-import 'package:lifeos_client/features/projects/presentation/bloc/manage_todos_state.dart';
 import 'package:lifeos_client/features/projects/presentation/bloc/manage_projects_bloc.dart';
+import 'package:lifeos_client/features/projects/presentation/bloc/manage_todos_bloc.dart';
+import 'package:lifeos_client/features/projects/presentation/bloc/manage_todos_state.dart';
 import 'package:lifeos_client/features/projects/presentation/pages/create_todo_page.dart';
-import 'package:lifeos_client/features/projects/presentation/widgets/todo_card.dart';
 import 'package:lifeos_client/features/home/presentation/widgets/projects_list_sheet.dart';
 import 'package:lifeos_client/injection.dart';
 import 'package:lifeos_client/utils/modal.dart';
@@ -36,43 +31,15 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<RefreshTriggerState> _refreshTriggerKey =
       GlobalKey<RefreshTriggerState>();
 
-  int? _updatingTodoId;
-  int? _deletingTodoId;
-  int? _updatingHabitId;
-
   @override
   Widget build(BuildContext context) {
     return BlocListener<ManageTodosBloc, ManageTodosState>(
       listener: (context, state) {
-        if (state is TodoStatusUpdating) {
-          setState(() {
-            _updatingTodoId = state.todoId;
-          });
-        } else if (state is TodoStatusUpdated) {
+        if (state is TodoStatusUpdated || state is ManageTodosLoaded) {
           context.read<HomeBloc>().add(const HomeRefreshed());
-        } else if (state is TodoDeleting) {
-          setState(() {
-            _deletingTodoId = state.todoId;
-          });
-        } else if (state is ManageTodosLoaded) {
-          context.read<HomeBloc>().add(const HomeRefreshed());
-        } else if (state is ManageTodosError) {
-          setState(() {
-            _updatingTodoId = null;
-            _deletingTodoId = null;
-          });
         }
       },
-      child: BlocListener<HomeBloc, HomeState>(
-        listener: (context, state) {
-          if (state is HomeSuccess) {
-            setState(() {
-              _deletingTodoId = null;
-              _updatingTodoId = null;
-            });
-          }
-        },
-        child: BlocBuilder<HomeBloc, HomeState>(
+      child: BlocBuilder<HomeBloc, HomeState>(
           builder: (context, state) {
             return Scaffold(
               headers: [
@@ -98,10 +65,8 @@ class _HomePageState extends State<HomePage> {
             );
           },
         ),
-      ),
     );
   }
-
   String _getGreeting() {
     final hour = DateTime.now().hour;
     if (hour < 12) {
@@ -153,69 +118,13 @@ class _HomePageState extends State<HomePage> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Date display
           _buildDateCard(context, theme, colorScheme),
           const SizedBox(height: 12),
 
-          // Overdue Todos
-          ..._buildTodoSection(context, theme, 'Overdue', state.overdueTodos),
+          MainPageTodosList(state: state),
 
-          // Todos for Today
-          ..._buildTodoSection(
-            context,
-            theme,
-            'Planned for Today',
-            state.todosToday,
-          ),
+          HomeHabitsSection(habits: state.habitsToday),
 
-          // In Progress Todos
-          ..._buildTodoSection(
-            context,
-            theme,
-            'In Progress',
-            state.inProgressTodos,
-          ),
-
-          // Inbox Todos
-          ..._buildTodoSection(context, theme, 'Inbox', state.inboxTodos),
-
-          // Habits for Today
-          if (state.habitsToday.isNotEmpty) ...[
-            _buildSectionHeader(
-              context,
-              theme,
-              'Habits for Today',
-              onViewAll: () {
-                Navigator.of(context).push(
-                  CupertinoPageRoute(builder: (_) => const HabitsMainPage()),
-                );
-              },
-            ),
-            const SizedBox(height: 12),
-            ...state.habitsToday.map((habit) {
-              final isUpdating = _updatingHabitId == habit.id;
-
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: HabitCard(
-                  habit: habit,
-                  isUpdating: isUpdating,
-                  onCheckIn: () {
-                    if (!isUpdating) {
-                      _toggleHabitCompletion(
-                        context,
-                        habit.id,
-                        habit.isCompletedToday ?? false,
-                      );
-                    }
-                  },
-                ),
-              );
-            }),
-            const SizedBox(height: 24),
-          ],
-
-          // Empty state if all sections are empty
           if (state.habitsToday.isEmpty &&
               state.todosToday.isEmpty &&
               state.overdueTodos.isEmpty &&
@@ -280,37 +189,6 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  Widget _buildSectionHeader(
-    BuildContext context,
-    ThemeData theme,
-    String title, {
-    VoidCallback? onViewAll,
-  }) {
-    final colorScheme = theme.colorScheme;
-
-    return Row(
-      children: [
-        Text(
-          title,
-          style: theme.typography.normal.copyWith(fontWeight: FontWeight.w600),
-        ),
-        if (onViewAll != null) ...[
-          const Spacer(),
-          GestureDetector(
-            onTap: onViewAll,
-            child: Text(
-              'View All',
-              style: theme.typography.small.copyWith(
-                color: colorScheme.primary,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ],
-    );
-  }
-
   void _showQuickAddMenu(BuildContext context) {
     BottomSheetModal.openSheet(
       context: context,
@@ -339,201 +217,6 @@ class _HomePageState extends State<HomePage> {
 
     if (result == true && mounted) {
       context.read<HomeBloc>().add(const HomeRefreshed());
-    }
-  }
-
-  List<Widget> _buildTodoSection(
-    BuildContext context,
-    ThemeData theme,
-    String title,
-    List<dynamic> todos,
-  ) {
-    if (todos.isEmpty) return [];
-
-    return [
-      _buildSectionHeader(context, theme, title),
-      const SizedBox(height: 12),
-      ...todos.map((todo) {
-        final isUpdating =
-            _updatingTodoId == todo.id || _deletingTodoId == todo.id;
-
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 8),
-          child: TodoCard(
-            padding: const EdgeInsets.all(0),
-            todo: todo,
-            showProject: true,
-            isUpdating: isUpdating,
-            onTap: () {
-              // TODO: Navigate to todo details page
-            },
-            onStatusChanged: ({plannedDate, required status}) {
-              if (!isUpdating) {
-                _handleTodoStatusChanged(
-                  context,
-                  todo.id,
-                  todo.status,
-                  status,
-                  plannedDate,
-                );
-              }
-            },
-            onDelete: () {
-              if (!isUpdating) {
-                _handleTodoDelete(context, todo.id);
-              }
-            },
-          ),
-        );
-      }),
-      const SizedBox(height: 12),
-    ];
-  }
-
-  void _handleTodoStatusChanged(
-    BuildContext context,
-    int todoId,
-    String oldStatus,
-    String newStatus,
-    DateTime? plannedDate,
-  ) {
-    if (newStatus == 'planned' && plannedDate == null) {
-      // Show date picker before changing status to planned
-      showDialog<DateTime>(
-        context: context,
-        builder: (context) {
-          DateTime selectedDate = DateTime.now();
-          return AlertDialog(
-            title: Text("Select Planned Date"),
-            content: DatePickerDialog(
-              initialViewType: CalendarViewType.date,
-              selectionMode: CalendarSelectionMode.single,
-              onChanged: (value) {
-                if (value is DateTime) {
-                  Navigator.of(context).pop(value);
-                }
-              },
-            ),
-            actions: [
-              TextButton(
-                onPressed: () => Navigator.of(context).pop(),
-                child: const Text('Cancel'),
-              ),
-              PrimaryButton(
-                child: const Text('Select'),
-                onPressed: () {
-                  Navigator.of(context).pop(selectedDate);
-                },
-              ),
-            ],
-          );
-        },
-      ).then((selectedDate) {
-        if (selectedDate != null) {
-          context.read<ManageTodosBloc>().add(
-            UpdateTodoStatus(
-              todoId: todoId,
-              status: newStatus,
-              oldStatus: oldStatus,
-              plannedDate: selectedDate,
-            ),
-          );
-        }
-      });
-    } else {
-      context.read<ManageTodosBloc>().add(
-        UpdateTodoStatus(
-          todoId: todoId,
-          status: newStatus,
-          oldStatus: oldStatus,
-        ),
-      );
-    }
-  }
-
-  void _handleTodoDelete(BuildContext context, int todoId) {
-    showDialog(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Delete Todo'),
-        content: const Text('Are you sure you want to delete this todo?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () {
-              Navigator.of(dialogContext).pop();
-              context.read<ManageTodosBloc>().add(DeleteTodo(todoId));
-            },
-            child: const Text('Delete'),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _toggleHabitCompletion(
-    BuildContext context,
-    int habitId,
-    bool isCompleted,
-  ) async {
-    setState(() {
-      _updatingHabitId = habitId;
-    });
-
-    try {
-      final logEntryBloc = getIt<LogEntryBloc>();
-
-      // Create log entry for today
-      final now = DateTime.now();
-      final dateString =
-          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      // Backend expects completed_at in "Y-m-d H:i:s" format
-      final completedAtString =
-          '$dateString ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-
-      logEntryBloc.add(
-        LogEntrySubmitted(
-          habitId: habitId,
-          date: dateString,
-          completedAt: completedAtString,
-          note: null,
-        ),
-      );
-
-      // Wait for the result
-      await for (final state in logEntryBloc.stream) {
-        if (state is LogEntrySuccess) {
-          setState(() {
-            _updatingHabitId = null;
-          });
-          context.read<HomeBloc>().add(const HomeRefreshed());
-          break;
-        } else if (state is LogEntryFailure) {
-          setState(() {
-            _updatingHabitId = null;
-          });
-          if (mounted) {
-            // ScaffoldMessenger.of(context).showSnackBar(
-            //   SnackBar(content: Text('Failed to update habit: ${state.message}')),
-            // );
-          }
-          break;
-        }
-      }
-
-      logEntryBloc.close();
-    } catch (e) {
-      setState(() {
-        _updatingHabitId = null;
-      });
-      if (mounted) {
-        // ScaffoldMessenger.of(context).showSnackBar(
-        //   SnackBar(content: Text('Error: $e')),
-        // );
-      }
     }
   }
 }

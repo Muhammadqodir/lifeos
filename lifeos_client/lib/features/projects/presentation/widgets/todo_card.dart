@@ -17,6 +17,7 @@ class TodoCard extends StatelessWidget {
   final bool isUpdating;
   final EdgeInsets padding;
   final bool showProject;
+  final bool kanbanMode;
 
   const TodoCard({
     super.key,
@@ -26,6 +27,7 @@ class TodoCard extends StatelessWidget {
     required this.onDelete,
     this.isUpdating = false,
     this.showProject = false,
+    this.kanbanMode = false,
     this.padding = const EdgeInsets.symmetric(vertical: 6, horizontal: 12),
   });
 
@@ -195,8 +197,20 @@ class TodoCard extends StatelessWidget {
       );
     }
 
-    dynamic icon;
-    Color color;
+    // Kanban mode: only done button for in_progress, nothing for others
+    if (kanbanMode) {
+      if (todo.status == 'in_progress') {
+        return IconButton.ghost(
+          size: ButtonSize.xSmall,
+          icon: const HugeIcon(
+            icon: HugeIcons.strokeRoundedCheckmarkSquare02,
+            strokeWidth: 2,
+          ),
+          onPressed: () => onStatusChanged(status: 'done'),
+        );
+      }
+      return const SizedBox.shrink();
+    }
 
     switch (todo.status) {
       case 'planned':

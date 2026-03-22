@@ -1,3 +1,4 @@
+import 'package:lifeos_client/features/navigation/presentation/widgets/navigation_item_data.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 
@@ -133,12 +134,4 @@ class _NavigationButtonState extends State<_NavigationButton> {
       ),
     );
   }
-}
-
-/// Navigation item data class
-class NavigationItemData {
-  final String label;
-  final dynamic icon;
-
-  const NavigationItemData({required this.label, required this.icon});
 }

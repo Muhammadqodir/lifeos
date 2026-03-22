@@ -67,6 +67,7 @@ dependencies:
   cached_network_image: ^3.4.1
   flutter_slidable: ^4.0.3
   contributions_chart: ^1.0.0+4
+  flutter_side_menu: ^0.5.41
 
 dev_dependencies:
   flutter_test:
