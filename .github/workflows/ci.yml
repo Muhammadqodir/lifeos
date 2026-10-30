@@ -1,0 +1,53 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  client:
+    name: Flutter client
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lifeos_client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          # Keep in sync with the local toolchain; shadcn_flutter is pinned
+          # against this version (see pubspec.yaml).
+          flutter-version: 3.47.0
+          channel: stable
+          cache: true
+      - run: flutter pub get
+      - run: dart format --output=none --set-exit-if-changed lib/core/ui test
+      - run: flutter analyze
+      - run: flutter test
+
+  backend:
+    name: Laravel backend
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: lifeos_backend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.4'
+          extensions: mbstring, pdo_sqlite, sqlite3, bcmath
+          coverage: none
+      - uses: actions/cache@v4
+        with:
+          path: lifeos_backend/vendor
+          key: composer-${{ hashFiles('lifeos_backend/composer.lock') }}
+      - run: composer install --no-interaction --prefer-dist --no-progress
+      - run: cp .env.example .env && php artisan key:generate
+      # phpunit.xml runs the suite on in-memory SQLite.
+      - run: php artisan test
