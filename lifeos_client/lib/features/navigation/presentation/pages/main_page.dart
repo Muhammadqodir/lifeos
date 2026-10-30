@@ -37,6 +37,10 @@ import 'other_page.dart';
 /// Each tab owns a nested [Navigator], so detail pages open inside the
 /// content area (the sidebar stays visible) and every tab keeps its own
 /// back stack, like a native tab bar controller.
+///
+/// Keyboard (iPad/Mac): ⌘1–5 switch tabs, ⌘[ or Esc go back, ⌘N runs the
+/// page's primary action and ⌘R refreshes it. On macOS the same commands
+/// are in the menu bar (see MainFlutterWindow.swift).
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
 
@@ -82,11 +86,60 @@ class _MainShellState extends State<_MainShell> {
     (_) => GlobalKey<NavigatorState>(),
   );
 
+  final PageCommandRegistry _commands = PageCommandRegistry();
+
+  /// Menu bar items added natively in MainFlutterWindow.swift.
+  static const _menuChannel = MethodChannel('lifeos/menu');
+
   late final List<Widget> _tabs = _buildTabs();
 
+  @override
+  void initState() {
+    super.initState();
+    _menuChannel.setMethodCallHandler(_onMenuCommand);
+    HardwareKeyboard.instance.addHandler(_onHardwareKey);
+  }
+
+  @override
+  void dispose() {
+    _menuChannel.setMethodCallHandler(null);
+    HardwareKeyboard.instance.removeHandler(_onHardwareKey);
+    super.dispose();
+  }
+
+  Future<void> _onMenuCommand(MethodCall call) async {
+    if (!mounted) return;
+    // Ignore the menu while a dialog or a full-screen flow (workout) is
+    // on top of the shell.
+    if (ModalRoute.isCurrentOf(context) == false) return;
+    switch (call.method) {
+      case 'newItem':
+        _runPageCommand((c) => c.onNew);
+      case 'refresh':
+        _runPageCommand((c) => c.onRefresh);
+      case 'back':
+        _popCurrentTab();
+      case 'selectTab':
+        final index = call.arguments as int;
+        if (index >= 0 && index < _items.length) _selectTab(index);
+    }
+  }
+
+  /// Runs a command of the top page in the active tab, if it has one.
+  bool _runPageCommand(VoidCallback? Function(PageCommandSet) pick) {
+    final index = context.read<NavigationBloc>().state.currentIndex;
+    final commands = _commands.activeFor(index);
+    final callback = commands == null ? null : pick(commands);
+    callback?.call();
+    return callback != null;
+  }
+
   List<Widget> _buildTabs() {
-    Widget tab(int index, Widget page) =>
-        _TabNavigator(navigatorKey: _navigatorKeys[index], child: page);
+    Widget tab(int index, Widget page) => PageCommandScope(
+      registry: _commands,
+      tabIndex: index,
+      child: _TabNavigator(navigatorKey: _navigatorKeys[index], child: page),
+    );
 
     return [
       MultiBlocProvider(
@@ -125,30 +178,69 @@ class _MainShellState extends State<_MainShell> {
     bloc.add(TabSelected(index));
   }
 
-  void _popCurrentTab() {
+  /// Goes back inside the active tab. Returns false on a tab's root page.
+  bool _popCurrentTab() {
     final index = context.read<NavigationBloc>().state.currentIndex;
-    _navigatorKeys[index].currentState?.maybePop();
+    final navigator = _navigatorKeys[index].currentState;
+    if (navigator == null || !navigator.canPop()) return false;
+    navigator.maybePop();
+    return true;
   }
 
-  Map<ShortcutActivator, VoidCallback> get _shortcuts {
-    final useMeta = isApplePlatform;
-    final digits = [
-      LogicalKeyboardKey.digit1,
-      LogicalKeyboardKey.digit2,
-      LogicalKeyboardKey.digit3,
-      LogicalKeyboardKey.digit4,
-      LogicalKeyboardKey.digit5,
-    ];
-    return {
-      for (var i = 0; i < _items.length; i++)
-        SingleActivator(digits[i], meta: useMeta, control: !useMeta): () =>
-            _selectTab(i),
-      SingleActivator(
-        LogicalKeyboardKey.bracketLeft,
-        meta: useMeta,
-        control: !useMeta,
-      ): _popCurrentTab,
-    };
+  static const _tabKeys = [
+    LogicalKeyboardKey.digit1,
+    LogicalKeyboardKey.digit2,
+    LogicalKeyboardKey.digit3,
+    LogicalKeyboardKey.digit4,
+    LogicalKeyboardKey.digit5,
+  ];
+
+  /// App-wide shortcuts. Registered on [HardwareKeyboard] rather than as
+  /// focus-based [Shortcuts], so they keep working after a click moves
+  /// focus out of the shell (common with a mouse). Returning false leaves
+  /// the key to text fields, the browser or the Mac menu bar.
+  bool _onHardwareKey(KeyEvent event) {
+    if (event is! KeyDownEvent || !mounted) return false;
+    // A dialog, sheet, menu or full-screen flow is on top of the shell.
+    if (ModalRoute.isCurrentOf(context) == false) return false;
+
+    final keyboard = HardwareKeyboard.instance;
+    final key = event.logicalKey;
+    final command = isApplePlatform
+        ? keyboard.isMetaPressed
+        : keyboard.isControlPressed;
+    final otherModifiers =
+        keyboard.isAltPressed ||
+        keyboard.isShiftPressed ||
+        (isApplePlatform && keyboard.isControlPressed);
+
+    if (command && !otherModifiers) {
+      final tab = _tabKeys.indexOf(key);
+      if (tab >= 0 && tab < _items.length) {
+        _selectTab(tab);
+        return true;
+      }
+      if (key == LogicalKeyboardKey.bracketLeft) return _popCurrentTab();
+      if (key == LogicalKeyboardKey.keyN) {
+        return _runPageCommand((c) => c.onNew);
+      }
+      if (key == LogicalKeyboardKey.keyR) {
+        return _runPageCommand((c) => c.onRefresh);
+      }
+      return false;
+    }
+
+    if (key == LogicalKeyboardKey.escape && !command && !otherModifiers) {
+      // First Esc leaves a text field, so a half-typed form isn't lost.
+      final focused = FocusManager.instance.primaryFocus;
+      if (focused?.context?.findAncestorWidgetOfExactType<EditableText>() !=
+          null) {
+        focused!.unfocus();
+        return true;
+      }
+      return _popCurrentTab();
+    }
+    return false;
   }
 
   @override
@@ -163,44 +255,36 @@ class _MainShellState extends State<_MainShell> {
         return NavigatorPopHandler(
           // Android back / predictive back pops inside the active tab first.
           onPopWithResult: (_) => _popCurrentTab(),
-          child: CallbackShortcuts(
-            bindings: _shortcuts,
-            child: Focus(
-              autofocus: true,
-              child: LayoutBuilder(
-                builder: (context, constraints) {
-                  final windowClass = WindowClass.fromWidth(
-                    constraints.maxWidth,
-                  );
-                  if (windowClass.isCompact) {
-                    return Scaffold(
-                      footers: [
-                        CustomBottomNavigation(
-                          currentIndex: state.currentIndex,
-                          onTap: _selectTab,
-                          items: _items,
-                        ),
-                      ],
-                      child: content,
-                    );
-                  }
-                  return Scaffold(
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        CustomSideNavigation(
-                          currentIndex: state.currentIndex,
-                          onTap: _selectTab,
-                          items: _items,
-                          collapsed: !windowClass.isExpanded,
-                        ),
-                        Expanded(child: content),
-                      ],
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final windowClass = WindowClass.fromWidth(constraints.maxWidth);
+              if (windowClass.isCompact) {
+                return Scaffold(
+                  footers: [
+                    CustomBottomNavigation(
+                      currentIndex: state.currentIndex,
+                      onTap: _selectTab,
+                      items: _items,
                     ),
-                  );
-                },
-              ),
-            ),
+                  ],
+                  child: content,
+                );
+              }
+              return Scaffold(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    CustomSideNavigation(
+                      currentIndex: state.currentIndex,
+                      onTap: _selectTab,
+                      items: _items,
+                      collapsed: !windowClass.isExpanded,
+                    ),
+                    Expanded(child: content),
+                  ],
+                ),
+              );
+            },
           ),
         );
       },

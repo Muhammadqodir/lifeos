@@ -3,6 +3,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import '../app_theme_x.dart';
 import '../breakpoints.dart';
+import '../page_commands.dart';
 import '../tokens.dart';
 
 /// Page header used by every screen.
@@ -12,6 +13,8 @@ import '../tokens.dart';
 ///   label become labelled buttons on iPad/Mac.
 /// * On Mac (no pull-to-refresh with a mouse) shows a refresh button when
 ///   [onRefresh] is provided.
+/// * Binds ⌘R to [onRefresh] and ⌘N to the primary [HeaderAction] (see
+///   [PageCommands]).
 class AppHeader extends StatelessWidget {
   const AppHeader({
     super.key,
@@ -64,6 +67,26 @@ class AppHeader extends StatelessWidget {
         ),
     ];
 
+    final primaryAction = actions
+        ?.whereType<HeaderAction>()
+        .where((a) => a.primary && a.onTap != null)
+        .firstOrNull;
+
+    return PageCommands(
+      commands: PageCommandSet(
+        onNew: primaryAction?.onTap,
+        onRefresh: onRefresh,
+      ),
+      child: _buildBar(context, colors, leadingWidgets, trailing),
+    );
+  }
+
+  Widget _buildBar(
+    BuildContext context,
+    ColorScheme colors,
+    List<Widget> leadingWidgets,
+    List<Widget> trailing,
+  ) {
     return Container(
       decoration: BoxDecoration(
         color: colors.background,

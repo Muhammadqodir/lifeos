@@ -6,6 +6,7 @@ library;
 
 export 'app_theme_x.dart';
 export 'breakpoints.dart';
+export 'page_commands.dart';
 export 'tokens.dart';
 export 'components/app_actions.dart';
 export 'components/app_badge.dart';
