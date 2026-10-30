@@ -54,15 +54,16 @@ class TodoController extends Controller
         }
 
         // Ordering
-        $allowedOrderFields = ['planned_date', 'priority', 'urgency', 'energy', 'created_at'];
+        $allowedOrderFields = ['planned_date', 'priority', 'urgency', 'energy', 'created_at', 'updated_at'];
         $orderBy = $request->get('order_by', 'created_at');
-        $orderDirection = $request->get('order_direction', 'desc');
+        $orderDirection = strtolower((string) $request->get('order_direction', 'desc')) === 'asc' ? 'asc' : 'desc';
 
-        if (in_array($orderBy, $allowedOrderFields)) {
+        if (in_array($orderBy, $allowedOrderFields, true)) {
             $query->orderBy($orderBy, $orderDirection);
         }
 
-        $todos = $query->paginate($request->get('per_page', 15));
+        $perPage = max(1, min((int) $request->get('per_page', 15), 100));
+        $todos = $query->paginate($perPage);
 
         return TodoResource::collection($todos);
     }

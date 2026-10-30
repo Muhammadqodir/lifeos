@@ -38,11 +38,13 @@ class SleepEntryTest extends TestCase
             ],
         ]);
 
-        $this->assertDatabaseHas('sleep_entries', [
-            'user_id' => $user->id,
-            'date' => '2026-01-04',
-            'quality' => 4,
-        ]);
+        // whereDate keeps this driver-agnostic: SQLite stores date casts with a time part.
+        $this->assertTrue(
+            \App\Models\SleepEntry::where('user_id', $user->id)
+                ->whereDate('date', '2026-01-04')
+                ->where('quality', 4)
+                ->exists()
+        );
     }
 
     public function test_user_can_view_their_sleep_entries(): void

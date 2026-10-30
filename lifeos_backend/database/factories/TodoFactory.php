@@ -38,7 +38,8 @@ class TodoFactory extends Factory
             'urgency' => fake()->randomElement(Todo::getAllowedUrgencies()),
             'energy' => fake()->randomElement(Todo::getAllowedEnergies()),
             'time_spent_minutes' => fake()->optional()->numberBetween(5, 300),
-            'planned_date_time' => fake()->optional()->dateTimeBetween('now', '+30 days'),
+            'planned_date' => fake()->optional()->dateTimeBetween('now', '+30 days')?->format('Y-m-d'),
+            'planned_time' => fake()->optional()->time('H:i:s'),
             'completed_at' => $status === Todo::STATUS_DONE ? now() : null,
             'tags' => fake()->optional()->randomElements(['work', 'personal', 'urgent', 'health', 'finance'], 2),
         ];

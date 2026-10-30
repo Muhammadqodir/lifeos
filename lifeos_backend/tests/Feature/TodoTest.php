@@ -112,18 +112,32 @@ class TodoTest extends TestCase
         Todo::factory()->create([
             'user_id' => $this->user->id,
             'project_id' => $this->project->id,
-            'planned_date_time' => '2026-01-15 10:00:00',
+            'planned_date' => '2026-01-15',
         ]);
         Todo::factory()->create([
             'user_id' => $this->user->id,
             'project_id' => $this->project->id,
-            'planned_date_time' => '2026-01-20 10:00:00',
+            'planned_date' => '2026-01-20',
         ]);
 
         $response = $this->getJson('/api/v1/todos?planned_from=2026-01-18&planned_to=2026-01-22');
 
         $response->assertOk()
             ->assertJsonCount(1, 'data');
+    }
+
+    public function test_invalid_ordering_and_page_size_are_sanitized(): void
+    {
+        Sanctum::actingAs($this->user);
+
+        Todo::factory()->count(3)->create([
+            'user_id' => $this->user->id,
+            'project_id' => $this->project->id,
+        ]);
+
+        $this->getJson('/api/v1/todos?order_by=updated_at&order_direction=sideways&per_page=100000')
+            ->assertOk()
+            ->assertJsonPath('meta.per_page', 100);
     }
 
     public function test_user_can_search_todos_by_title(): void
@@ -184,7 +198,7 @@ class TodoTest extends TestCase
             'urgency' => 'high',
             'energy' => 'medium',
             'time_spent_minutes' => 30,
-            'planned_date_time' => '2026-01-20 10:00:00',
+            'planned_date' => '2026-01-20',
             'tags' => ['work', 'urgent'],
         ];
 

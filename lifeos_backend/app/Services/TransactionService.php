@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Transaction;
 use App\Models\TransactionEntry;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class TransactionService
 {
@@ -15,7 +16,7 @@ class TransactionService
      * @param string $userId
      * @param array $data
      * @return Transaction
-     * @throws \Exception
+     * @throws ValidationException
      */
     public function createTransaction(string $userId, array $data): Transaction
     {
@@ -41,7 +42,7 @@ class TransactionService
                     ->count();
 
                 if ($validWallets !== count($walletIds)) {
-                    throw new \Exception('One or more wallets do not belong to the authenticated user.');
+                    throw ValidationException::withMessages(['entries' => ['One or more wallets do not belong to the authenticated user.']]);
                 }
             }
 
@@ -50,12 +51,12 @@ class TransactionService
                 $category = \App\Models\TransactionCategory::find($data['category_id']);
 
                 if (!$category) {
-                    throw new \Exception('Category not found.');
+                    throw ValidationException::withMessages(['category_id' => ['Category not found.']]);
                 }
 
                 // Category must belong to user OR be a system category (user_id = null)
                 if ($category->user_id !== null && $category->user_id !== (int)$userId) {
-                    throw new \Exception('Category does not belong to the authenticated user.');
+                    throw ValidationException::withMessages(['category_id' => ['Category does not belong to the authenticated user.']]);
                 }
             }
 
@@ -94,7 +95,7 @@ class TransactionService
      * @param Transaction $transaction
      * @param array $data
      * @return Transaction
-     * @throws \Exception
+     * @throws ValidationException
      */
     public function updateTransaction(Transaction $transaction, array $data): Transaction
     {
@@ -107,7 +108,7 @@ class TransactionService
                     ->count();
 
                 if ($validWallets !== count($walletIds)) {
-                    throw new \Exception('One or more wallets do not belong to the transaction owner.');
+                    throw ValidationException::withMessages(['entries' => ['One or more wallets do not belong to the transaction owner.']]);
                 }
             }
 
@@ -116,12 +117,12 @@ class TransactionService
                 $category = \App\Models\TransactionCategory::find($data['category_id']);
 
                 if (!$category) {
-                    throw new \Exception('Category not found.');
+                    throw ValidationException::withMessages(['category_id' => ['Category not found.']]);
                 }
 
                 // Category must belong to user OR be a system category (user_id = null)
                 if ($category->user_id !== null && $category->user_id !== $transaction->user_id) {
-                    throw new \Exception('Category does not belong to the transaction owner.');
+                    throw ValidationException::withMessages(['category_id' => ['Category does not belong to the transaction owner.']]);
                 }
             }
 

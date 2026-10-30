@@ -49,17 +49,10 @@ class HabitController extends Controller
      */
     public function store(StoreHabitRequest $request): HabitResource
     {
-        \Log::info('=== CREATE HABIT DEBUG ===');
-        \Log::info('Request all data:', $request->all());
-        \Log::info('Validated data:', $request->validated());
-
         $habit = Habit::create([
             'user_id' => auth()->id(),
             ...$request->validated(),
         ]);
-
-        \Log::info('Created habit:', $habit->toArray());
-        \Log::info('Raw attributes:', $habit->getAttributes());
 
         return new HabitResource($habit);
     }
@@ -107,7 +100,7 @@ class HabitController extends Controller
     {
         $this->authorize('view', $habit);
 
-        $days = $request->input('days', 30);
+        $days = max(1, min((int) $request->input('days', 30), 366));
 
         $stats = [
             'current_streak' => $habit->getCurrentStreak(),
@@ -137,6 +130,7 @@ class HabitController extends Controller
     {
         $habits = Habit::where('user_id', auth()->id())
             ->where('status', Habit::STATUS_ACTIVE)
+            ->withCompletedToday()
             ->orderBy('created_at', 'desc')
             ->get();
 

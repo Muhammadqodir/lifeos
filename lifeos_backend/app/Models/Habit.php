@@ -270,9 +270,24 @@ class Habit extends Model
      */
     public function isCompletedToday(): bool
     {
+        // Prefer the flag loaded via withCompletedToday() to avoid one query per habit.
+        if (array_key_exists('completed_today', $this->attributes)) {
+            return (bool) $this->attributes['completed_today'];
+        }
+
         return $this->entries()
             ->whereDate('date', Carbon::today())
             ->exists();
+    }
+
+    /**
+     * Eager-load whether each habit has an entry for today.
+     */
+    public function scopeWithCompletedToday($query)
+    {
+        return $query->withExists([
+            'entries as completed_today' => fn ($q) => $q->whereDate('date', Carbon::today()),
+        ]);
     }
 
     /**

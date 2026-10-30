@@ -42,7 +42,7 @@ class UpdateProjectRequest extends FormRequest
                 'sometimes',
                 'required',
                 'string',
-                'regex:/^#[0-9A-Fa-f]{6}$/', // Hex color format #RRGGBB
+                'regex:/^#?([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/', // RRGGBB or AARRGGBB, optional leading #
             ],
             'icon' => 'nullable|string|max:255',
             'tags' => 'nullable|array',

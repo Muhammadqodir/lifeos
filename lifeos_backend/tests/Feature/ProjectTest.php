@@ -63,7 +63,6 @@ class ProjectTest extends TestCase
             'title' => 'New Project',
             'description' => 'Project description',
             'color' => '#FF5733',
-            'icon' => 'icon.png',
             'tags' => ['work', 'important'],
         ];
 

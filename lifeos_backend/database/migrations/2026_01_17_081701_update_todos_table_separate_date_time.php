@@ -16,7 +16,9 @@ return new class extends Migration
             $table->date('planned_date')->nullable()->after('energy');
             $table->time('planned_time')->nullable()->after('planned_date');
 
-            // Drop the old combined column
+            // Drop the old combined column. The index must go first: SQLite
+            // refuses to drop a column that is still referenced by an index.
+            $table->dropIndex(['planned_date_time']);
             $table->dropColumn('planned_date_time');
         });
     }
@@ -29,6 +31,7 @@ return new class extends Migration
         Schema::table('todos', function (Blueprint $table) {
             // Restore the combined column
             $table->dateTime('planned_date_time')->nullable()->after('energy');
+            $table->index('planned_date_time');
 
             // Drop the separate columns
             $table->dropColumn(['planned_date', 'planned_time']);

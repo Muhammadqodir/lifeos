@@ -37,7 +37,7 @@ class StoreProjectRequest extends FormRequest
             'color' => [
                 'required',
                 'string',
-                'regex:/^[0-9A-Fa-f]{6,8}$/', // Hex color format RRGGBB or AARRGGBB
+                'regex:/^#?([0-9A-Fa-f]{6}|[0-9A-Fa-f]{8})$/', // RRGGBB or AARRGGBB, optional leading #
             ],
             'icon' => 'nullable|image|mimes:jpeg,jpg,png,gif,webp|max:2048', // 2MB max
             'tags' => 'nullable|array',

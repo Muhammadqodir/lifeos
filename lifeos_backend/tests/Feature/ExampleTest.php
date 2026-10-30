@@ -12,7 +12,8 @@ class ExampleTest extends TestCase
      */
     public function test_the_application_returns_a_successful_response(): void
     {
-        $response = $this->get('/');
+        // The backend is API-only; the framework health route is the smoke check.
+        $response = $this->get('/up');
 
         $response->assertStatus(200);
     }
