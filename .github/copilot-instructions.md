@@ -50,10 +50,12 @@ composer run test  # Clears config cache, runs PHPUnit
 
 ### Architecture Conventions
 
-- **API responses**: Return JSON using Laravel API Resources
+- **API responses**: Successes are `{"data": ..., "meta"?: {...}}`; return an API Resource or `$this->ok()` / `$this->created()` from the base `Controller`. Deletes return `$this->noContent()` (204). Never add a `message` to a success body.
+- **API errors**: Every error is `{"message", "code", "errors"?}`, rendered by `App\Http\Responses\ApiErrorRenderer`. Throw `ValidationException`, use policies (`denyAsNotFound` for ownership), or throw `App\Exceptions\ApiException` with a code — don't build error JSON by hand.
 - **Authentication**: When implementing API auth, use Laravel Sanctum token-based auth
 - **Validation**: Always use Form Request classes, never validate in controllers
-- **Business logic**: Controllers should be thin—delegate to service classes
+- **Business logic**: Controllers should be thin—delegate to service classes (`HabitStatsService`, `WorkoutService`, `TransactionService`)
+- **Sync**: Projects, todos, habits and habit entries are also served by `/v1/sync/*` (`app/Sync`). New models the app keeps offline need the `Syncable` trait and a `SyncEntity`; see `docs/local-first.md`.
 - **Database**: Use migrations for schema, factories for testing, seeders for initial data
 
 ### Configuration Notes
@@ -108,8 +110,9 @@ lib/
 
 ### Key Conventions
 
-- **State management**: Use BLoC/Cubit pattern (install `flutter_bloc` when needed)
-- **HTTP client**: Use `dio` package for API calls (not installed yet)
+- **Local-first**: Projects, todos, habits and Home read from `LocalStore` streams and write through `SyncEngine` (`lib/core/sync`); see `docs/local-first.md`. In those features never await the network in a BLoC and never refresh one screen from another — the store notifies every watcher. Ids are uuid strings.
+- **State management**: BLoC; local-first BLoCs subscribe to a repository stream and re-emit on change
+- **HTTP client**: `dio`; parse `response.data['data']` and turn failures into `ApiException.from(e)`
 - **API models**: Keep DTOs in `data/` layer, map to domain entities
 - **Dependency injection**: Use `get_it` or `provider` for service location
 - **Naming**: Match backend API response keys exactly in DTO classes
