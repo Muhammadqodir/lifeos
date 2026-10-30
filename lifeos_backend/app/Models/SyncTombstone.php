@@ -18,6 +18,11 @@ class SyncTombstone extends Model
 
     public static function record(Model $model): void
     {
+        // Shared rows (system categories and exercises) belong to no one.
+        if ($model->user_id === null) {
+            return;
+        }
+
         static::updateOrCreate(
             ['entity' => $model->getTable(), 'uuid' => $model->uuid],
             ['user_id' => $model->user_id, 'deleted_at' => now()],

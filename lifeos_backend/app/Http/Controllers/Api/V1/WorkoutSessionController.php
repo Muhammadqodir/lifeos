@@ -13,6 +13,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Response;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class WorkoutSessionController extends Controller
@@ -106,6 +107,27 @@ class WorkoutSessionController extends Controller
         );
 
         return new WorkoutSessionResource($session);
+    }
+
+    /**
+     * Attach or replace the progress photo. The local-first client syncs the
+     * workout first and uploads the photo afterwards.
+     */
+    public function updatePhoto(Request $request, WorkoutSession $workout): WorkoutSessionResource
+    {
+        $this->authorize('update', $workout);
+        $request->validate(['photo' => 'required|image|max:10240']);
+
+        $path = $request->file('photo')->store('workout_photos/'.$workout->user_id, 'public');
+        $completion = $workout->completion()->firstOrNew([]);
+        if ($completion->photo_path) {
+            Storage::disk('public')->delete($completion->photo_path);
+        }
+        $completion->photo_path = $path;
+        $completion->save();
+        $workout->touch();
+
+        return new WorkoutSessionResource($workout->load(['workoutExercises.exercise', 'workoutExercises.sets', 'completion']));
     }
 
     public function show(WorkoutSession $workout): WorkoutSessionResource

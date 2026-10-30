@@ -95,6 +95,7 @@ Route::prefix('v1')->group(function () {
             Route::post('workouts/complete', [WorkoutSessionController::class, 'storeComplete']);
             Route::post('workouts/complete-with-photo', [WorkoutSessionController::class, 'storeCompleteWithPhoto']);
             Route::get('workouts/{workout}', [WorkoutSessionController::class, 'show']);
+            Route::post('workouts/{workout}/photo', [WorkoutSessionController::class, 'updatePhoto']);
             Route::put('workouts/{workout}', [WorkoutSessionController::class, 'update']);
             Route::delete('workouts/{workout}', [WorkoutSessionController::class, 'destroy']);
 
@@ -102,6 +103,7 @@ Route::prefix('v1')->group(function () {
             Route::get('exercises', [ExerciseController::class, 'index']);
             Route::post('exercises', [ExerciseController::class, 'store']);
             Route::delete('exercises/{exercise}', [ExerciseController::class, 'destroy']);
+            Route::post('exercises/{exercise}/image', [ExerciseController::class, 'updateImage']);
             Route::get('exercises/{exercise}/progress', [ExerciseProgressController::class, 'show']);
 
             // Workout exercises

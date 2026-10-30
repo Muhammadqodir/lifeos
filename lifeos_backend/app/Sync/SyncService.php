@@ -114,7 +114,7 @@ class SyncService
 
         if ($op['type'] === 'delete') {
             if ($record && ! $trashed) {
-                $record->delete();
+                $entity->remove($record);
             }
 
             return null;
@@ -139,7 +139,7 @@ class SyncService
             }
         }
 
-        $record->fill($attributes)->save();
+        $entity->persist($record, $attributes, $validated, $creating);
 
         return $entity->serialize($record->fresh($entity->with()));
     }

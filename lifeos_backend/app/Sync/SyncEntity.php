@@ -58,9 +58,25 @@ abstract class SyncEntity
         return null;
     }
 
+    /** Records the user can see (pull) and refer to. */
     public function query(int $userId): Builder
     {
         return ($this->model())::query()->where('user_id', $userId);
+    }
+
+    /**
+     * Stores a create or update. Aggregates (a transaction with its
+     * entries, a workout with its sets) override this to write children.
+     */
+    public function persist(Model $record, array $attributes, array $validated, bool $creating): void
+    {
+        $record->fill($attributes)->save();
+    }
+
+    /** Handles a `delete` operation. */
+    public function remove(Model $record): void
+    {
+        $record->delete();
     }
 
     protected static function iso(mixed $value): ?string

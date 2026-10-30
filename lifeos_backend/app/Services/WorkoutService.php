@@ -36,8 +36,9 @@ class WorkoutService
             foreach ($data['exercises'] as $exerciseData) {
                 $workoutExercise = $session->workoutExercises()->create([
                     'exercise_id' => $exerciseData['exercise_id'],
-                    'order_index' => $exerciseData['order_index'],
-                    'note' => $exerciseData['note'] ?? null,
+                    // The column is sort_order; order_index used to be dropped
+                    // silently by mass assignment.
+                    'sort_order' => $exerciseData['order_index'],
                 ]);
 
                 foreach ($exerciseData['sets'] as $setData) {
