@@ -17,8 +17,27 @@ abstract final class SyncEntities {
   static const todos = 'todos';
   static const habits = 'habits';
   static const habitEntries = 'habit_entries';
+  static const wallets = 'wallets';
+  static const transactionCategories = 'transaction_categories';
+  static const transactions = 'transactions';
+  static const sleepEntries = 'sleep_entries';
+  static const wellbeingEntries = 'wellbeing_entries';
+  static const exercises = 'exercises';
+  static const workoutSessions = 'workout_sessions';
 
-  static const all = [projects, todos, habits, habitEntries];
+  static const all = [
+    projects,
+    todos,
+    habits,
+    habitEntries,
+    wallets,
+    transactionCategories,
+    transactions,
+    sleepEntries,
+    wellbeingEntries,
+    exercises,
+    workoutSessions,
+  ];
 
   /// Children that go when their parent is deleted: entity → foreign key.
   static const children = {
@@ -160,6 +179,10 @@ class LocalStore {
   }
 
   Future<Object?> meta(String key) => _meta.record(key).get(_db);
+
+  /// Caches a value that isn't synced (currencies, settings, FX rates).
+  Future<void> setMeta(String key, Object? value) =>
+      write((txn) => txn.setMeta(key, value));
 
   /// Runs [body] in one transaction and then notifies watchers.
   Future<R> write<R>(Future<R> Function(LocalTxn txn) body) async {

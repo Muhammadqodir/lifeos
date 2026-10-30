@@ -2,7 +2,8 @@ import 'package:lifeos_client/features/health/data/models/workout_exercise_dto.d
 import 'package:lifeos_client/features/health/data/models/workout_completion_dto.dart';
 
 class WorkoutSessionDto {
-  final int? id;
+  /// Client-generated uuid (the sync API's id); null while being recorded.
+  final String? id;
   final int? userId;
   final DateTime startedAt;
   final DateTime? endedAt;
@@ -26,25 +27,30 @@ class WorkoutSessionDto {
 
   factory WorkoutSessionDto.fromJson(Map<String, dynamic> json) {
     return WorkoutSessionDto(
-      id: (json['id'] as num?)?.toInt(),
+      id: json['id'] as String?,
       userId: (json['user_id'] as num?)?.toInt(),
       startedAt: DateTime.parse(json['started_at'] as String),
-      endedAt: json['ended_at'] != null 
-          ? DateTime.parse(json['ended_at'] as String) 
+      endedAt: json['ended_at'] != null
+          ? DateTime.parse(json['ended_at'] as String)
           : null,
       note: json['note'] as String?,
-      exercises: (json['exercises'] as List<dynamic>?)
-              ?.map((e) => WorkoutExerciseDto.fromJson(e as Map<String, dynamic>))
+      exercises:
+          (json['exercises'] as List<dynamic>?)
+              ?.map(
+                (e) => WorkoutExerciseDto.fromJson(e as Map<String, dynamic>),
+              )
               .toList() ??
           [],
       completion: json['completion'] != null
-          ? WorkoutCompletionDto.fromJson(json['completion'] as Map<String, dynamic>)
+          ? WorkoutCompletionDto.fromJson(
+              json['completion'] as Map<String, dynamic>,
+            )
           : null,
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'] as String) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
           : null,
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at'] as String) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
           : null,
     );
   }
@@ -64,7 +70,7 @@ class WorkoutSessionDto {
   }
 
   WorkoutSessionDto copyWith({
-    int? id,
+    String? id,
     int? userId,
     DateTime? startedAt,
     DateTime? endedAt,

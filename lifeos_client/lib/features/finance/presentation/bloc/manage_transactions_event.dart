@@ -8,7 +8,7 @@ abstract class ManageTransactionsEvent extends Equatable {
 }
 
 class ManageTransactionsLoad extends ManageTransactionsEvent {
-  final int? walletId;
+  final String? walletId;
 
   const ManageTransactionsLoad({this.walletId});
 
@@ -25,7 +25,7 @@ class ManageTransactionsLoadMore extends ManageTransactionsEvent {
 }
 
 class ManageTransactionsDelete extends ManageTransactionsEvent {
-  final int transactionId;
+  final String transactionId;
 
   const ManageTransactionsDelete({required this.transactionId});
 

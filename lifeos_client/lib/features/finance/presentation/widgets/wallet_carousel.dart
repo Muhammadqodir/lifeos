@@ -9,7 +9,7 @@ import 'wallet_card.dart';
 /// add/manage actions.
 class WalletCarousel extends StatelessWidget {
   final List<WalletDto> wallets;
-  final void Function(int walletId)? onWalletTap;
+  final void Function(String walletId)? onWalletTap;
   final VoidCallback onAddWallet;
   final VoidCallback onManageWallet;
 

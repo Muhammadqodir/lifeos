@@ -26,7 +26,8 @@ enum TransactionCategoryType {
 }
 
 class TransactionCategoryDto extends Equatable {
-  final int id;
+  /// Client-generated uuid (the sync API's id).
+  final String id;
   final int? userId;
   final String title;
   final String icon;
@@ -50,13 +51,13 @@ class TransactionCategoryDto extends Equatable {
 
   factory TransactionCategoryDto.fromJson(Map<String, dynamic> json) {
     return TransactionCategoryDto(
-      id: json['id'] as int,
+      id: json['id'] as String,
       userId: json['user_id'] as int?,
       title: json['title'] as String,
       icon: json['icon'] as String,
       color: json['color'] as String,
       type: TransactionCategoryType.fromJson(json['type'] as String),
-      isSystem: json['is_system'] as bool,
+      isSystem: json['is_system'] as bool? ?? false,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
     );

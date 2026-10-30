@@ -3,8 +3,8 @@ import '../../data/models/transaction_category_dto.dart';
 
 class CategorySelector extends StatefulWidget {
   final List<TransactionCategoryDto> categories;
-  final int? selectedCategoryId;
-  final ValueChanged<int?> onChanged;
+  final String? selectedCategoryId;
+  final ValueChanged<String?> onChanged;
 
   const CategorySelector({
     super.key,
@@ -18,7 +18,7 @@ class CategorySelector extends StatefulWidget {
 }
 
 class _CategorySelectorState extends State<CategorySelector> {
-  int? _selectedValue;
+  String? _selectedValue;
 
   @override
   void initState() {
@@ -84,7 +84,7 @@ class _CategorySelectorState extends State<CategorySelector> {
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
-          child: Select<int?>(
+          child: Select<String?>(
             itemBuilder: (context, item) {
               if (item == null) return const Text('Select category');
               try {

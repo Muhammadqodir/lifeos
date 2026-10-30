@@ -11,10 +11,7 @@ class WorkoutSessionsLoad extends WorkoutSessionsEvent {
   final DateTime? dateFrom;
   final DateTime? dateTo;
 
-  const WorkoutSessionsLoad({
-    this.dateFrom,
-    this.dateTo,
-  });
+  const WorkoutSessionsLoad({this.dateFrom, this.dateTo});
 
   @override
   List<Object?> get props => [dateFrom, dateTo];
@@ -29,7 +26,7 @@ class WorkoutSessionsLoadMore extends WorkoutSessionsEvent {
 }
 
 class WorkoutSessionsDelete extends WorkoutSessionsEvent {
-  final int workoutId;
+  final String workoutId;
 
   const WorkoutSessionsDelete({required this.workoutId});
 

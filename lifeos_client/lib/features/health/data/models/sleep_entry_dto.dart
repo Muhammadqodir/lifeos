@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class SleepEntryDto extends Equatable {
-  final int id;
+  final String id;
   final String date;
   final String sleepStart;
   final String sleepEnd;
@@ -21,7 +21,7 @@ class SleepEntryDto extends Equatable {
 
   factory SleepEntryDto.fromJson(Map<String, dynamic> json) {
     return SleepEntryDto(
-      id: json['id'] as int,
+      id: json['id'] as String,
       date: json['date'] as String,
       sleepStart: json['sleep_start'] as String,
       sleepEnd: json['sleep_end'] as String,
@@ -45,12 +45,12 @@ class SleepEntryDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        date,
-        sleepStart,
-        sleepEnd,
-        durationHours,
-        quality,
-        note,
-      ];
+    id,
+    date,
+    sleepStart,
+    sleepEnd,
+    durationHours,
+    quality,
+    note,
+  ];
 }

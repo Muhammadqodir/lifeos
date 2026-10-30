@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/sync/sync_engine.dart';
 import '../../domain/repositories/finance_repository.dart';
 import 'manage_transactions_event.dart';
 import 'manage_transactions_state.dart';
@@ -8,10 +11,22 @@ class ManageTransactionsBloc
   final FinanceRepository financeRepository;
   static const int _perPage = 20;
   int _currentPage = 1;
-  int? _currentWalletId;
+  String? _currentWalletId;
 
-  ManageTransactionsBloc({required this.financeRepository})
+  /// Asked to sync when the user refreshes; local changes reload the list
+  /// by themselves.
+  final SyncEngine? sync;
+  StreamSubscription<void>? _changes;
+
+  ManageTransactionsBloc({required this.financeRepository, this.sync})
     : super(const ManageTransactionsInitial()) {
+    on<_FinanceDataChanged>((event, emit) {
+      _currentPage = 1;
+      return _loadData(emit);
+    });
+    _changes = financeRepository.changes.listen((_) {
+      if (state is! ManageTransactionsInitial) add(_FinanceDataChanged());
+    });
     on<ManageTransactionsLoad>(_onLoad);
     on<ManageTransactionsRefresh>(_onRefresh);
     on<ManageTransactionsLoadMore>(_onLoadMore);
@@ -32,6 +47,7 @@ class ManageTransactionsBloc
     ManageTransactionsRefresh event,
     Emitter<ManageTransactionsState> emit,
   ) async {
+    unawaited(sync?.syncNow());
     _currentPage = 1;
     await _loadData(emit);
   }
@@ -151,4 +167,13 @@ class ManageTransactionsBloc
       }
     }
   }
+
+  @override
+  Future<void> close() async {
+    await _changes?.cancel();
+    return super.close();
+  }
 }
+
+/// Wallets, categories or transactions changed on the device (internal).
+class _FinanceDataChanged extends ManageTransactionsEvent {}

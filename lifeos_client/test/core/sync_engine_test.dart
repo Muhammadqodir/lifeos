@@ -262,4 +262,18 @@ void main() {
     expect(await store.all(SyncEntities.projects), isEmpty);
     expect(await store.pendingCount(), 0);
   });
+
+  test(
+    'an app update that syncs more entities starts with a full pull',
+    () async {
+      await engine.stop();
+      await store.write((txn) => txn.setMeta('entities', 'projects,todos'));
+
+      await engine.start('user-1');
+
+      expect(await store.meta('cursor'), isNull);
+      await engine.syncNow();
+      expect(await store.meta('cursor'), isNotNull);
+    },
+  );
 }

@@ -28,7 +28,7 @@ class ManageTransactionsLoading extends ManageTransactionsState {
 
 class ManageTransactionsLoaded extends ManageTransactionsWithData {
   final bool isLoadingMore;
-  final int? walletId;
+  final String? walletId;
 
   const ManageTransactionsLoaded({
     required super.transactions,
@@ -41,7 +41,7 @@ class ManageTransactionsLoaded extends ManageTransactionsWithData {
     List<TransactionDto>? transactions,
     bool? hasMore,
     bool? isLoadingMore,
-    int? walletId,
+    String? walletId,
   }) {
     return ManageTransactionsLoaded(
       transactions: transactions ?? this.transactions,
@@ -65,7 +65,7 @@ class ManageTransactionsError extends ManageTransactionsState {
 }
 
 class ManageTransactionsDeleting extends ManageTransactionsWithData {
-  final int transactionId;
+  final String transactionId;
 
   const ManageTransactionsDeleting({
     required this.transactionId,

@@ -53,7 +53,7 @@ class ExerciseCreated extends ExerciseState {
 class ExerciseDeleting extends ExerciseState {}
 
 class ExerciseDeleted extends ExerciseState {
-  final int exerciseId;
+  final String exerciseId;
 
   const ExerciseDeleted(this.exerciseId);
 

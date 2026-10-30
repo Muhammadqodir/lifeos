@@ -40,8 +40,8 @@ enum TransactionType {
 
 class TransactionEntryDto extends Equatable {
   final int id;
-  final int transactionId;
-  final int walletId;
+  final String transactionId;
+  final String walletId;
   final WalletEntryDto wallet;
   final double amount;
   final int currencyId;
@@ -65,16 +65,17 @@ class TransactionEntryDto extends Equatable {
 
   factory TransactionEntryDto.fromJson(Map<String, dynamic> json) {
     return TransactionEntryDto(
-      id: json['id'] as int,
-      transactionId: json['transaction_id'] as int,
-      walletId: json['wallet_id'] as int,
+      id: json['id'] as int? ?? 0,
+      transactionId: json['transaction_id'] as String? ?? '',
+      walletId: json['wallet_id'] as String,
       wallet: WalletEntryDto.fromJson(json['wallet'] as Map<String, dynamic>),
       amount: (json['amount'] as num).toDouble(),
       currencyId: json['currency_id'] as int,
       currency: CurrencyDto.fromJson(json['currency'] as Map<String, dynamic>),
       rate: json['rate'] != null ? (json['rate'] as num).toDouble() : null,
       note: json['note'] as String?,
-      createdAt: DateTime.parse(json['created_at'] as String),
+      createdAt: DateTime.tryParse(json['created_at'] as String? ?? '') ??
+          DateTime.now(),
     );
   }
 
@@ -110,7 +111,7 @@ class TransactionEntryDto extends Equatable {
 
 // Simplified wallet info in transaction entry
 class WalletEntryDto extends Equatable {
-  final int id;
+  final String id;
   final String name;
   final WalletType type;
 
@@ -122,7 +123,7 @@ class WalletEntryDto extends Equatable {
 
   factory WalletEntryDto.fromJson(Map<String, dynamic> json) {
     return WalletEntryDto(
-      id: json['id'] as int,
+      id: json['id'] as String,
       name: json['name'] as String,
       type: WalletType.fromJson(json['type'] as String),
     );
@@ -137,11 +138,12 @@ class WalletEntryDto extends Equatable {
 }
 
 class TransactionDto extends Equatable {
-  final int id;
+  /// Client-generated uuid (the sync API's id).
+  final String id;
   final int userId;
   final String clientId;
   final TransactionType type;
-  final int? categoryId;
+  final String? categoryId;
   final TransactionCategoryDto? category;
   final String? description;
   final DateTime occurredAt;
@@ -165,11 +167,11 @@ class TransactionDto extends Equatable {
 
   factory TransactionDto.fromJson(Map<String, dynamic> json) {
     return TransactionDto(
-      id: json['id'] as int,
-      userId: json['user_id'] as int,
-      clientId: json['client_id'] as String,
+      id: json['id'] as String,
+      userId: json['user_id'] as int? ?? 0,
+      clientId: json['client_id'] as String? ?? json['id'] as String,
       type: TransactionType.fromJson(json['type'] as String),
-      categoryId: json['category_id'] as int?,
+      categoryId: json['category_id'] as String?,
       category: json['category'] != null
           ? TransactionCategoryDto.fromJson(
               json['category'] as Map<String, dynamic>,

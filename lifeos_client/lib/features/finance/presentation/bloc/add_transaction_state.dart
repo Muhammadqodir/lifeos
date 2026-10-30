@@ -36,14 +36,14 @@ class AddTransactionReady extends AddTransactionState {
   final List<TransactionCategoryDto> incomeCategories;
   final List<TransactionCategoryDto> expenseCategories;
   final TransactionType type;
-  final int? walletId; // For income/expense
-  final int? fromWalletId; // For transfer
-  final int? toWalletId; // For transfer
+  final String? walletId; // For income/expense
+  final String? fromWalletId; // For transfer
+  final String? toWalletId; // For transfer
   final String amount; // For income/expense/transfer
   final String exchangeAmount; // For exchange (destination amount in different currency)
   final double? feePercentage; // For transfer fee (0, 0.5, 1.0, or custom)
   final String customFeeValue; // For custom fee percentage input
-  final int? categoryId;
+  final String? categoryId;
   final String description;
   final DateTime occurredAt;
   final bool isValid;
@@ -71,18 +71,18 @@ class AddTransactionReady extends AddTransactionState {
     List<TransactionCategoryDto>? incomeCategories,
     List<TransactionCategoryDto>? expenseCategories,
     TransactionType? type,
-    int? walletId,
+    String? walletId,
     bool clearWalletId = false,
-    int? fromWalletId,
+    String? fromWalletId,
     bool clearFromWalletId = false,
-    int? toWalletId,
+    String? toWalletId,
     bool clearToWalletId = false,
     String? amount,
     String? exchangeAmount,
     double? feePercentage,
     bool clearFeePercentage = false,
     String? customFeeValue,
-    int? categoryId,
+    String? categoryId,
     bool clearCategoryId = false,
     String? description,
     DateTime? occurredAt,

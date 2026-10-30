@@ -38,7 +38,7 @@ class FinanceSettingsAddCategory extends FinanceSettingsEvent {
 }
 
 class FinanceSettingsRemoveCategory extends FinanceSettingsEvent {
-  final int categoryId;
+  final String categoryId;
 
   const FinanceSettingsRemoveCategory(this.categoryId);
 

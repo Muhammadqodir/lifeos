@@ -1,4 +1,7 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/sync/sync_engine.dart';
 import '../../domain/repositories/health_repository.dart';
 import 'health_home_event.dart';
 import 'health_home_state.dart';
@@ -6,8 +9,17 @@ import 'health_home_state.dart';
 class HealthHomeBloc extends Bloc<HealthHomeEvent, HealthHomeState> {
   final HealthRepository healthRepository;
 
-  HealthHomeBloc({required this.healthRepository})
-      : super(const HealthHomeInitial()) {
+  /// Asked to sync when the user refreshes; local changes reload the
+  /// summaries by themselves.
+  final SyncEngine? sync;
+  StreamSubscription<void>? _changes;
+
+  HealthHomeBloc({required this.healthRepository, this.sync})
+    : super(const HealthHomeInitial()) {
+    on<_HealthDataChanged>((event, emit) => _loadData(emit));
+    _changes = healthRepository.changes.listen((_) {
+      if (state is! HealthHomeInitial) add(_HealthDataChanged());
+    });
     on<HealthHomeStarted>(_onStarted);
     on<HealthHomeRefreshed>(_onRefreshed);
     on<HealthHomeRetried>(_onRetried);
@@ -25,6 +37,7 @@ class HealthHomeBloc extends Bloc<HealthHomeEvent, HealthHomeState> {
     HealthHomeRefreshed event,
     Emitter<HealthHomeState> emit,
   ) async {
+    unawaited(sync?.syncNow());
     await _loadData(emit);
   }
 
@@ -58,13 +71,24 @@ class HealthHomeBloc extends Bloc<HealthHomeEvent, HealthHomeState> {
       );
 
       // Always show success state with charts (they handle empty data)
-      emit(HealthHomeSuccess(
-        sleepSummary: sleepSummary,
-        wellbeingSummary: wellbeingSummary,
-        workoutSummary: workoutSummary,
-      ));
+      emit(
+        HealthHomeSuccess(
+          sleepSummary: sleepSummary,
+          wellbeingSummary: wellbeingSummary,
+          workoutSummary: workoutSummary,
+        ),
+      );
     } catch (e) {
       emit(HealthHomeFailure(message: e.toString()));
     }
   }
+
+  @override
+  Future<void> close() async {
+    await _changes?.cancel();
+    return super.close();
+  }
 }
+
+/// Health data changed on the device (internal).
+class _HealthDataChanged extends HealthHomeEvent {}

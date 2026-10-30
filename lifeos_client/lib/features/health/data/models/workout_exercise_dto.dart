@@ -3,7 +3,7 @@ import 'package:lifeos_client/features/health/data/models/workout_set_dto.dart';
 
 class WorkoutExerciseDto {
   final int? id; // null for local exercises not yet saved
-  final int exerciseId;
+  final String exerciseId;
   final ExerciseDto? exercise; // Loaded from API
   final int orderIndex;
   final String? note;
@@ -25,21 +25,22 @@ class WorkoutExerciseDto {
   factory WorkoutExerciseDto.fromJson(Map<String, dynamic> json) {
     return WorkoutExerciseDto(
       id: (json['id'] as num?)?.toInt(),
-      exerciseId: (json['exercise_id'] as num?)?.toInt() ?? 0,
-      exercise: json['exercise'] != null 
+      exerciseId: '${json['exercise_id'] ?? ''}',
+      exercise: json['exercise'] != null
           ? ExerciseDto.fromJson(json['exercise'] as Map<String, dynamic>)
           : null,
       orderIndex: (json['order_index'] as num?)?.toInt() ?? 0,
       note: json['note'] as String?,
-      sets: (json['sets'] as List<dynamic>?)
+      sets:
+          (json['sets'] as List<dynamic>?)
               ?.map((s) => WorkoutSetDto.fromJson(s as Map<String, dynamic>))
               .toList() ??
           [],
-      createdAt: json['created_at'] != null 
-          ? DateTime.parse(json['created_at'] as String) 
+      createdAt: json['created_at'] != null
+          ? DateTime.parse(json['created_at'] as String)
           : null,
-      updatedAt: json['updated_at'] != null 
-          ? DateTime.parse(json['updated_at'] as String) 
+      updatedAt: json['updated_at'] != null
+          ? DateTime.parse(json['updated_at'] as String)
           : null,
     );
   }
@@ -59,7 +60,7 @@ class WorkoutExerciseDto {
 
   WorkoutExerciseDto copyWith({
     int? id,
-    int? exerciseId,
+    String? exerciseId,
     ExerciseDto? exercise,
     int? orderIndex,
     String? note,

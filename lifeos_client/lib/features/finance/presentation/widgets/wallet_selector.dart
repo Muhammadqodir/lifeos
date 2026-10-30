@@ -9,8 +9,8 @@ import '../../data/models/wallet_dto.dart';
 class WalletSelector extends StatefulWidget {
   final String label;
   final List<WalletDto> wallets;
-  final int? selectedWalletId;
-  final ValueChanged<int?> onChanged;
+  final String? selectedWalletId;
+  final ValueChanged<String?> onChanged;
   final String? placeholder;
 
   const WalletSelector({
@@ -27,7 +27,7 @@ class WalletSelector extends StatefulWidget {
 }
 
 class _WalletSelectorState extends State<WalletSelector> {
-  int? _selectedValue;
+  String? _selectedValue;
 
   @override
   void initState() {
@@ -61,7 +61,7 @@ class _WalletSelectorState extends State<WalletSelector> {
         const SizedBox(height: 8),
         SizedBox(
           width: double.infinity,
-          child: Select<int?>(
+          child: Select<String?>(
             itemBuilder: (context, item) {
               if (item == null) {
                 return Text(

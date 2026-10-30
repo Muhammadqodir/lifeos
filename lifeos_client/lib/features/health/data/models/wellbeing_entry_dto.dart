@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class WellbeingEntryDto extends Equatable {
-  final int id;
+  final String id;
   final String date;
   final int? energy;
   final int? stress;
@@ -17,7 +17,7 @@ class WellbeingEntryDto extends Equatable {
 
   factory WellbeingEntryDto.fromJson(Map<String, dynamic> json) {
     return WellbeingEntryDto(
-      id: json['id'] as int,
+      id: json['id'] as String,
       date: json['date'] as String,
       energy: json['energy'] as int?,
       stress: json['stress'] as int?,

@@ -25,7 +25,7 @@ class AddTransactionTypeChanged extends AddTransactionEvent {
 
 /// Update wallet for income/expense
 class AddTransactionWalletChanged extends AddTransactionEvent {
-  final int walletId;
+  final String walletId;
 
   const AddTransactionWalletChanged(this.walletId);
 
@@ -35,7 +35,7 @@ class AddTransactionWalletChanged extends AddTransactionEvent {
 
 /// Update from wallet for transfer/exchange
 class AddTransactionFromWalletChanged extends AddTransactionEvent {
-  final int walletId;
+  final String walletId;
 
   const AddTransactionFromWalletChanged(this.walletId);
 
@@ -45,7 +45,7 @@ class AddTransactionFromWalletChanged extends AddTransactionEvent {
 
 /// Update to wallet for transfer/exchange
 class AddTransactionToWalletChanged extends AddTransactionEvent {
-  final int walletId;
+  final String walletId;
 
   const AddTransactionToWalletChanged(this.walletId);
 
@@ -95,7 +95,7 @@ class AddTransactionCustomFeeValueChanged extends AddTransactionEvent {
 
 /// Update category
 class AddTransactionCategoryChanged extends AddTransactionEvent {
-  final int? categoryId;
+  final String? categoryId;
 
   const AddTransactionCategoryChanged(this.categoryId);
 

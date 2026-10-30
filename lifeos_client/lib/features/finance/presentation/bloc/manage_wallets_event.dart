@@ -16,7 +16,7 @@ class ManageWalletsRefresh extends ManageWalletsEvent {
 }
 
 class ManageWalletsDelete extends ManageWalletsEvent {
-  final int walletId;
+  final String walletId;
 
   const ManageWalletsDelete({required this.walletId});
 

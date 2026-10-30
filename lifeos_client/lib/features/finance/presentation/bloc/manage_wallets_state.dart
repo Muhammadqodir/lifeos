@@ -47,7 +47,7 @@ class ManageWalletsError extends ManageWalletsState {
 }
 
 class ManageWalletsDeleting extends ManageWalletsWithData {
-  final int walletId;
+  final String walletId;
 
   const ManageWalletsDeleting({
     required this.walletId,

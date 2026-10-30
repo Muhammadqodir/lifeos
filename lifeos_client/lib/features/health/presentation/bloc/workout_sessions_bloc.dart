@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/workout_repository.dart';
 import 'workout_sessions_event.dart';
@@ -10,8 +12,14 @@ class WorkoutSessionsBloc
   DateTime? _dateTo;
   int _currentPage = 1;
 
+  StreamSubscription<void>? _changes;
+
   WorkoutSessionsBloc({required this.workoutRepository})
-      : super(const WorkoutSessionsInitial()) {
+    : super(const WorkoutSessionsInitial()) {
+    // Reload from the device whenever a workout is saved, deleted or synced.
+    _changes = workoutRepository.changes.listen((_) {
+      if (state is! WorkoutSessionsInitial) add(const WorkoutSessionsRefresh());
+    });
     on<WorkoutSessionsLoad>(_onLoad);
     on<WorkoutSessionsRefresh>(_onRefresh);
     on<WorkoutSessionsLoadMore>(_onLoadMore);
@@ -38,11 +46,13 @@ class WorkoutSessionsBloc
       if (sessions.isEmpty) {
         emit(const WorkoutSessionsEmpty());
       } else {
-        emit(WorkoutSessionsSuccess(
-          sessions: sessions,
-          hasMore: sessions.length >= 20, // API returns 20 per page
-          currentPage: _currentPage,
-        ));
+        emit(
+          WorkoutSessionsSuccess(
+            sessions: sessions,
+            hasMore: sessions.length >= 20, // API returns 20 per page
+            currentPage: _currentPage,
+          ),
+        );
       }
     } catch (e) {
       emit(WorkoutSessionsFailure(message: e.toString()));
@@ -65,11 +75,13 @@ class WorkoutSessionsBloc
       if (sessions.isEmpty) {
         emit(const WorkoutSessionsEmpty());
       } else {
-        emit(WorkoutSessionsSuccess(
-          sessions: sessions,
-          hasMore: sessions.length >= 20,
-          currentPage: _currentPage,
-        ));
+        emit(
+          WorkoutSessionsSuccess(
+            sessions: sessions,
+            hasMore: sessions.length >= 20,
+            currentPage: _currentPage,
+          ),
+        );
       }
     } catch (e) {
       emit(WorkoutSessionsFailure(message: e.toString()));
@@ -98,11 +110,13 @@ class WorkoutSessionsBloc
 
       final allSessions = [...currentState.sessions, ...newSessions];
 
-      emit(WorkoutSessionsSuccess(
-        sessions: allSessions,
-        hasMore: newSessions.length >= 20,
-        currentPage: _currentPage,
-      ));
+      emit(
+        WorkoutSessionsSuccess(
+          sessions: allSessions,
+          hasMore: newSessions.length >= 20,
+          currentPage: _currentPage,
+        ),
+      );
     } catch (e) {
       // On error, restore previous state
       emit(currentState);
@@ -127,11 +141,13 @@ class WorkoutSessionsBloc
           .toList();
 
       // Emit delete success state
-      emit(WorkoutSessionsDeleteSuccess(
-        sessions: updatedSessions,
-        hasMore: currentState.hasMore,
-        currentPage: currentState.currentPage,
-      ));
+      emit(
+        WorkoutSessionsDeleteSuccess(
+          sessions: updatedSessions,
+          hasMore: currentState.hasMore,
+          currentPage: currentState.currentPage,
+        ),
+      );
 
       // Then emit regular state
       if (updatedSessions.isEmpty) {
@@ -141,15 +157,23 @@ class WorkoutSessionsBloc
       }
     } catch (e) {
       // Emit delete error state
-      emit(WorkoutSessionsDeleteError(
-        message: 'Failed to delete workout',
-        sessions: currentState.sessions,
-        hasMore: currentState.hasMore,
-        currentPage: currentState.currentPage,
-      ));
-      
+      emit(
+        WorkoutSessionsDeleteError(
+          message: 'Failed to delete workout',
+          sessions: currentState.sessions,
+          hasMore: currentState.hasMore,
+          currentPage: currentState.currentPage,
+        ),
+      );
+
       // Keep current state
       emit(currentState);
     }
+  }
+
+  @override
+  Future<void> close() async {
+    await _changes?.cancel();
+    return super.close();
   }
 }

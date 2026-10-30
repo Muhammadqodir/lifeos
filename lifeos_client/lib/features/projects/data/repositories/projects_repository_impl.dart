@@ -1,8 +1,8 @@
-import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:image_picker/image_picker.dart';
 
 import '../../../../core/network/api_exception.dart';
 import '../../../../core/sync/local_store.dart';
+import '../../../../core/sync/pending_uploads.dart';
 import '../../../../core/sync/sync_engine.dart';
 import '../../domain/repositories/projects_repository.dart';
 import '../datasources/projects_api_client.dart';
@@ -13,13 +13,22 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
     required this.store,
     required this.sync,
     required this.apiClient,
-  });
+    required this.uploads,
+  }) {
+    uploads.register(
+      _iconUpload,
+      (serverId, path) => apiClient.uploadProjectIcon(serverId, XFile(path)),
+    );
+  }
 
   final LocalStore store;
   final SyncEngine sync;
 
   /// Only for the icon upload; files don't go through sync.
   final ProjectsApiClient apiClient;
+  final PendingUploads uploads;
+
+  static const _iconUpload = 'project_icon';
 
   static const _watched = {SyncEntities.projects, SyncEntities.todos};
 
@@ -81,25 +90,15 @@ class ProjectsRepositoryImpl implements ProjectsRepository {
       'description': (description?.isEmpty ?? true) ? null : description,
       'tags': [for (final t in tags) t.trim().toLowerCase()],
     });
-    if (icon != null) _uploadIcon(record['id'] as String, icon);
-    return ProjectDto.fromJson(record);
-  }
-
-  /// Uploads once the project exists on the server; the next pull brings
-  /// the icon path back.
-  Future<void> _uploadIcon(String id, XFile icon) async {
-    try {
-      await sync.syncNow();
-      final serverId = (await store.get(
-        SyncEntities.projects,
-        id,
-      ))?['server_id'];
-      if (serverId is! int) return;
-      await apiClient.uploadProjectIcon(serverId, icon);
-      await sync.syncNow();
-    } catch (e) {
-      debugPrint('Project icon upload failed: $e');
+    if (icon != null) {
+      await uploads.add(
+        kind: _iconUpload,
+        entity: SyncEntities.projects,
+        id: record['id'] as String,
+        path: icon.path,
+      );
     }
+    return ProjectDto.fromJson(record);
   }
 
   @override

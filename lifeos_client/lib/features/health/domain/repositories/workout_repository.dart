@@ -2,7 +2,12 @@ import '../../data/models/exercise_dto.dart';
 import '../../data/models/workout_completion_dto.dart';
 import '../../data/models/workout_session_dto.dart';
 
+/// Exercises and workouts, local-first; the active (unfinished) workout is
+/// a draft kept on the device until it is submitted.
 abstract class WorkoutRepository {
+  /// Fires after any local change to exercises or workouts.
+  Stream<void> get changes;
+
   /// Get all exercises (system + user's custom)
   Future<List<ExerciseDto>> getExercises({bool includeLastSession = false});
 
@@ -15,7 +20,7 @@ abstract class WorkoutRepository {
   });
 
   /// Delete a custom exercise
-  Future<void> deleteExercise(int exerciseId);
+  Future<void> deleteExercise(String exerciseId);
 
   /// Get paginated list of workout sessions
   Future<List<WorkoutSessionDto>> getWorkoutSessions({
@@ -25,7 +30,7 @@ abstract class WorkoutRepository {
   });
 
   /// Delete a workout session
-  Future<void> deleteWorkoutSession(int workoutId);
+  Future<void> deleteWorkoutSession(String workoutId);
 
   /// Save active workout locally (offline)
   Future<void> saveActiveWorkoutLocally(WorkoutSessionDto workout);

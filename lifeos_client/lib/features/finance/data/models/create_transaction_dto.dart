@@ -2,7 +2,7 @@
 class CreateTransactionRequestDto {
   final String clientId;
   final String type;
-  final int? categoryId;
+  final String? categoryId;
   final String? description;
   final DateTime occurredAt;
   final List<CreateTransactionEntryDto> entries;
@@ -30,7 +30,7 @@ class CreateTransactionRequestDto {
 
 /// Entry DTO for creating transaction entries
 class CreateTransactionEntryDto {
-  final int walletId;
+  final String walletId;
   final String amount;
   final int currencyId;
   final String? rate;

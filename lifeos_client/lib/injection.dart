@@ -53,6 +53,7 @@ import 'features/security/data/datasources/security_local_storage.dart';
 import 'features/security/data/repositories/security_repository_impl.dart';
 import 'core/storage/secure_store.dart';
 import 'core/sync/local_store.dart';
+import 'core/sync/pending_uploads.dart';
 import 'core/sync/sync_api.dart';
 import 'core/sync/sync_engine.dart';
 import 'features/security/domain/repositories/security_repository.dart';
@@ -95,7 +96,11 @@ Future<void> setupDependencies() async {
   // before the first frame means screens read local data immediately.
   final localStore = await LocalStore.open();
   getIt.registerSingleton<LocalStore>(localStore);
-  getIt.registerSingleton<SyncEngine>(SyncEngine(localStore, SyncApi(dio)));
+  final syncEngine = SyncEngine(localStore, SyncApi(dio));
+  getIt.registerSingleton<SyncEngine>(syncEngine);
+  getIt.registerSingleton<PendingUploads>(
+    PendingUploads(localStore, syncEngine),
+  );
 
   // Data sources
   getIt.registerLazySingleton<AuthApiClient>(
@@ -135,11 +140,18 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerLazySingleton<FinanceRepository>(
-    () => FinanceRepositoryImpl(apiClient: getIt<FinanceApiClient>()),
+    () => FinanceRepositoryImpl(
+      apiClient: getIt<FinanceApiClient>(),
+      store: getIt<LocalStore>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerLazySingleton<HealthRepository>(
-    () => HealthRepositoryImpl(apiClient: getIt<HealthApiClient>()),
+    () => HealthRepositoryImpl(
+      store: getIt<LocalStore>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerLazySingleton<WorkoutLocalStorage>(
@@ -150,6 +162,9 @@ Future<void> setupDependencies() async {
     () => WorkoutRepositoryImpl(
       apiClient: getIt<HealthApiClient>(),
       localStorage: getIt<WorkoutLocalStorage>(),
+      store: getIt<LocalStore>(),
+      sync: getIt<SyncEngine>(),
+      uploads: getIt<PendingUploads>(),
     ),
   );
 
@@ -158,6 +173,7 @@ Future<void> setupDependencies() async {
       store: getIt<LocalStore>(),
       sync: getIt<SyncEngine>(),
       apiClient: getIt<ProjectsApiClient>(),
+      uploads: getIt<PendingUploads>(),
     ),
   );
 
@@ -202,11 +218,17 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerFactory<ManageWalletsBloc>(
-    () => ManageWalletsBloc(financeRepository: getIt<FinanceRepository>()),
+    () => ManageWalletsBloc(
+      financeRepository: getIt<FinanceRepository>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerFactory<ManageTransactionsBloc>(
-    () => ManageTransactionsBloc(financeRepository: getIt<FinanceRepository>()),
+    () => ManageTransactionsBloc(
+      financeRepository: getIt<FinanceRepository>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerFactory<AddTransactionBloc>(
@@ -234,7 +256,10 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerFactory<HealthHomeBloc>(
-    () => HealthHomeBloc(healthRepository: getIt<HealthRepository>()),
+    () => HealthHomeBloc(
+      healthRepository: getIt<HealthRepository>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerFactory<SleepEntryBloc>(

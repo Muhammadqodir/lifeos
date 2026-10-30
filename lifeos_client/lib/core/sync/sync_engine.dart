@@ -97,6 +97,7 @@ class SyncEngine {
 
   static const _cursorKey = 'cursor';
   static const _ownerKey = 'owner';
+  static const _entitiesKey = 'entities';
   static const _batchSize = 100;
 
   final ValueNotifier<SyncStatus> status = ValueNotifier(const SyncStatus());
@@ -138,7 +139,16 @@ class SyncEngine {
   Future<void> start(String userId) async {
     final owner = await _store.meta(_ownerKey);
     if (owner != null && owner != userId) await _store.clear();
-    await _store.write((txn) => txn.setMeta(_ownerKey, userId));
+    await _store.write((txn) async {
+      await txn.setMeta(_ownerKey, userId);
+      // A cursor only covers the entities synced when it was taken; when an
+      // app update adds entities, start over with a full pull.
+      final entities = SyncEntities.all.join(',');
+      if (await txn.meta(_entitiesKey) != entities) {
+        await txn.setMeta(_cursorKey, null);
+        await txn.setMeta(_entitiesKey, entities);
+      }
+    });
     if (await _store.meta(_cursorKey) != null && !_ready.isCompleted) {
       _ready.complete();
     }

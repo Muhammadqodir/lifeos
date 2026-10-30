@@ -1,7 +1,8 @@
 import 'package:lifeos_client/features/health/data/models/workout_set_dto.dart';
 
 class ExerciseDto {
-  final int id;
+  /// Client-generated uuid (the sync API's id).
+  final String id;
   final String name;
   final String type; // 'strength', 'distance', 'time'
   final String? image;
@@ -25,16 +26,16 @@ class ExerciseDto {
 
   factory ExerciseDto.fromJson(Map<String, dynamic> json) {
     return ExerciseDto(
-      id: json['id'] as int,
+      id: json['id'] as String,
       name: json['name'] as String,
       type: json['type'] as String,
       image: json['image'] as String?,
       muscleGroup: json['muscle_group'] as String?,
-      isSystem: json['is_system'] as bool,
+      isSystem: json['is_system'] as bool? ?? false,
       lastSessionSets: json['last_session_sets'] != null
           ? (json['last_session_sets'] as List<dynamic>)
-              .map((s) => WorkoutSetDto.fromJson(s as Map<String, dynamic>))
-              .toList()
+                .map((s) => WorkoutSetDto.fromJson(s as Map<String, dynamic>))
+                .toList()
           : null,
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),

@@ -46,7 +46,7 @@ class CreateExercise extends ExerciseEvent {
 }
 
 class DeleteExercise extends ExerciseEvent {
-  final int exerciseId;
+  final String exerciseId;
 
   const DeleteExercise(this.exerciseId);
 

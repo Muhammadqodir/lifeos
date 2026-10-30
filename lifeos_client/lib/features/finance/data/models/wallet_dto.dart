@@ -37,7 +37,8 @@ enum WalletType {
 }
 
 class WalletDto extends Equatable {
-  final int id;
+  /// Client-generated uuid (the sync API's id).
+  final String id;
   final int userId;
   final String name;
   final int currencyId;
@@ -63,8 +64,8 @@ class WalletDto extends Equatable {
 
   factory WalletDto.fromJson(Map<String, dynamic> json) {
     return WalletDto(
-      id: json['id'] as int,
-      userId: json['user_id'] as int,
+      id: json['id'] as String,
+      userId: json['user_id'] as int? ?? 0,
       name: json['name'] as String,
       currencyId: json['currency_id'] as int,
       currency: CurrencyDto.fromJson(json['currency'] as Map<String, dynamic>),
