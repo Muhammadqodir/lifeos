@@ -1,6 +1,5 @@
 import 'package:dio/dio.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import '../config/app_config.dart';
+import '../storage/secure_store.dart';
 import 'session_events.dart';
 
 /// Adds the bearer token to requests and signs the user out when the
@@ -10,16 +9,16 @@ import 'session_events.dart';
 /// refresh endpoint, so a 401 on an authenticated request means the token
 /// was revoked: clear it and let [SessionEvents] route the UI to login.
 class AuthInterceptor extends Interceptor {
-  final SharedPreferences _prefs;
+  final SecureStore _store;
   final SessionEvents _sessionEvents;
 
-  AuthInterceptor(this._prefs, this._sessionEvents);
+  AuthInterceptor(this._store, this._sessionEvents);
 
   static const _publicAuthPaths = ['/auth/login', '/auth/register'];
 
   @override
   void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
-    final token = _prefs.getString(AppConfig.authTokenKey);
+    final token = _store.read(SecureStore.authTokenKey);
     if (token != null && token.isNotEmpty) {
       options.headers['Authorization'] = 'Bearer $token';
     }
@@ -36,8 +35,7 @@ class AuthInterceptor extends Interceptor {
       (path) => err.requestOptions.path.contains(path),
     );
     if (err.response?.statusCode == 401 && !isPublicAuthCall) {
-      await _prefs.remove(AppConfig.authTokenKey);
-      await _prefs.remove(AppConfig.refreshTokenKey);
+      await _store.delete(SecureStore.authTokenKey);
       _sessionEvents.notifyExpired();
     }
     handler.next(err);

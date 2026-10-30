@@ -19,8 +19,4 @@ class AppConfig {
 
   /// API send timeout in seconds
   static const int sendTimeoutSeconds = 30;
-
-  /// Token storage keys
-  static const String authTokenKey = 'auth_token';
-  static const String refreshTokenKey = 'refresh_token';
 }

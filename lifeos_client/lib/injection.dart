@@ -52,6 +52,7 @@ import 'features/home/domain/repositories/home_repository.dart';
 import 'features/home/presentation/bloc/home_bloc.dart';
 import 'features/security/data/datasources/security_local_storage.dart';
 import 'features/security/data/repositories/security_repository_impl.dart';
+import 'core/storage/secure_store.dart';
 import 'features/security/domain/repositories/security_repository.dart';
 import 'features/security/presentation/bloc/security_bloc.dart';
 
@@ -61,6 +62,9 @@ Future<void> setupDependencies() async {
   // External dependencies
   final sharedPreferences = await SharedPreferences.getInstance();
   getIt.registerSingleton<SharedPreferences>(sharedPreferences);
+  final secureStore = SecureStore(sharedPreferences);
+  await secureStore.load();
+  getIt.registerSingleton<SecureStore>(secureStore);
 
   // Dio with interceptors
   final dio = Dio(
@@ -81,7 +85,7 @@ Future<void> setupDependencies() async {
   getIt.registerSingleton<SessionEvents>(sessionEvents);
 
   // Adds the bearer token and reports revoked sessions.
-  dio.interceptors.add(AuthInterceptor(sharedPreferences, sessionEvents));
+  dio.interceptors.add(AuthInterceptor(secureStore, sessionEvents));
 
   getIt.registerSingleton<Dio>(dio);
 
@@ -112,6 +116,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<SecurityLocalStorage>(
     () => SecurityLocalStorage(
       prefs: getIt<SharedPreferences>(),
+      secureStore: getIt<SecureStore>(),
       localAuth: getIt<LocalAuthentication>(),
     ),
   );
@@ -120,7 +125,7 @@ Future<void> setupDependencies() async {
   getIt.registerLazySingleton<AuthRepository>(
     () => AuthRepositoryImpl(
       apiClient: getIt<AuthApiClient>(),
-      prefs: getIt<SharedPreferences>(),
+      store: getIt<SecureStore>(),
     ),
   );
 

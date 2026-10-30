@@ -1,34 +1,36 @@
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:local_auth/local_auth.dart';
+import 'package:lifeos_client/core/storage/secure_store.dart';
 
 class SecurityLocalStorage {
   final SharedPreferences prefs;
+  final SecureStore secureStore;
   final LocalAuthentication localAuth;
 
-  static const String _passcodeKey = 'local_passcode';
   static const String _biometricEnabledKey = 'biometric_enabled';
 
   SecurityLocalStorage({
     required this.prefs,
+    required this.secureStore,
     required this.localAuth,
   });
 
   // Passcode methods
   Future<void> savePasscode(String passcode) async {
-    await prefs.setString(_passcodeKey, passcode);
+    await secureStore.write(SecureStore.passcodeKey, passcode);
   }
 
   Future<String?> getPasscode() async {
-    return prefs.getString(_passcodeKey);
+    return secureStore.read(SecureStore.passcodeKey);
   }
 
   Future<void> clearPasscode() async {
-    await prefs.remove(_passcodeKey);
+    await secureStore.delete(SecureStore.passcodeKey);
     await prefs.remove(_biometricEnabledKey);
   }
 
   Future<bool> hasPasscode() async {
-    return prefs.containsKey(_passcodeKey);
+    return secureStore.read(SecureStore.passcodeKey) != null;
   }
 
   Future<bool> verifyPasscode(String passcode) async {

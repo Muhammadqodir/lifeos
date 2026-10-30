@@ -1,14 +1,13 @@
-import 'package:shared_preferences/shared_preferences.dart';
-import '../../../../core/config/app_config.dart';
+import '../../../../core/storage/secure_store.dart';
 import '../../domain/entities/user.dart';
 import '../../domain/repositories/auth_repository.dart';
 import '../datasources/auth_api_client.dart';
 
 class AuthRepositoryImpl implements AuthRepository {
   final AuthApiClient apiClient;
-  final SharedPreferences prefs;
+  final SecureStore store;
 
-  AuthRepositoryImpl({required this.apiClient, required this.prefs});
+  AuthRepositoryImpl({required this.apiClient, required this.store});
 
   @override
   Future<AuthResult> login(String email, String password) async {
@@ -57,16 +56,16 @@ class AuthRepositoryImpl implements AuthRepository {
 
   @override
   Future<String?> getToken() async {
-    return prefs.getString(AppConfig.authTokenKey);
+    return store.read(SecureStore.authTokenKey);
   }
 
   @override
   Future<void> saveToken(String token) async {
-    await prefs.setString(AppConfig.authTokenKey, token);
+    await store.write(SecureStore.authTokenKey, token);
   }
 
   @override
   Future<void> clearToken() async {
-    await prefs.remove(AppConfig.authTokenKey);
+    await store.delete(SecureStore.authTokenKey);
   }
 }
