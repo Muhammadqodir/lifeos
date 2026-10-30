@@ -41,7 +41,8 @@ class _SplashPageState extends State<SplashPage> {
           setState(() {
             _showUnlock = true;
           });
-        } else if (state is SecuritySettingsLoaded && !state.settings.hasPasscode) {
+        } else if (state is SecuritySettingsLoaded &&
+            !state.settings.hasPasscode) {
           setState(() {
             _showUnlock = false;
           });

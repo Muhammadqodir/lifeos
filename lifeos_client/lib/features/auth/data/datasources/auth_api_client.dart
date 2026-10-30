@@ -11,12 +11,9 @@ class AuthApiClient {
     try {
       final response = await dio.post(
         '$baseUrl/auth/login',
-        data: {
-          'email': email,
-          'password': password,
-        },
+        data: {'email': email, 'password': password},
       );
-      
+
       // Check if response is successful
       if (response.statusCode == 200 || response.statusCode == 201) {
         return AuthResponseDto.fromJson(response.data);
@@ -64,9 +61,7 @@ class AuthApiClient {
     try {
       await dio.post(
         '$baseUrl/auth/logout',
-        options: Options(
-          headers: {'Authorization': 'Bearer $token'},
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
     } catch (e) {
       throw _handleError(e);
@@ -77,9 +72,7 @@ class AuthApiClient {
     try {
       final response = await dio.get(
         '$baseUrl/auth/me',
-        options: Options(
-          headers: {'Authorization': 'Bearer $token'},
-        ),
+        options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
       return UserDto.fromJson(response.data['user']);
     } catch (e) {
@@ -90,10 +83,11 @@ class AuthApiClient {
   Exception _handleError(dynamic error) {
     if (error is DioException) {
       // Handle redirects (302, 301, etc.)
-      if (error.response?.statusCode == 302 || error.response?.statusCode == 301) {
+      if (error.response?.statusCode == 302 ||
+          error.response?.statusCode == 301) {
         return Exception('Invalid credentials');
       }
-      
+
       // Handle validation errors (422)
       if (error.response?.statusCode == 422) {
         try {
@@ -102,7 +96,9 @@ class AuthApiClient {
             final errors = data['errors'];
             if (errors != null && errors is Map) {
               final firstError = errors.values.first;
-              final message = firstError is List ? firstError.first : firstError;
+              final message = firstError is List
+                  ? firstError.first
+                  : firstError;
               return Exception(message);
             }
           }
@@ -110,7 +106,7 @@ class AuthApiClient {
           // Ignore parsing errors
         }
       }
-      
+
       // Handle other error responses
       try {
         final data = error.response?.data;
@@ -121,12 +117,12 @@ class AuthApiClient {
       } catch (e) {
         // Ignore parsing errors
       }
-      
+
       // Fallback for unauthorized
       if (error.response?.statusCode == 401) {
         return Exception('Invalid credentials');
       }
-      
+
       return Exception('Network error');
     }
     return Exception('Unknown error occurred');

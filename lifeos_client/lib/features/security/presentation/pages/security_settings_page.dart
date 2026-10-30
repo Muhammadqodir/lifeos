@@ -2,7 +2,6 @@ import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import '../../../../core/widgets/action_list_item.dart';
 import '../bloc/security_bloc.dart';
 import '../bloc/security_event.dart';
 import '../bloc/security_state.dart';
@@ -38,37 +37,21 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
     }
   }
 
-  void _handleClearPasscode() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Clear Passcode'),
-        content: const Text(
-          'Are you sure you want to remove your passcode? This will also disable biometric authentication.',
-        ),
-        actions: [
-          SecondaryButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('Cancel'),
-          ),
-          DestructiveButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              context.read<SecurityBloc>().add(
-                SecurityClearPasscodeRequested(),
-              );
-            },
-            child: const Text('Remove'),
-          ),
-        ],
-      ),
+  Future<void> _handleClearPasscode() async {
+    final confirmed = await AppDialogs.confirm(
+      context,
+      title: 'Remove passcode?',
+      message: 'Anyone with your device will be able to open LifeOS.',
+      confirmLabel: 'Remove',
+      destructive: true,
     );
+    if (confirmed && mounted) {
+      context.read<SecurityBloc>().add(SecurityClearPasscodeRequested());
+    }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocListener<SecurityBloc, SecurityState>(
       listener: (context, state) {
         if (state is SecurityPasscodeCleared) {
@@ -89,7 +72,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
               child: BlocBuilder<SecurityBloc, SecurityState>(
                 builder: (context, state) {
                   if (state is SecurityLoading) {
-                    return const Center(child: CircularProgressIndicator());
+                    return const LoadingState(message: 'Loading…');
                   }
 
                   final hasPasscode =
@@ -102,137 +85,80 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                       state is SecuritySettingsLoaded &&
                       state.settings.biometricAvailable;
 
+                  final semantic = context.semantic;
                   return SingleChildScrollView(
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
                     ),
-                    child: ContentWidth(child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 12,
-                            vertical: 6,
-                          ),
-                          child: Text(
-                            'App Security',
-                            style: theme.typography.normal.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ),
-                        if (!hasPasscode)
-                          ActionListItem(
-                            title: 'Set passcode',
-                            description:
-                                'Secure your app with a 6-digit passcode',
-                            onTap: _navigateToSetPasscode,
-                            icon: HugeIcon(
-                              icon: HugeIcons.strokeRoundedLock,
-                              size: 18,
-                              strokeWidth: 2,
-                              color: theme.colorScheme.background,
-                            ),
-                          )
-                        else ...[
-                          ActionListItem(
-                            title: 'Change Passcode',
-                            description: 'Update your current passcode',
-                            onTap: _navigateToSetPasscode,
-                            icon: HugeIcon(
-                              icon: HugeIcons.strokeRoundedLock,
-                              size: 18,
-                              strokeWidth: 2,
-                              color: theme.colorScheme.background,
-                            ),
-                          ),
-                          ActionListItem(
-                            title: 'Remove Passcode',
-                            description: 'Disable passcode protection',
-                            onTap: _handleClearPasscode,
-                            icon: HugeIcon(
-                              icon: HugeIcons.strokeRoundedLockPassword,
-                              size: 18,
-                              strokeWidth: 2,
-                              color: theme.colorScheme.background,
-                            ),
-                          ),
-                        ],
-                        if (biometricAvailable) ...[
-                          const SizedBox(height: 16),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 6,
-                            ),
-                            child: Text(
-                              'Biometric Authentication',
-                              style: theme.typography.normal.copyWith(
-                                fontWeight: FontWeight.w600,
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: AppSpacing.page,
+                      vertical: AppSpacing.lg,
+                    ),
+                    child: ContentWidth(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          AppListSection(
+                            title: 'Passcode',
+                            footer:
+                                'LifeOS asks for the passcode each time you open it.',
+                            children: [
+                              AppListTile(
+                                leading: LeadingTile.icon(
+                                  HugeIcons.strokeRoundedLock,
+                                  color: hasPasscode ? semantic.success : null,
+                                ),
+                                title: hasPasscode
+                                    ? 'Change passcode'
+                                    : 'Set passcode',
+                                subtitle: hasPasscode
+                                    ? 'Passcode is on'
+                                    : 'Protect the app with a 6-digit code',
+                                showChevron: true,
+                                onTap: _navigateToSetPasscode,
                               ),
-                            ),
+                              if (hasPasscode)
+                                AppListTile(
+                                  leading: LeadingTile.icon(
+                                    HugeIcons.strokeRoundedLockPassword,
+                                    color: context.colors.destructive,
+                                  ),
+                                  title: 'Remove passcode',
+                                  onTap: _handleClearPasscode,
+                                ),
+                            ],
                           ),
-                          Container(
-                            margin: const EdgeInsets.symmetric(
-                              horizontal: 12,
-                              vertical: 4,
-                            ),
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: theme.colorScheme.muted.withOpacity(0.3),
-                              borderRadius: BorderRadius.circular(12),
-                              border: Border.all(
-                                color: theme.colorScheme.border,
-                              ),
-                            ),
-                            child: Row(
+                          if (biometricAvailable)
+                            AppListSection(
+                              title: 'Biometrics',
                               children: [
-                                Icon(
-                                  Icons.fingerprint,
-                                  color: theme.colorScheme.primary,
-                                  size: 32,
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Face ID / Touch ID',
-                                        style: TextStyle(
-                                          fontSize: 16,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        hasPasscode && biometricEnabled
-                                            ? 'Enabled'
-                                            : hasPasscode
-                                            ? 'Disabled - Enable when setting passcode'
-                                            : 'Set a passcode first',
-                                        style: TextStyle(
-                                          fontSize: 12,
-                                          color:
-                                              theme.colorScheme.mutedForeground,
-                                        ),
-                                      ),
-                                    ],
+                                AppListTile(
+                                  leading: LeadingTile.icon(
+                                    HugeIcons.strokeRoundedFingerPrint,
+                                    color: hasPasscode && biometricEnabled
+                                        ? semantic.success
+                                        : null,
+                                  ),
+                                  title: 'Face ID / Touch ID',
+                                  subtitle: hasPasscode && biometricEnabled
+                                      ? 'On'
+                                      : hasPasscode
+                                      ? 'Off · turn on when you set the passcode'
+                                      : 'Set a passcode first',
+                                  trailing: AppBadge(
+                                    label: hasPasscode && biometricEnabled
+                                        ? 'On'
+                                        : 'Off',
+                                    color: hasPasscode && biometricEnabled
+                                        ? semantic.success
+                                        : semantic.neutral,
                                   ),
                                 ),
-                                if (hasPasscode && biometricEnabled)
-                                  Icon(
-                                    Icons.check_circle,
-                                    color: theme.colorScheme.primary,
-                                    size: 24,
-                                  ),
                               ],
                             ),
-                          ),
                         ],
-                      ],
-                    )),
+                      ),
+                    ),
                   );
                 },
               ),

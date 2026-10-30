@@ -1,4 +1,7 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import '../widgets/passcode_prompt.dart';
+import '../../../../core/ui/ui.dart';
+import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/security_bloc.dart';
 import '../bloc/security_event.dart';
@@ -97,89 +100,41 @@ class _UnlockPageState extends State<UnlockPage> {
         child: SafeArea(
           child: Stack(
             children: [
-              SingleChildScrollView(
-                padding: const EdgeInsets.all(24),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    const SizedBox(height: 64),
-                    TweenAnimationBuilder<double>(
-                      tween: Tween(begin: 0.0, end: 1.0),
-                      duration: const Duration(milliseconds: 800),
-                      curve: Curves.easeOutBack,
-                      builder: (context, value, child) {
-                        return Transform.scale(
-                          scale: value,
-                          child: Opacity(
-                            opacity: value,
-                            child: child,
-                          ),
-                        );
-                      },
-                      child: ColorFiltered(
-                        colorFilter: ColorFilter.mode(
-                          theme.colorScheme.foreground,
-                          BlendMode.srcIn,
-                        ),
-                        child: Image.asset(
-                          'assets/logo.png',
-                          width: 100,
-                          height: 100,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(height: 32),
-                    const Text(
-                      'Enter Passcode',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      'Enter your passcode to unlock',
-                      style: TextStyle(
-                        fontSize: 16,
-                        color: theme.colorScheme.mutedForeground,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    if (_isError) ...[
-                      const SizedBox(height: 8),
-                      Text(
-                        'Invalid passcode',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: theme.colorScheme.destructive,
-                        ),
-                      ),
-                    ],
-                    const SizedBox(height: 48),
-                    PasscodeInput(
-                      onCompleted: _handlePasscodeCompleted,
-                      onChanged: _handlePasscodeChanged,
-                      isError: _isError,
-                    ),
-                    if (_biometricAvailable && _biometricEnabled) ...[
-                      const SizedBox(height: 32),
-                      OutlineButton(
-                        onPressed: _handleBiometricAuth,
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.fingerprint,
-                              size: 24,
-                            ),
-                            const SizedBox(width: 8),
-                            const Text('Use Face ID'),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ],
+              PasscodePrompt(
+                visual: TweenAnimationBuilder<double>(
+                  tween: Tween(begin: 0.0, end: 1.0),
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutBack,
+                  builder: (context, value, child) => Transform.scale(
+                    scale: value,
+                    child: Opacity(opacity: value.clamp(0, 1), child: child),
+                  ),
+                  child: Image.asset(
+                    'assets/logo.png',
+                    width: 72,
+                    height: 72,
+                    color: theme.colorScheme.foreground,
+                    colorBlendMode: BlendMode.srcIn,
+                  ),
                 ),
+                title: 'Welcome back',
+                message: 'Enter your passcode to unlock LifeOS.',
+                error: _isError ? 'Wrong passcode. Try again.' : null,
+                input: PasscodeInput(
+                  onCompleted: _handlePasscodeCompleted,
+                  onChanged: _handlePasscodeChanged,
+                  isError: _isError,
+                ),
+                footer: _biometricAvailable && _biometricEnabled
+                    ? OutlineButton(
+                        onPressed: _handleBiometricAuth,
+                        leading: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedFaceId,
+                          size: AppIconSize.md,
+                        ),
+                        child: const Text('Use Face ID'),
+                      )
+                    : null,
               ),
             ],
           ),

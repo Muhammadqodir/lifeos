@@ -40,9 +40,10 @@ class _WorkoutPageState extends State<WorkoutPage> {
   Future<void> _confirmCancel(BuildContext context) async {
     final bool? confirmed = await Dialogs.showConfirmDialog(
       context: context,
-      title: 'Cancel Workout',
-      message:
-          'Are you sure you want to cancel the workout? Your progress will not be saved.',
+      title: 'Discard workout?',
+      message: "Sets you've logged in this session won't be saved.",
+      confirmLabel: 'Discard',
+      destructive: true,
     );
 
     if (confirmed == true) {
@@ -156,25 +157,35 @@ class _WorkoutPageState extends State<WorkoutPage> {
         return Scaffold(
           headers: [
             AppHeader(
-              title: isInProgress ? 'Workout in Progress' : 'Start Workout',
-            ),
-          ],
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(16),
-            physics: const AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            child: Column(
-              children: [
-                if (isLoading)
-                  const Center(child: CircularProgressIndicator())
-                else if (isInProgress)
-                  _buildWorkoutInProgress(context, state)
-                else
-                  const Center(child: CircularProgressIndicator()),
+              title: isInProgress ? 'Workout' : 'Start workout',
+              subtitle: isInProgress ? 'In progress' : null,
+              actions: [
+                if (isInProgress)
+                  HeaderAction(
+                    icon: HugeIcons.strokeRoundedAdd01,
+                    tooltip: 'Add exercise',
+                    label: 'Add exercise',
+                    onTap: () => _showExerciseSelection(context),
+                  ),
               ],
             ),
-          ),
+          ],
+          child: isInProgress
+              ? SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.page,
+                    vertical: AppSpacing.lg,
+                  ),
+                  physics: const AlwaysScrollableScrollPhysics(
+                    parent: BouncingScrollPhysics(),
+                  ),
+                  child: ContentWidth(
+                    child: _buildWorkoutInProgress(context, state),
+                  ),
+                )
+              : LoadingState(
+                  message: isLoading ? 'Preparing workout…' : 'Loading…',
+                ),
         );
       },
     );
@@ -184,75 +195,46 @@ class _WorkoutPageState extends State<WorkoutPage> {
     BuildContext context,
     WorkoutInProgress state,
   ) {
+    final count = state.workout.exercises.length;
     return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Card(
+        AppCard(
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Text(
                 _formatDuration(state.elapsedTime),
-                style: Theme.of(context).typography.h1,
+                style: context.text.display,
               ),
-              const SizedBox(width: 150, child: Divider(height: 24)),
+              const SizedBox(height: AppSpacing.xxs),
               Text(
-                '${state.workout.exercises.length} Exercise${state.workout.exercises.length == 1 ? '' : 's'}',
-                style: Theme.of(
-                  context,
-                ).typography.normal.copyWith(fontWeight: FontWeight.w600),
+                count == 1 ? '1 exercise' : '$count exercises',
+                style: context.text.itemSubtitle,
               ),
-              const SizedBox(height: 8),
+              const SizedBox(height: AppSpacing.lg),
               Row(
                 children: [
                   Expanded(
-                    child: PrimaryButton(
-                      onPressed: () {
-                        _confirmCancel(context);
-                      },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const HugeIcon(
-                            icon: HugeIcons.strokeRoundedCancel01,
-                            size: 18,
-                            strokeWidth: 2.5,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Cancel',
-                            style: Theme.of(context).typography.small.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                    child: OutlineButton(
+                      onPressed: () => _confirmCancel(context),
+                      leading: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCancel01,
+                        size: AppIconSize.sm,
                       ),
+                      child: const Text('Discard'),
                     ),
                   ),
-                  const SizedBox(width: 12),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: PrimaryButton(
-                      onPressed: state.workout.exercises.isEmpty
+                      onPressed: count == 0
                           ? null
-                          : () {
-                              _finishWorkout(context, state);
-                            },
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          const HugeIcon(
-                            icon: HugeIcons.strokeRoundedStop,
-                            size: 18,
-                            strokeWidth: 2.5,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Finish',
-                            style: Theme.of(context).typography.small.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
+                          : () => _finishWorkout(context, state),
+                      leading: const HugeIcon(
+                        icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                        size: AppIconSize.sm,
                       ),
+                      child: const Text('Finish'),
                     ),
                   ),
                 ],
@@ -260,68 +242,48 @@ class _WorkoutPageState extends State<WorkoutPage> {
             ],
           ),
         ),
-        const SizedBox(height: 24),
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Exercises:',
-                style: Theme.of(
-                  context,
-                ).typography.small.copyWith(fontWeight: FontWeight.w600),
-              ),
+        const SizedBox(height: AppSpacing.section),
+        SectionHeader(
+          title: 'Exercises',
+          count: count,
+          trailing: GhostButton(
+            size: ButtonSize.small,
+            density: ButtonDensity.compact,
+            leading: const HugeIcon(
+              icon: HugeIcons.strokeRoundedAdd01,
+              size: AppIconSize.sm,
             ),
-            IconButton.primary(
-              size: ButtonSize.normal,
-              onPressed: () => _showExerciseSelection(context),
-              icon: const HugeIcon(
-                icon: HugeIcons.strokeRoundedAdd01,
-                size: 16,
-                strokeWidth: 3,
-              ),
-            ),
-          ],
+            onPressed: () => _showExerciseSelection(context),
+            child: const Text('Add'),
+          ),
         ),
-        const SizedBox(height: 12),
-        if (state.workout.exercises.isEmpty)
-          SizedBox(
-            width: double.infinity,
-            child: Card(
-              child: Column(
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedDumbbell02,
-                    size: 34,
-                    color: Theme.of(context).colorScheme.mutedForeground,
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No exercises yet',
-                    style: Theme.of(context).typography.small.copyWith(
-                      color: Theme.of(context).colorScheme.mutedForeground,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'Tap the + button to add exercises',
-                    style: Theme.of(context).typography.xSmall.copyWith(
-                      color: Theme.of(context).colorScheme.mutedForeground,
-                    ),
-                  ),
-                ],
+        if (count == 0)
+          AppCard(
+            child: EmptyState(
+              padding: const EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              icon: const HugeIcon(icon: HugeIcons.strokeRoundedDumbbell02),
+              title: 'Add your first exercise',
+              description: 'Pick an exercise, then log sets as you go.',
+              action: PrimaryButton(
+                onPressed: () => _showExerciseSelection(context),
+                child: const Text('Add exercise'),
               ),
             ),
           )
         else
           Column(
-            children: List.generate(
-              state.workout.exercises.length,
-              (index) => ExerciseSets(
-                exerciseIndex: index,
-                exercise: state.workout.exercises[index],
-              ),
-            ),
-          ).gap(12),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (var i = 0; i < count; i++)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                  child: ExerciseSets(
+                    exerciseIndex: i,
+                    exercise: state.workout.exercises[i],
+                  ),
+                ),
+            ],
+          ),
       ],
     );
   }

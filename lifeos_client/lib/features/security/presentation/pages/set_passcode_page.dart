@@ -1,4 +1,6 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:hugeicons/hugeicons.dart';
+import '../widgets/passcode_prompt.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/security_bloc.dart';
 import '../bloc/security_event.dart';
@@ -70,7 +72,6 @@ class _SetPasscodePageState extends State<SetPasscodePage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
 
     return BlocListener<SecurityBloc, SecurityState>(
       listener: (context, state) {
@@ -96,106 +97,43 @@ class _SetPasscodePageState extends State<SetPasscodePage> {
             Expanded(
               child: SafeArea(
                 top: false,
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.center,
-                    children: [
-                      const SizedBox(height: 32),
-                      Icon(
-                        Icons.lock,
-                        size: 64,
-                        color: theme.colorScheme.primary,
-                      ),
-                      const SizedBox(height: 24),
-                      Text(
-                        _isConfirming ? 'Confirm Passcode' : 'Enter Passcode',
-                        style: const TextStyle(
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      Text(
-                        _isConfirming
-                            ? 'Re-enter your passcode to confirm'
-                            : 'Enter a 6-digit passcode',
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: theme.colorScheme.mutedForeground,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                      if (_isError) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          'Passcodes do not match',
-                          style: TextStyle(
-                            fontSize: 14,
-                            color: theme.colorScheme.destructive,
-                          ),
-                        ),
-                      ],
-                      const SizedBox(height: 48),
-                      PasscodeInput(
-                        onCompleted: _handlePasscodeCompleted,
-                        onChanged: _handlePasscodeChanged,
-                        isError: _isError,
-                      ),
-                      if (_biometricAvailable && !_isConfirming) ...[
-                        const SizedBox(height: 48),
-                        Container(
-                          padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: theme.colorScheme.muted.withOpacity(0.3),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(color: theme.colorScheme.border),
-                          ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                Icons.fingerprint,
-                                color: theme.colorScheme.primary,
-                                size: 32,
-                              ),
-                              const SizedBox(width: 16),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    const Text(
-                                      'Enable Face ID',
-                                      style: TextStyle(
-                                        fontSize: 16,
-                                        fontWeight: FontWeight.w600,
-                                      ),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      'Unlock with biometric authentication',
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        color:
-                                            theme.colorScheme.mutedForeground,
-                                      ),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              Switch(
-                                value: _enableBiometric,
-                                onChanged: (value) {
-                                  setState(() {
-                                    _enableBiometric = value;
-                                  });
-                                },
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ],
+                child: PasscodePrompt(
+                  visual: LeadingTile.icon(
+                    HugeIcons.strokeRoundedLockPassword,
+                    size: 64,
                   ),
+                  title: _isConfirming ? 'Confirm passcode' : 'Create a passcode',
+                  message: _isConfirming
+                      ? 'Enter the same 6 digits again.'
+                      : 'Choose 6 digits you will remember.',
+                  error: _isError ? "Passcodes don't match. Try again." : null,
+                  input: PasscodeInput(
+                    onCompleted: _handlePasscodeCompleted,
+                    onChanged: _handlePasscodeChanged,
+                    isError: _isError,
+                  ),
+                  footer: _biometricAvailable && !_isConfirming
+                      ? AppListSection(
+                          margin: EdgeInsets.zero,
+                          children: [
+                            AppListTile(
+                              leading: LeadingTile.icon(
+                                HugeIcons.strokeRoundedFingerPrint,
+                              ),
+                              title: 'Unlock with Face ID',
+                              subtitle: 'Skip the passcode when it is you',
+                              onTap: () => setState(
+                                () => _enableBiometric = !_enableBiometric,
+                              ),
+                              trailing: Switch(
+                                value: _enableBiometric,
+                                onChanged: (value) =>
+                                    setState(() => _enableBiometric = value),
+                              ),
+                            ),
+                          ],
+                        )
+                      : null,
                 ),
               ),
             ),

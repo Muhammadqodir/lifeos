@@ -1,4 +1,7 @@
+import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+
+import '../../../../core/ui/ui.dart';
 
 class PasscodeInput extends StatefulWidget {
   final Function(String) onCompleted;
@@ -43,114 +46,123 @@ class _PasscodeInputState extends State<PasscodeInput> {
     }
   }
 
+  /// Hardware keyboard (Mac, iPad keyboard): digits type, Backspace deletes.
+  KeyEventResult _onKey(FocusNode node, KeyEvent event) {
+    if (event is! KeyDownEvent && event is! KeyRepeatEvent) {
+      return KeyEventResult.ignored;
+    }
+    if (event.logicalKey == LogicalKeyboardKey.backspace) {
+      _removeDigit();
+      return KeyEventResult.handled;
+    }
+    final char = event.character;
+    if (char != null && RegExp(r'^[0-9]$').hasMatch(char)) {
+      _addDigit(char);
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
+    final colors = context.colors;
 
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        // Passcode dots display
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: List.generate(
-            widget.length,
-            (index) => Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Container(
-                width: 16,
-                height: 16,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: index < _passcode.length
-                      ? (widget.isError
-                          ? theme.colorScheme.destructive
-                          : theme.colorScheme.primary)
-                      : theme.colorScheme.muted,
-                  border: Border.all(
-                    color: widget.isError
-                        ? theme.colorScheme.destructive
-                        : theme.colorScheme.border,
-                    width: 2,
+    return Focus(
+      autofocus: true,
+      onKeyEvent: _onKey,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              for (var index = 0; index < widget.length; index++)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 7),
+                  child: AnimatedContainer(
+                    duration: AppDurations.fast,
+                    width: 14,
+                    height: 14,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: index < _passcode.length
+                          ? (widget.isError
+                                ? colors.destructive
+                                : colors.foreground)
+                          : colors.foreground.withValues(alpha: 0),
+                      border: Border.all(
+                        color: widget.isError
+                            ? colors.destructive
+                            : colors.mutedForeground,
+                        width: 1.5,
+                      ),
+                    ),
                   ),
                 ),
-              ),
-            ),
-          ),
-        ),
-        const SizedBox(height: 48),
-        // Number pad
-        SizedBox(
-          width: 280,
-          child: Column(
-            children: [
-              _buildNumberRow(['1', '2', '3']),
-              const SizedBox(height: 16),
-              _buildNumberRow(['4', '5', '6']),
-              const SizedBox(height: 16),
-              _buildNumberRow(['7', '8', '9']),
-              const SizedBox(height: 16),
-              _buildNumberRow(['', '0', 'del']),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: AppSpacing.xxl),
+          SizedBox(
+            width: 264,
+            child: Column(
+              children: [
+                for (final row in const [
+                  ['1', '2', '3'],
+                  ['4', '5', '6'],
+                  ['7', '8', '9'],
+                  ['', '0', 'del'],
+                ]) ...[
+                  _buildNumberRow(row),
+                  const SizedBox(height: AppSpacing.md),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   Widget _buildNumberRow(List<String> numbers) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: numbers.map((number) {
-        if (number.isEmpty) {
-          return const SizedBox(width: 72, height: 72);
-        }
-        return _buildNumberButton(number);
-      }).toList(),
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        for (final number in numbers)
+          number.isEmpty
+              ? const SizedBox(width: 72, height: 72)
+              : _buildNumberButton(number),
+      ],
     );
   }
 
   Widget _buildNumberButton(String number) {
-    final theme = Theme.of(context);
-
-    if (number == 'del') {
-      return GestureDetector(
-        onTap: _removeDigit,
-        child: Container(
-          width: 72,
-          height: 72,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: theme.colorScheme.muted.withOpacity(0.5),
-          ),
-          child: Icon(
-            Icons.backspace,
-            color: theme.colorScheme.foreground,
-            size: 24,
-          ),
-        ),
-      );
-    }
-
-    return GestureDetector(
-      onTap: () => _addDigit(number),
+    final colors = context.colors;
+    final isDelete = number == 'del';
+    return AppPressable(
+      onTap: isDelete ? _removeDigit : () => _addDigit(number),
+      borderRadius: BorderRadius.circular(36),
+      semanticLabel: isDelete ? 'Delete digit' : number,
       child: Container(
         width: 72,
         height: 72,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: theme.colorScheme.muted.withOpacity(0.5),
+          color: isDelete ? null : colors.muted,
         ),
-        child: Center(
-          child: Text(
-            number,
-            style: TextStyle(
-              fontSize: 28,
-              fontWeight: FontWeight.w600,
-              color: theme.colorScheme.foreground,
-            ),
-          ),
-        ),
+        alignment: Alignment.center,
+        child: isDelete
+            ? Icon(
+                Icons.backspace_outlined,
+                size: AppIconSize.lg,
+                color: colors.foreground,
+              )
+            : Text(
+                number,
+                style: context.theme.typography.x2Large.copyWith(
+                  fontWeight: FontWeight.w500,
+                  color: colors.foreground,
+                ),
+              ),
       ),
     );
   }

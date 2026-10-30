@@ -14,10 +14,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<AuthResult> login(String email, String password) async {
     final response = await apiClient.login(email, password);
     await saveToken(response.token);
-    return AuthResult(
-      user: response.user.toEntity(),
-      token: response.token,
-    );
+    return AuthResult(user: response.user.toEntity(), token: response.token);
   }
 
   @override
@@ -32,10 +29,7 @@ class AuthRepositoryImpl implements AuthRepository {
       passwordConfirmation: params.passwordConfirmation,
     );
     await saveToken(response.token);
-    return AuthResult(
-      user: response.user.toEntity(),
-      token: response.token,
-    );
+    return AuthResult(user: response.user.toEntity(), token: response.token);
   }
 
   @override
@@ -51,7 +45,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<User?> getCurrentUser() async {
     final token = await getToken();
     if (token == null) return null;
-    
+
     try {
       final userDto = await apiClient.getCurrentUser(token);
       return userDto.toEntity();

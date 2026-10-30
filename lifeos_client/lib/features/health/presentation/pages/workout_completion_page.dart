@@ -116,241 +116,151 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
         }
       },
       child: Scaffold(
-        headers: [AppHeader(title: 'Finish workout')],
+        headers: const [
+          AppHeader(title: 'Finish workout', subtitle: 'Optional details'),
+        ],
         child: Form(
           key: _formKey,
           child: Column(
             children: [
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: AppSpacing.page,
+                    vertical: AppSpacing.lg,
+                  ),
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics(),
                   ),
-                  child: ContentWidth(child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      // Photo Preview
-                      if (widget.photoPath != null) ...[
-                        Card(
-                          child: Column(
-                            children: [
-                              ClipRRect(
-                                borderRadius: BorderRadius.circular(12),
-                                child: Image.file(
-                                  File(widget.photoPath!),
-                                  height: 300,
-                                  width: double.infinity,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              const SizedBox(height: 12),
-                              Text(
-                                'Post-Workout Photo',
-                                style: theme.typography.small.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                      // Total Weight Lifted
-                      Card(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Total Weight Lifted',
-                              style: theme.typography.normal.copyWith(
-                                fontWeight: FontWeight.w600,
+                  child: ContentWidth(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        if (widget.photoPath != null)
+                          Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppSpacing.section,
+                            ),
+                            child: ClipRRect(
+                              borderRadius: theme.cardRadius,
+                              child: Image.file(
+                                File(widget.photoPath!),
+                                height: 280,
+                                fit: BoxFit.cover,
                               ),
                             ),
-                            const SizedBox(height: 12),
-                            if (weightTotals.isEmpty)
-                              Text(
-                                'No weight data recorded',
-                                style: theme.typography.small.copyWith(
-                                  color: colorScheme.mutedForeground,
-                                ),
-                              )
-                            else
-                              ...weightTotals.entries.map((entry) {
-                                return Padding(
-                                  padding: const EdgeInsets.only(bottom: 8),
-                                  child: Row(
-                                    mainAxisAlignment:
-                                        MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Expanded(
-                                        child: Text(
-                                          entry.key,
-                                          style: theme.typography.small,
-                                        ),
-                                      ),
-                                      Text(
-                                        '${entry.value.toStringAsFixed(1)} kg',
-                                        style: theme.typography.small.copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: colorScheme.primary,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                );
-                              }),
-                            if (weightTotals.isNotEmpty) ...[
-                              const Divider(height: 16),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  Text(
-                                    'Grand Total',
-                                    style: theme.typography.normal.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                    ),
-                                  ),
-                                  Text(
-                                    '${weightTotals.values.reduce((a, b) => a + b).toStringAsFixed(1)} kg',
-                                    style: theme.typography.normal.copyWith(
-                                      fontWeight: FontWeight.w700,
-                                      color: colorScheme.primary,
-                                    ),
-                                  ),
-                                ],
+                          ),
+                        AppListSection(
+                          title: 'Volume',
+                          dividerIndent: AppSpacing.md,
+                          empty: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.lg),
+                            child: Text(
+                              'No weighted sets recorded',
+                              style: context.text.caption,
+                              textAlign: TextAlign.center,
+                            ),
+                          ),
+                          children: [
+                            for (final entry in weightTotals.entries)
+                              DetailRow(
+                                label: entry.key,
+                                value: '${entry.value.toStringAsFixed(0)} kg',
                               ),
-                            ],
+                            if (weightTotals.isNotEmpty)
+                              DetailRow(
+                                label: 'Total',
+                                valueWidget: AppBadge(
+                                  label:
+                                      '${weightTotals.values.reduce((a, b) => a + b).toStringAsFixed(0)} kg',
+                                  color: context.semantic.info,
+                                ),
+                              ),
                           ],
                         ),
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Measurements
-                      Text(
-                        'Body Measurements',
-                        style: theme.typography.normal.copyWith(
-                          fontWeight: FontWeight.w600,
+                        AppListSection(
+                          title: 'Body measurements',
+                          footer: 'Leave blank anything you did not measure.',
+                          dividerIndent: AppSpacing.md,
+                          children: [
+                            _measurement(
+                              _bodyWeightController,
+                              'Body weight',
+                              'kg',
+                              HugeIcons.strokeRoundedWeightScale,
+                            ),
+                            _measurement(
+                              _heightController,
+                              'Height',
+                              'cm',
+                              HugeIcons.strokeRoundedRuler,
+                            ),
+                            _measurement(
+                              _bicepsController,
+                              'Biceps',
+                              'cm',
+                              HugeIcons.strokeRoundedBodyPartMuscle,
+                            ),
+                            _measurement(
+                              _chestController,
+                              'Chest',
+                              'cm',
+                              HugeIcons.strokeRoundedTapeMeasure,
+                            ),
+                            _measurement(
+                              _waistController,
+                              'Waist',
+                              'cm',
+                              HugeIcons.strokeRoundedTapeMeasure,
+                            ),
+                            _measurement(
+                              _thighsController,
+                              'Thighs',
+                              'cm',
+                              HugeIcons.strokeRoundedTapeMeasure,
+                            ),
+                            _measurement(
+                              _calfsController,
+                              'Calves',
+                              'cm',
+                              HugeIcons.strokeRoundedTapeMeasure,
+                            ),
+                          ],
                         ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildMeasurementField(
-                        controller: _bodyWeightController,
-                        label: 'Body Weight',
-                        unit: 'kg',
-                        icon: HugeIcons.strokeRoundedWeightScale,
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildMeasurementField(
-                        controller: _heightController,
-                        label: 'Height',
-                        unit: 'cm',
-                        icon: HugeIcons.strokeRoundedRuler,
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildMeasurementField(
-                        controller: _bicepsController,
-                        label: 'Biceps',
-                        unit: 'cm',
-                        icon: HugeIcons.strokeRoundedBodyPartMuscle,
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildMeasurementField(
-                        controller: _chestController,
-                        label: 'Chest',
-                        unit: 'cm',
-                        icon: HugeIcons.strokeRoundedTapeMeasure,
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildMeasurementField(
-                        controller: _waistController,
-                        label: 'Waist',
-                        unit: 'cm',
-                        icon: HugeIcons.strokeRoundedTapeMeasure,
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildMeasurementField(
-                        controller: _thighsController,
-                        label: 'Thighs',
-                        unit: 'cm',
-                        icon: HugeIcons.strokeRoundedTapeMeasure,
-                      ),
-                      const SizedBox(height: 12),
-
-                      _buildMeasurementField(
-                        controller: _calfsController,
-                        label: 'Calfs',
-                        unit: 'cm',
-                        icon: HugeIcons.strokeRoundedTapeMeasure,
-                      ),
-                      const SizedBox(height: 24),
-
-                      // Notes
-                      Text(
-                        'Notes',
-                        style: theme.typography.normal.copyWith(
-                          fontWeight: FontWeight.w600,
+                        AppFormField(
+                          label: 'How did it go?',
+                          optional: true,
+                          child: TextField(
+                            controller: _notesController,
+                            maxLines: 4,
+                            placeholder: const Text(
+                              'Felt strong, new PR on squat',
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: 12),
-
-                      TextField(controller: _notesController, maxLines: 4),
-                    ],
-                  )),
-                ),
-              ),
-
-              // Submit Button
-              Container(
-                padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(
-                  border: Border(
-                    top: BorderSide(color: colorScheme.border, width: 1),
+                      ],
+                    ),
                   ),
                 ),
-                child: BlocBuilder<WorkoutBloc, WorkoutState>(
-                  builder: (context, state) {
-                    final isLoading = state is WorkoutLoading;
-                    return SizedBox(
-                      width: double.infinity,
-                      child: PrimaryButton(
-                        onPressed: isLoading ? null : _submitCompletion,
-                        child: isLoading
-                            ? const SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            : Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  const HugeIcon(
-                                    icon: HugeIcons
-                                        .strokeRoundedCheckmarkCircle02,
-                                    size: 18,
-                                    strokeWidth: 2.5,
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    'Complete Workout',
-                                    style: theme.typography.normal.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
-                                  ),
-                                ],
-                              ),
+              ),
+              Container(
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  color: colorScheme.background,
+                  border: Border(top: BorderSide(color: colorScheme.border)),
+                ),
+                child: SafeArea(
+                  top: false,
+                  child: ContentWidth(
+                    child: BlocBuilder<WorkoutBloc, WorkoutState>(
+                      builder: (context, state) => FormSubmitButton(
+                        label: 'Save workout',
+                        loadingLabel: 'Saving…',
+                        loading: state is WorkoutLoading,
+                        onPressed: _submitCompletion,
                       ),
-                    );
-                  },
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -360,52 +270,28 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
     );
   }
 
-  Widget _buildMeasurementField({
-    required TextEditingController controller,
-    required String label,
-    required String unit,
-    required List<List<dynamic>> icon,
-  }) {
-    return Row(
-      children: [
-        HugeIcon(
-          icon: icon,
-          size: 20,
-          color: Theme.of(context).colorScheme.mutedForeground,
+  /// Measurement row: label left, numeric input with unit right.
+  Widget _measurement(
+    TextEditingController controller,
+    String label,
+    String unit,
+    List<List<dynamic>> icon,
+  ) {
+    return DetailRow(
+      icon: icon,
+      label: label,
+      valueWidget: SizedBox(
+        width: 120,
+        child: TextField(
+          controller: controller,
+          textAlign: TextAlign.right,
+          placeholder: const Text('—'),
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          features: [
+            InputFeature.trailing(Text(unit, style: context.text.caption)),
+          ],
         ),
-        const SizedBox(width: 12),
-        Expanded(
-          flex: 2,
-          child: Text(
-            label,
-            style: Theme.of(
-              context,
-            ).typography.small.copyWith(fontWeight: FontWeight.w500),
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: controller,
-                  keyboardType: const TextInputType.numberWithOptions(
-                    decimal: true,
-                  ),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                unit,
-                style: Theme.of(context).typography.small.copyWith(
-                  color: Theme.of(context).colorScheme.mutedForeground,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+      ),
     );
   }
 }

@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart' show TextInputAction;
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -40,11 +41,7 @@ class _LoginPageState extends State<LoginPage> {
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            AppToast.error(
-              context,
-              'Something went wrong',
-              message: state.message,
-            );
+            AppToast.error(context, "Couldn't sign in", message: state.message);
 
             // Clear password but keep email when error occurs
             _passwordController.clear();
@@ -52,69 +49,98 @@ class _LoginPageState extends State<LoginPage> {
         },
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: SizedBox(
-              width: 400,
-              child: Card(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    const SizedBox(height: 24),
-                    TextField(
-                      controller: _emailController,
-                      placeholder: const Text('email@example.com'),
-                      keyboardType: TextInputType.emailAddress,
-                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
+            padding: const EdgeInsets.all(AppSpacing.xl),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 380),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Center(
+                    child: Image.asset(
+                      'assets/logo.png',
+                      width: 56,
+                      height: 56,
+                      color: context.colors.foreground,
+                      colorBlendMode: BlendMode.srcIn,
                     ),
-                    const SizedBox(height: 16),
-                    TextField(
-                      controller: _passwordController,
-                      placeholder: const Text('Enter your password'),
-                      obscureText: true,
-                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                    ),
-                    const SizedBox(height: 24),
-                    BlocBuilder<AuthBloc, AuthState>(
-                      builder: (context, state) {
-                        final isLoading = state is AuthLoading;
-                        return PrimaryButton(
-                          onPressed: isLoading ? null : _handleLogin,
-                          child: isLoading
-                              ? const SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    color: Colors.white,
-                                  ),
-                                )
-                              : const Text('Sign In'),
-                        );
-                      },
-                    ),
-                    const SizedBox(height: 16),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Text(
+                    'Welcome to LifeOS',
+                    style: context.theme.typography.h3,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xs),
+                  Text(
+                    'Sign in to continue.',
+                    style: context.text.itemSubtitle,
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: AppSpacing.xl),
+                  AppCard(
+                    padding: const EdgeInsets.all(AppSpacing.xl),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        const Text("Don't have an account? "),
-                        Button.ghost(
-                          onPressed: () {
-                            Navigator.of(context).push(
-                              CupertinoPageRoute(
-                                builder: (_) => BlocProvider.value(
-                                  value: context.read<AuthBloc>(),
-                                  child: const RegisterPage(),
-                                ),
-                              ),
-                            );
-                          },
-                          child: const Text('Sign Up'),
+                        AppFormField(
+                          label: 'Email',
+                          child: TextField(
+                            controller: _emailController,
+                            autofocus: isDesktopPlatform,
+                            placeholder: const Text('you@example.com'),
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            onSubmitted: (_) =>
+                                FocusScope.of(context).nextFocus(),
+                          ),
+                        ),
+                        AppFormField(
+                          label: 'Password',
+                          child: TextField(
+                            controller: _passwordController,
+                            obscureText: true,
+                            textInputAction: TextInputAction.go,
+                            // Return submits, like any sign-in form.
+                            onSubmitted: (_) => _handleLogin(),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.xs),
+                        BlocBuilder<AuthBloc, AuthState>(
+                          builder: (context, state) => FormSubmitButton(
+                            label: 'Sign in',
+                            loadingLabel: 'Signing in…',
+                            loading: state is AuthLoading,
+                            onPressed: _handleLogin,
+                          ),
                         ),
                       ],
                     ),
-                  ],
-                ),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(
+                        "Don't have an account?",
+                        style: context.text.itemSubtitle,
+                      ),
+                      GhostButton(
+                        size: ButtonSize.small,
+                        density: ButtonDensity.compact,
+                        onPressed: () => Navigator.of(context).push(
+                          CupertinoPageRoute(
+                            builder: (_) => BlocProvider.value(
+                              value: context.read<AuthBloc>(),
+                              child: const RegisterPage(),
+                            ),
+                          ),
+                        ),
+                        child: const Text('Create account'),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ),
