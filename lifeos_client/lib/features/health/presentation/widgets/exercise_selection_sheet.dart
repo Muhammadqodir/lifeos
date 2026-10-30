@@ -1,11 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:lifeos_client/core/widgets/tappable.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/exercise_bloc.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/exercise_event.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/exercise_state.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_card.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class ExerciseSelectionSheet extends StatefulWidget {
   const ExerciseSelectionSheet({super.key});
@@ -152,25 +152,22 @@ class _ExerciseSelectionSheetState extends State<ExerciseSelectionSheet> {
                     );
                   }
 
-                  return ListView.separated(
+                  return SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
+                      horizontal: AppSpacing.page,
+                      vertical: AppSpacing.sm,
                     ),
-                    itemCount: state.filteredExercises.length,
-                    separatorBuilder: (context, index) =>
-                        const SizedBox(height: 8),
-                    itemBuilder: (context, index) {
-                      final exercise = state.filteredExercises[index];
-                      return Tappable(
-                        lowerBound: 0.98,
-                        child: ExerciseCard(
-                          exercise: exercise,
-                          showMuscleGroup: true,
-                        ),
-                        onTap: () => Navigator.pop(context, exercise),
-                      );
-                    },
+                    child: AppListSection(
+                      margin: EdgeInsets.zero,
+                      children: [
+                        for (final exercise in state.filteredExercises)
+                          ExerciseCard(
+                            exercise: exercise,
+                            showMuscleGroup: true,
+                            onTap: () => Navigator.pop(context, exercise),
+                          ),
+                      ],
+                    ),
                   );
                 }
 

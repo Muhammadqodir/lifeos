@@ -107,15 +107,17 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
-                child: ContentWidth(child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    _buildDefaultCurrencySection(context, loadedState),
-                    const SizedBox(height: 12),
-                    _buildCategoriesSection(context, loadedState),
-                    const SizedBox(height: 24),
-                  ],
-                )),
+                child: ContentWidth(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      _buildDefaultCurrencySection(context, loadedState),
+                      const SizedBox(height: 12),
+                      _buildCategoriesSection(context, loadedState),
+                      const SizedBox(height: 24),
+                    ],
+                  ),
+                ),
               );
             }
 
@@ -358,6 +360,8 @@ class _FinanceSettingsPageContent extends StatelessWidget {
       title: 'Remove Category',
       message: 'Are you sure you want to remove "${category.title}" category?',
       context: context,
+      confirmLabel: 'Delete',
+      destructive: true,
     );
 
     if (confirmed == true) {

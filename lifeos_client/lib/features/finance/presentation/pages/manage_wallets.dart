@@ -1,5 +1,4 @@
 import 'package:lifeos_client/core/extension/extensions.dart';
-import 'package:lifeos_client/core/theme/app_colors.dart';
 import 'package:lifeos_client/features/finance/data/datasources/constants.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -38,6 +37,8 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
       title: 'Delete Wallet',
       message: 'Are you sure you want to delete "${wallet.name}"?',
       context: context,
+      confirmLabel: 'Delete',
+      destructive: true,
     );
 
     if (confirmed == true) {
@@ -173,118 +174,35 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              child: ContentWidth(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  ...wallets.map((wallet) {
-                    final isDeleting = deletingWalletId == wallet.id;
-                    return Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: Card(
-                        padding: const EdgeInsets.all(12),
-                        child: Row(
-                          children: [
-                            // Wallet icon
-                            Container(
-                              width: 48,
-                              height: 48,
-                              decoration: BoxDecoration(
-                                color: colorScheme.muted,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Center(
-                                child: HugeIcon(
-                                  icon: FinanceConstants.getWalletTypeIcon(
-                                    wallet.type,
-                                  ),
-                                  size: 24,
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            // Wallet details
-                            Expanded(
-                              child: Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    wallet.name,
-                                    style: Theme.of(context).typography.small
-                                        .copyWith(
-                                          fontWeight: FontWeight.w600,
-                                          color: colorScheme.foreground,
-                                        ),
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Row(
-                                    children: [
-                                      Text(
-                                        FinanceConstants.getWalletTypeName(
-                                          wallet.type,
-                                        ),
-                                        style: Theme.of(context)
-                                            .typography
-                                            .xSmall
-                                            .copyWith(
-                                              color:
-                                                  colorScheme.mutedForeground,
-                                            ),
-                                      ),
-
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '•',
-                                        style: Theme.of(context)
-                                            .typography
-                                            .xSmall
-                                            .copyWith(
-                                              color:
-                                                  colorScheme.mutedForeground,
-                                            ),
-                                      ),
-                                      const SizedBox(width: 8),
-                                      Text(
-                                        '${wallet.balance.toMoneyFormat()} ${wallet.currency.code}',
-                                        style: Theme.of(context)
-                                            .typography
-                                            .xSmall
-                                            .copyWith(
-                                              fontWeight: FontWeight.w600,
-                                              color:
-                                                  colorScheme.mutedForeground,
-                                            ),
-                                      ),
-                                    ],
-                                  ),
-                                ],
-                              ),
-                            ),
-                            // Delete button
-                            if (isDeleting)
-                              const SizedBox(
-                                width: 24,
-                                height: 24,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              )
-                            else
-                              IconButton.ghost(
-                                icon: const HugeIcon(
-                                  icon: HugeIcons.strokeRoundedDelete02,
-                                  size: 22,
-                                  color: AppColors.redColor,
-                                ),
-                                onPressed: () =>
-                                    _showDeleteConfirmation(context, wallet),
-                              ),
-                          ],
+              child: ContentWidth(
+                child: AppListSection(
+                  title: 'Your wallets',
+                  count: wallets.length,
+                  footer:
+                      'Deleting a wallet hides it; its transaction history is kept.',
+                  children: [
+                    for (final wallet in wallets)
+                      AppListTile(
+                        leading: LeadingTile.icon(
+                          FinanceConstants.getWalletTypeIcon(wallet.type),
                         ),
+                        title: wallet.name,
+                        subtitle:
+                            '${FinanceConstants.getWalletTypeName(wallet.type)} · ${wallet.balance.toMoneyFormat()} ${wallet.currency.code}',
+                        loading: deletingWalletId == wallet.id,
+                        actions: [
+                          AppAction(
+                            label: 'Delete wallet',
+                            icon: HugeIcons.strokeRoundedDelete02,
+                            destructive: true,
+                            onSelected: () =>
+                                _showDeleteConfirmation(context, wallet),
+                          ),
+                        ],
                       ),
-                    );
-                  }),
-                ],
-              )),
+                  ],
+                ),
+              ),
             );
           },
         ),

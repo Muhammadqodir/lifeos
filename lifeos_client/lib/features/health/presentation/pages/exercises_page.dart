@@ -188,28 +188,18 @@ class _ExercisesPageState extends State<ExercisesPage> {
             });
 
           return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: sortedGroups.expand((group) {
-              final exercises = groupedExercises[group]!;
-              return [
-                Padding(
-                  padding: const EdgeInsets.only(top: 12, bottom: 8),
-                  child: Text(
-                    group,
-                    style: Theme.of(context).typography.small.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: Theme.of(context).colorScheme.foreground,
-                    ),
-                  ),
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final group in sortedGroups)
+                AppListSection(
+                  title: group,
+                  count: groupedExercises[group]!.length,
+                  children: [
+                    for (final e in groupedExercises[group]!)
+                      ExerciseCard(exercise: e, showDeleteButton: true),
+                  ],
                 ),
-                ...exercises.map(
-                  (e) => Padding(
-                    padding: const EdgeInsets.only(bottom: 6),
-                    child: ExerciseCard(exercise: e, showDeleteButton: true),
-                  ),
-                ),
-              ];
-            }).toList(),
+            ],
           );
         }
 
