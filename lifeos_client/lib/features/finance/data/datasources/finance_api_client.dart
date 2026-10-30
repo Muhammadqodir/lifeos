@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/network/api_exception.dart';
 import '../models/wallet_dto.dart';
 import '../models/transaction_dto.dart';
 import '../models/finance_summary_dto.dart';
@@ -322,41 +323,7 @@ class FinanceApiClient {
     }
   }
 
-  Exception _handleError(dynamic error) {
-    if (error is DioException) {
-      if (error.response != null) {
-        final statusCode = error.response!.statusCode;
-        final message =
-            error.response!.data['message'] as String? ?? 'An error occurred';
-
-        switch (statusCode) {
-          case 401:
-            return Exception('Unauthorized: Please log in again');
-          case 403:
-            return Exception('Forbidden: $message');
-          case 404:
-            return Exception('Not found: $message');
-          case 422:
-            final errors = error.response!.data['errors'] as Map?;
-            if (errors != null) {
-              final firstError = errors.values.first as List;
-              return Exception(firstError.first as String);
-            }
-            return Exception(message);
-          case 500:
-            return Exception('Server error: Please try again later');
-          default:
-            return Exception(message);
-        }
-      } else if (error.type == DioExceptionType.connectionTimeout ||
-          error.type == DioExceptionType.receiveTimeout) {
-        return Exception('Connection timeout: Please check your internet');
-      } else if (error.type == DioExceptionType.connectionError) {
-        return Exception('Connection error: Please check your internet');
-      }
-    }
-    return Exception('An unexpected error occurred');
-  }
+  Exception _handleError(Object error) => ApiException.from(error);
 
   /// Get analytics data grouped by category for a given period
   Future<AnalyticsSummaryDto> getAnalytics({

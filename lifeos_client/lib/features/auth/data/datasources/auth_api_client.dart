@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/network/api_exception.dart';
 import '../models/user_dto.dart';
 
 class AuthApiClient {
@@ -16,7 +17,7 @@ class AuthApiClient {
 
       // Check if response is successful
       if (response.statusCode == 200 || response.statusCode == 201) {
-        return AuthResponseDto.fromJson(response.data);
+        return AuthResponseDto.fromJson(response.data['data']);
       } else {
         // Handle error responses
         throw DioException(
@@ -51,7 +52,7 @@ class AuthApiClient {
           'password_confirmation': passwordConfirmation,
         },
       );
-      return AuthResponseDto.fromJson(response.data);
+      return AuthResponseDto.fromJson(response.data['data']);
     } catch (e) {
       throw _handleError(e);
     }
@@ -74,57 +75,11 @@ class AuthApiClient {
         '$baseUrl/auth/me',
         options: Options(headers: {'Authorization': 'Bearer $token'}),
       );
-      return UserDto.fromJson(response.data['user']);
+      return UserDto.fromJson(response.data['data']);
     } catch (e) {
       throw _handleError(e);
     }
   }
 
-  Exception _handleError(dynamic error) {
-    if (error is DioException) {
-      // Handle redirects (302, 301, etc.)
-      if (error.response?.statusCode == 302 ||
-          error.response?.statusCode == 301) {
-        return Exception('Invalid credentials');
-      }
-
-      // Handle validation errors (422)
-      if (error.response?.statusCode == 422) {
-        try {
-          final data = error.response?.data;
-          if (data is Map) {
-            final errors = data['errors'];
-            if (errors != null && errors is Map) {
-              final firstError = errors.values.first;
-              final message = firstError is List
-                  ? firstError.first
-                  : firstError;
-              return Exception(message);
-            }
-          }
-        } catch (e) {
-          // Ignore parsing errors
-        }
-      }
-
-      // Handle other error responses
-      try {
-        final data = error.response?.data;
-        if (data is Map && data['message'] != null) {
-          final message = data['message'];
-          return Exception(message);
-        }
-      } catch (e) {
-        // Ignore parsing errors
-      }
-
-      // Fallback for unauthorized
-      if (error.response?.statusCode == 401) {
-        return Exception('Invalid credentials');
-      }
-
-      return Exception('Network error');
-    }
-    return Exception('Unknown error occurred');
-  }
+  Exception _handleError(Object error) => ApiException.from(error);
 }

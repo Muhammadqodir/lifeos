@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 import 'package:dio/dio.dart';
+import '../../../../core/network/api_exception.dart';
 import '../models/exercise_dto.dart';
 import '../models/sleep_entry_dto.dart';
 import '../models/sleep_summary_dto.dart';
@@ -69,7 +70,7 @@ class HealthApiClient {
       );
 
       if (response.statusCode == 200) {
-        return SleepSummaryDto.fromJson(response.data);
+        return SleepSummaryDto.fromJson(response.data['data']);
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -167,7 +168,7 @@ class HealthApiClient {
       );
 
       if (response.statusCode == 200) {
-        return WellbeingSummaryDto.fromJson(response.data);
+        return WellbeingSummaryDto.fromJson(response.data['data']);
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -230,7 +231,7 @@ class HealthApiClient {
       );
 
       if (response.statusCode == 200) {
-        return WorkoutSummaryDto.fromJson(response.data);
+        return WorkoutSummaryDto.fromJson(response.data['data']);
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -310,7 +311,7 @@ class HealthApiClient {
     try {
       final response = await dio.delete('$baseUrl/gym/exercises/$exerciseId');
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 204) {
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,
@@ -433,106 +434,5 @@ class HealthApiClient {
     }
   }
 
-  Exception _handleError(dynamic error) {
-    if (error is DioException) {
-      switch (error.type) {
-        case DioExceptionType.connectionTimeout:
-        case DioExceptionType.sendTimeout:
-        case DioExceptionType.receiveTimeout:
-          return Exception('Connection timeout. Please try again.');
-        case DioExceptionType.badResponse:
-          final statusCode = error.response?.statusCode;
-          final responseData = error.response?.data;
-
-          // Handle specific status codes
-          if (statusCode == 401) {
-            return Exception('Unauthorized. Please login again.');
-          } else if (statusCode == 403) {
-            return Exception('Access forbidden.');
-          } else if (statusCode == 404) {
-            return Exception('Resource not found.');
-          } else if (statusCode == 422) {
-            // Validation error - extract message
-            if (responseData is Map) {
-              // Check for Laravel validation errors
-              if (responseData['errors'] != null &&
-                  responseData['errors'] is Map) {
-                final errors = responseData['errors'] as Map;
-                if (errors.isNotEmpty) {
-                  final firstError = errors.values.first;
-                  if (firstError is List && firstError.isNotEmpty) {
-                    return Exception(firstError.first.toString());
-                  }
-                }
-              }
-              // Check for simple message
-              if (responseData['message'] != null) {
-                return Exception(responseData['message'].toString());
-              }
-            }
-            return Exception('Validation failed. Please check your input.');
-          } else if (statusCode! >= 500) {
-            // Extract server error message if available
-            if (responseData is Map && responseData['message'] != null) {
-              return Exception(
-                'Server Error ($statusCode): ${responseData['message']}',
-              );
-            }
-            return Exception(
-              'Server error ($statusCode). Please try again later.',
-            );
-          }
-
-          // For other errors, try to extract message
-          if (responseData is Map && responseData['message'] != null) {
-            return Exception(responseData['message'].toString());
-          }
-          return Exception('Request failed with status $statusCode');
-        case DioExceptionType.cancel:
-          return Exception('Request cancelled.');
-        case DioExceptionType.connectionError:
-          return Exception(
-            'No internet connection. Please check your connection.',
-          );
-        case DioExceptionType.badCertificate:
-          return Exception('Certificate error.');
-        case DioExceptionType.unknown:
-          // Check if there's a response with more details
-          if (error.response != null) {
-            final statusCode = error.response?.statusCode;
-            final responseData = error.response?.data;
-            if (responseData is Map && responseData['message'] != null) {
-              if (statusCode != null && statusCode >= 500) {
-                return Exception(
-                  'Server Error ($statusCode): ${responseData['message']}',
-                );
-              }
-              return Exception(responseData['message'].toString());
-            }
-            if (statusCode != null) {
-              return Exception('Request failed with status $statusCode');
-            }
-          }
-          // Check if there's an underlying error message
-          if (error.error != null) {
-            final errorMsg = error.error.toString();
-            // Provide more context for common network errors
-            if (errorMsg.contains('SocketException') ||
-                errorMsg.contains('Connection refused')) {
-              return Exception(
-                'Cannot connect to server. Please check if the server is running and the URL is correct.',
-              );
-            }
-            if (errorMsg.contains('Failed host lookup')) {
-              return Exception(
-                'Cannot resolve server address. Please check your internet connection.',
-              );
-            }
-            return Exception('Network error: ${error.error}');
-          }
-          return Exception('An unexpected error occurred. Please try again.');
-      }
-    }
-    return Exception('An unexpected error occurred: $error');
-  }
+  Exception _handleError(Object error) => ApiException.from(error);
 }

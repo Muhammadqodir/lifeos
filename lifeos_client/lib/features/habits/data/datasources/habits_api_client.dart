@@ -158,7 +158,7 @@ class HabitsApiClient {
     try {
       final response = await dio.delete('$baseUrl/habits/$habitId');
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 204) {
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,
@@ -181,7 +181,7 @@ class HabitsApiClient {
       );
 
       if (response.statusCode == 200) {
-        return HabitStatsDto.fromJson(response.data);
+        return HabitStatsDto.fromJson(response.data['data']);
       } else {
         throw DioException(
           requestOptions: response.requestOptions,
@@ -287,7 +287,7 @@ class HabitsApiClient {
     try {
       final response = await dio.delete('$baseUrl/habit-entries/$entryId');
 
-      if (response.statusCode != 200) {
+      if (response.statusCode != 200 && response.statusCode != 204) {
         throw DioException(
           requestOptions: response.requestOptions,
           response: response,
@@ -309,7 +309,7 @@ class HabitsApiClient {
       );
 
       if (response.statusCode == 200) {
-        return response.data as Map<String, dynamic>;
+        return response.data['data'] as Map<String, dynamic>;
       } else {
         throw DioException(
           requestOptions: response.requestOptions,

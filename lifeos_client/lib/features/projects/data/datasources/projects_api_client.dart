@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import '../../../../core/network/api_exception.dart';
 import '../models/project_dto.dart';
 import '../models/todo_dto.dart';
 import '../models/create_todo_dto.dart';
@@ -136,28 +137,7 @@ class ProjectsApiClient {
 
       return TodoDto.fromJson(data as Map<String, dynamic>);
     } on DioException catch (e) {
-      // Handle validation errors (422)
-      if (e.response?.statusCode == 422) {
-        final errors = e.response?.data['errors'] as Map<String, dynamic>?;
-        if (errors != null) {
-          // Combine all error messages
-          final errorMessages = errors.values
-              .expand((error) => error as List)
-              .join('\n');
-          throw Exception(errorMessages);
-        }
-        throw Exception(e.response?.data['message'] ?? 'Validation failed');
-      }
-
-      // Handle other HTTP errors
-      if (e.response?.data != null && e.response?.data is Map) {
-        final message = e.response?.data['message'];
-        if (message != null) {
-          throw Exception(message);
-        }
-      }
-
-      throw Exception(e.message ?? 'Failed to create todo');
+      throw ApiException.from(e);
     }
   }
 
