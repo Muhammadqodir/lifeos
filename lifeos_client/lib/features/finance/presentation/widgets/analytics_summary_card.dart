@@ -1,7 +1,13 @@
-import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import '../../data/models/analytics_summary_dto.dart';
 
+import '../../../../core/extension/extensions.dart';
+import '../../../../core/ui/ui.dart';
+import '../../data/models/analytics_summary_dto.dart';
+import '../providers/amount_visibility_provider.dart';
+
+/// Income, expenses and net for the selected period.
 class AnalyticsSummaryCard extends StatelessWidget {
   final AnalyticsSummaryDto analytics;
 
@@ -9,80 +15,35 @@ class AnalyticsSummaryCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final semantic = context.semantic;
+    final visible =
+        context.watch<AmountVisibilityProvider?>()?.isVisible ?? true;
+    String money(double value) => visible
+        ? '${value.toMoneyFormat()} ${analytics.currencyIcon}'
+        : '•••• ${analytics.currencyIcon}';
 
-    return Card(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Text(
-            'Summary',
-            style: theme.typography.small.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text('Total Income', style: theme.typography.xSmall),
-                    const SizedBox(height: 4),
-                    MoneyText(
-                      amount: analytics.totalIncome,
-                      currencyCode: analytics.currencyIcon,
-                      color: Colors.green.shade600,
-                    ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Text('Total Expense', style: theme.typography.xSmall),
-                    const SizedBox(height: 4),
-                    MoneyText(
-                      amount: analytics.totalExpense,
-                      currencyCode: analytics.currencyIcon,
-                      alignment: MainAxisAlignment.end,
-                      color: Colors.red.shade600,
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: colorScheme.muted,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  'Net Amount',
-                  style: theme.typography.small.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                MoneyText(
-                  amount: analytics.netAmount,
-                  currencyCode: analytics.currencyIcon,
-                  color: analytics.netAmount < 0
-                      ? Colors.red.shade600
-                      : Colors.green.shade600,
-                ),
-              ],
-            ),
-          ),
-        ],
-      ),
+    return StatGrid(
+      minTileWidth: 150,
+      children: [
+        StatTile(
+          label: 'Income',
+          value: money(analytics.totalIncome),
+          icon: HugeIcons.strokeRoundedArrowDownLeft01,
+          color: semantic.success,
+        ),
+        StatTile(
+          label: 'Expenses',
+          value: money(analytics.totalExpense.abs()),
+          icon: HugeIcons.strokeRoundedArrowUpRight01,
+          color: semantic.danger,
+        ),
+        StatTile(
+          label: 'Net',
+          value: money(analytics.netAmount),
+          icon: HugeIcons.strokeRoundedBalanceScale,
+          color: semantic.amount(analytics.netAmount),
+        ),
+      ],
     );
   }
 }

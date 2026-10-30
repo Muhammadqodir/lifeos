@@ -84,7 +84,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
       child: Scaffold(
         child: Column(
           children: [
-            AppHeader(title: 'Security'),
+            AppHeader(title: 'Passcode and Face ID'),
             Expanded(
               child: BlocBuilder<SecurityBloc, SecurityState>(
                 builder: (context, state) {
@@ -123,7 +123,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                         ),
                         if (!hasPasscode)
                           ActionListItem(
-                            title: 'Set Passcode',
+                            title: 'Set passcode',
                             description:
                                 'Secure your app with a 6-digit passcode',
                             onTap: _navigateToSetPasscode,

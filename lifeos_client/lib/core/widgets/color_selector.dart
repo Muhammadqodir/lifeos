@@ -1,6 +1,8 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../theme/app_colors.dart';
+import '../ui/components/app_pressable.dart';
+import '../ui/tokens.dart';
 
 class ColorSelector extends StatefulWidget {
   final String initialColor;
@@ -50,26 +52,43 @@ class _ColorSelectorState extends State<ColorSelector> {
               final isSelected = selectedColor == hexColor;
               final displayColor = Color(int.parse('0xFF$hexColor'));
 
-              return GestureDetector(
+              return AppPressable(
                 onTap: () => _selectColor(hexColor),
-                child: Container(
+                highlight: false,
+                borderRadius: theme.controlRadius,
+                semanticLabel: isSelected ? 'Selected colour' : 'Colour',
+                child: AnimatedContainer(
+                  duration: AppDurations.fast,
                   width: 32,
                   height: 32,
+                  padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
-                    color: displayColor,
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: colorScheme.border, width: 1),
+                    borderRadius: theme.controlRadius,
+                    border: Border.all(
+                      color: isSelected
+                          ? colorScheme.foreground
+                          : colorScheme.foreground.withValues(alpha: 0),
+                      width: 2,
+                    ),
                   ),
-                  child: isSelected
-                      ? Center(
-                          child: HugeIcon(
-                            icon: HugeIcons.strokeRoundedCircle,
-                            size: 18,
-                            strokeWidth: 4,
-                            color: _getContrastColor(displayColor),
-                          ),
-                        )
-                      : null,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: displayColor,
+                      borderRadius: BorderRadius.circular(
+                        theme.radiusLg - 3,
+                      ),
+                    ),
+                    child: isSelected
+                        ? Center(
+                            child: HugeIcon(
+                              icon: HugeIcons.strokeRoundedTick02,
+                              size: 16,
+                              strokeWidth: 2.5,
+                              color: _getContrastColor(displayColor),
+                            ),
+                          )
+                        : null,
+                  ),
                 ),
               );
             }),

@@ -2,6 +2,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/extension/extensions.dart';
 import 'package:lifeos_client/features/finance/data/datasources/constants.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 import '../../data/models/wallet_dto.dart';
 
@@ -86,10 +87,7 @@ class _WalletSelectorState extends State<WalletSelector> {
                   ),
                   Text(
                     wallet.currency.code,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: colorScheme.mutedForeground,
-                    ),
+                    style: context.text.caption,
                   ),
                 ],
               );
@@ -122,20 +120,14 @@ class _WalletSelectorState extends State<WalletSelector> {
                               Text(wallet.name),
                               Text(
                                 '${wallet.currency.icon} ${wallet.balance.toMoneyFormat()}',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  color: colorScheme.mutedForeground,
-                                ),
+                                style: context.text.caption,
                               ),
                             ],
                           ),
                         ),
                         Text(
                           wallet.currency.code,
-                          style: TextStyle(
-                            fontSize: 12,
-                            color: colorScheme.mutedForeground,
-                          ),
+                          style: context.text.caption,
                         ),
                       ],
                     ),

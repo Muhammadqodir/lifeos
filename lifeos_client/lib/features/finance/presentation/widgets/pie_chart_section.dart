@@ -1,5 +1,9 @@
 import 'package:hugeicons/hugeicons.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
+import 'package:lifeos_client/core/utils/color_utils.dart';
+import 'package:lifeos_client/features/finance/presentation/providers/amount_visibility_provider.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
+import 'package:provider/provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:fl_chart/fl_chart.dart';
 import '../../data/models/category_summary_dto.dart';
@@ -27,106 +31,98 @@ class _PieChartSectionState extends State<PieChartSection> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     if (widget.categories.isEmpty) {
-      return Card(
+      return AppCard(
         child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Row(
-              children: [
-                Text(
-                  widget.title,
-                  style: theme.typography.small.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
+            CardHeader(title: widget.title),
+            const EmptyState(
+              padding: EdgeInsets.symmetric(vertical: AppSpacing.lg),
+              icon: HugeIcon(icon: HugeIcons.strokeRoundedPieChart),
+              title: 'No data',
+              description: 'No transactions in this period.',
             ),
-
-            const SizedBox(height: 40),
-            Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  HugeIcon(
-                    icon: HugeIcons.strokeRoundedPieChart,
-                    size: 48,
-                    color: theme.colorScheme.mutedForeground.withOpacity(0.3),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    'No data',
-                    style: theme.typography.small.copyWith(
-                      color: theme.colorScheme.mutedForeground,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'No transactions in this period',
-                    style: theme.typography.xSmall.copyWith(
-                      color: theme.colorScheme.mutedForeground.withOpacity(0.7),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 40),
           ],
         ),
       );
     }
 
     final sorted = _sortedCategories();
+    final sum = sorted.fold<double>(0, (a, b) => a + b.totalAmount.abs());
+    final visible =
+        context.watch<AmountVisibilityProvider?>()?.isVisible ?? true;
 
-    return Card(
+    final legend = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (var i = 0; i < sorted.length; i++)
+          AppListTile(
+            leading: LeadingTile.emoji(
+              sorted[i].categoryIcon,
+              color: parseHexColor(sorted[i].categoryColor),
+              size: 32,
+            ),
+            title: sorted[i].categoryTitle,
+            subtitle:
+                '${(sum == 0 ? 0 : sorted[i].totalAmount.abs() / sum * 100).toStringAsFixed(1)}% · '
+                '${sorted[i].transactionCount} ${sorted[i].transactionCount == 1 ? 'transaction' : 'transactions'}',
+            trailing: MoneyText(
+              amount: sorted[i].totalAmount,
+              currencyCode: widget.currencyIcon,
+              size: MoneyTextSize.small,
+              isVisible: visible,
+            ),
+            selected: selectedIndexSorted == i,
+            borderRadius: context.theme.controlRadius,
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppSpacing.sm,
+              vertical: AppSpacing.xs,
+            ),
+            onTap: () => setState(
+              () => selectedIndexSorted = selectedIndexSorted == i ? null : i,
+            ),
+          ),
+      ],
+    );
+
+    final chart = SizedBox(
+      height: 220,
+      child: Center(child: _buildSimplePieChart(context, sorted)),
+    );
+
+    return AppCard(
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            widget.title,
-            style: theme.typography.small.copyWith(fontWeight: FontWeight.w600),
+          CardHeader(
+            title: widget.title,
+            subtitle:
+                '${sorted.length} ${sorted.length == 1 ? 'category' : 'categories'}',
           ),
-          const SizedBox(height: 24),
-          // Pie Chart Visualization
-          SizedBox(
-            height: 200,
-            child: Center(child: _buildSimplePieChart(context, sorted)),
+          LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 620) {
+                // Chart beside its legend on iPad / Mac.
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(width: 260, child: chart),
+                    const SizedBox(width: AppSpacing.lg),
+                    Expanded(child: legend),
+                  ],
+                );
+              }
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  chart,
+                  const SizedBox(height: AppSpacing.lg),
+                  legend,
+                ],
+              );
+            },
           ),
-          const SizedBox(height: 24),
-
-          // Legend
-          Text(
-            'By categories',
-            style: theme.typography.small.copyWith(fontWeight: FontWeight.w600),
-          ),
-          const SizedBox(height: 12),
-          ...sorted.asMap().entries.map((entry) {
-            final index = entry.key;
-            final category = entry.value;
-            final percentage =
-                (category.totalAmount.abs() /
-                sorted.fold<double>(0, (a, b) => a + b.totalAmount.abs()) *
-                100);
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _CategoryLegendItem(
-                category: category,
-                percentage: percentage,
-                currencyIcon: widget.currencyIcon,
-                isSelected: selectedIndexSorted == index,
-                onTap: () {
-                  setState(() {
-                    selectedIndexSorted = selectedIndexSorted == index
-                        ? null
-                        : index;
-                  });
-                },
-              ),
-            );
-          }),
         ],
       ),
     );
@@ -147,14 +143,10 @@ class _PieChartSectionState extends State<PieChartSection> {
         final theme = Theme.of(context);
         final values = sorted.map((c) => c.totalAmount.abs()).toList();
         final sum = values.fold<double>(0, (a, b) => a + b);
-        Color parseHex(String hex) {
-          final clean = hex.replaceFirst('#', '');
-          return Color(int.parse('0xFF$clean'));
-        }
 
         List<PieChartSectionData> sections = List.generate(sorted.length, (i) {
           final value = values[i];
-          final color = parseHex(sorted[i].categoryColor);
+          final color = parseHexColor(sorted[i].categoryColor);
           final category = sorted[i];
           final percent = sum > 0 ? (value / sum * 100) : 0.0;
           final isSelected = selectedIndexSorted == i;
@@ -203,94 +195,15 @@ class _PieChartSectionState extends State<PieChartSection> {
                   currencyCode: widget.currencyIcon,
                   size: MoneyTextSize.large,
                   alignment: MainAxisAlignment.center,
+                  isVisible:
+                      context.watch<AmountVisibilityProvider?>()?.isVisible ??
+                      true,
                 ),
               ],
             ),
           ],
         );
       },
-    );
-  }
-}
-
-class _CategoryLegendItem extends StatelessWidget {
-  final CategorySummaryDto category;
-  final double percentage;
-  final String currencyIcon;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  const _CategoryLegendItem({
-    required this.category,
-    required this.percentage,
-    required this.currencyIcon,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(8),
-          border: isSelected
-              ? Border.all(
-                  color: theme.colorScheme.primary.withOpacity(0.3),
-                  width: 2,
-                )
-              : Border.all(
-                  color: theme.colorScheme.primary.withOpacity(0.0),
-                  width: 2,
-                ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 20,
-              height: 20,
-              decoration: BoxDecoration(
-                color: Color(
-                  int.parse(
-                    '0xFF${category.categoryColor.replaceFirst('#', '')}',
-                  ),
-                ),
-                borderRadius: BorderRadius.circular(4),
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    category.categoryIcon + category.categoryTitle,
-                    style: theme.typography.small.copyWith(
-                      fontWeight: isSelected
-                          ? FontWeight.w600
-                          : FontWeight.normal,
-                    ),
-                  ),
-                  Text(
-                    '${percentage.toStringAsFixed(1)}% • ${category.transactionCount}',
-                    style: theme.typography.xSmall,
-                  ),
-                ],
-              ),
-            ),
-            MoneyText(
-              amount: category.totalAmount,
-              currencyCode: currencyIcon,
-              size: MoneyTextSize.small,
-            ),
-          ],
-        ),
-      ),
     );
   }
 }

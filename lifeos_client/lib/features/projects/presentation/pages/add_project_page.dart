@@ -83,7 +83,7 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
         }
       },
       child: Scaffold(
-        headers: [AppHeader(title: 'Add Project')],
+        headers: [AppHeader(title: 'New project')],
         child: BlocBuilder<AddProjectBloc, AddProjectState>(
           builder: (context, state) {
             final isSubmitting = state is AddProjectSubmitting;

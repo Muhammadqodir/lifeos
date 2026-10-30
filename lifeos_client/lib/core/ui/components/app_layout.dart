@@ -157,3 +157,64 @@ class FormSubmitButton extends StatelessWidget {
     );
   }
 }
+
+/// Layout for short entry tasks shown with `BottomSheetModal.openSheet`
+/// (a sheet on iPhone, a dialog on iPad/Mac): title, optional description,
+/// fields and a full-width submit button.
+class FormSheet extends StatelessWidget {
+  const FormSheet({
+    super.key,
+    required this.title,
+    required this.children,
+    this.description,
+    this.leading,
+    this.submit,
+  });
+
+  final String title;
+  final String? description;
+
+  /// Visual next to the title (a live preview, an icon).
+  final Widget? leading;
+  final List<Widget> children;
+  final Widget? submit;
+
+  @override
+  Widget build(BuildContext context) {
+    final text = context.text;
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.symmetric(horizontal: AppSpacing.xl),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            children: [
+              if (leading != null) ...[
+                leading!,
+                const SizedBox(width: AppSpacing.md),
+              ],
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(title, style: text.sectionTitle),
+                    if (description != null)
+                      Text(description!, style: text.itemSubtitle),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppSpacing.xl),
+          ...children,
+          if (submit != null) ...[
+            const SizedBox(height: AppSpacing.sm),
+            submit!,
+          ],
+        ],
+      ),
+    );
+  }
+}

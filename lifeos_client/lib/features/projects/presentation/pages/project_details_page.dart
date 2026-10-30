@@ -141,7 +141,12 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                     ),
                   ],
                   bottom: Padding(
-                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    padding: const EdgeInsets.fromLTRB(
+                      AppSpacing.page,
+                      0,
+                      AppSpacing.page,
+                      AppSpacing.md,
+                    ),
                     child: SelectableGroup<int>(
                       scrollable: true,
                       value: _selectedTabIndex,

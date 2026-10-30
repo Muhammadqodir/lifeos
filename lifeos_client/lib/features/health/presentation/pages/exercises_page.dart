@@ -40,7 +40,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
       headers: [
         AppHeader(
           showBorder: false,
-          title: 'My Exercises',
+          title: 'Exercises',
           actions: [
             HeaderAction(
               icon: HugeIcons.strokeRoundedAdd01,

@@ -1,3 +1,5 @@
+import 'package:lifeos_client/core/ui/ui.dart';
+import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 enum FeeType {
@@ -79,110 +81,66 @@ class _FeeSelectorState extends State<FeeSelector> {
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          'Transfer Fee (optional)',
-          style: theme.typography.small.copyWith(
-            fontWeight: FontWeight.w500,
-            color: colorScheme.foreground,
-          ),
-        ),
-        const SizedBox(height: 8),
-        ButtonGroup(
-          children: [
-            _buildFeeButton(FeeType.none),
-            _buildFeeButton(FeeType.halfPercent),
-            _buildFeeButton(FeeType.onePercent),
-            Expanded(
-              child: Row(
-                children: [
-                  Expanded(
-                    child: TextField(
-                      features: [
-                        InputFeature.trailing(
-                          Padding(
-                            padding: const EdgeInsets.only(left: 4),
-                            child: Text(
-                              '%',
-                              style: theme.typography.small.copyWith(
-                                color: colorScheme.mutedForeground,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                      controller: _customController,
-                      placeholder: const Text('0.00'),
-                      keyboardType: const TextInputType.numberWithOptions(
-                        decimal: true,
-                      ),
-                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                      onChanged: (value) {
-                        widget.onCustomFeeChanged(value);
-                        _updateFeeTypeFromValue(value);
-                      },
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
+  void _applyPreset(FeeType type) {
+    final percentage = type.percentage;
+    if (percentage == null) return;
+    final valueString = percentage == 0 ? '' : percentage.toString();
+    _customController.text = valueString;
+    widget.onCustomFeeChanged(valueString);
+    _updateFeeTypeFromValue(valueString);
   }
 
-  Widget _buildFeeButton(FeeType type) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    // Check if input value matches this button's percentage
+  @override
+  Widget build(BuildContext context) {
     final inputValue = double.tryParse(widget.customFeeValue) ?? 0;
-    final buttonValue = type.percentage;
-    final isSelected = inputValue == buttonValue;
+    final presets = [FeeType.none, FeeType.halfPercent, FeeType.onePercent];
+    final selected = presets
+        .where((t) => t.percentage == inputValue)
+        .firstOrNull;
 
-    return GestureDetector(
-      onTap: () {
-        // Auto-fill input with button's percentage value
-        final percentage = type.percentage;
-        if (percentage != null) {
-          final valueString = percentage == 0 ? '' : percentage.toString();
-          _customController.text = valueString;
-          widget.onCustomFeeChanged(valueString);
-          _updateFeeTypeFromValue(valueString);
-        }
-      },
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          border: Border.all(
-            color: isSelected ? colorScheme.primary : colorScheme.border,
+    return AppFormField(
+      label: 'Transfer fee',
+      optional: true,
+      hint: 'Deducted from the source wallet.',
+      child: Row(
+        children: [
+          Expanded(
+            flex: 3,
+            child: SelectableGroup<FeeType?>(
+              // null = a custom value that matches no preset
+              value: selected,
+              allowEmpty: true,
+              options: [
+                for (final type in presets)
+                  SelectableGroupOption(value: type, widget: Text(type.label)),
+              ],
+              onChanged: (type) {
+                if (type != null) _applyPreset(type);
+              },
+            ),
           ),
-          color: isSelected ? colorScheme.primary : colorScheme.muted,
-          borderRadius: type != FeeType.none
-              ? BorderRadius.zero
-              : BorderRadius.only(
-                  topLeft: Radius.circular(12),
-                  bottomLeft: Radius.circular(12),
+          const SizedBox(width: AppSpacing.sm),
+          Expanded(
+            flex: 2,
+            child: TextField(
+              controller: _customController,
+              placeholder: const Text('Custom'),
+              keyboardType: const TextInputType.numberWithOptions(
+                decimal: true,
+              ),
+              features: [
+                InputFeature.trailing(
+                  Text('%', style: context.text.itemSubtitle),
                 ),
-        ),
-        child: Text(
-          type.label,
-          style: theme.typography.small.copyWith(
-            fontWeight: FontWeight.w500,
-            color: isSelected
-                ? colorScheme.primaryForeground
-                : colorScheme.foreground,
+              ],
+              onSubmitted: (_) => FocusScope.of(context).unfocus(),
+              onChanged: (value) {
+                widget.onCustomFeeChanged(value);
+                _updateFeeTypeFromValue(value);
+              },
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

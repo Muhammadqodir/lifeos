@@ -3,6 +3,8 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/widgets/color_selector.dart';
 import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
+import 'package:lifeos_client/core/utils/color_utils.dart';
 import '../bloc/finance_settings_bloc.dart';
 import '../bloc/finance_settings_event.dart';
 
@@ -27,152 +29,90 @@ class _AddCategorySheetState extends State<AddCategorySheet> {
     super.dispose();
   }
 
+  void _submit() {
+    if (nameController.text.trim().isEmpty) {
+      AppToast.error(context, 'Check the form', message: 'Enter a category name.');
+      return;
+    }
+    Navigator.of(context).pop();
+    widget.bloc.add(
+      FinanceSettingsAddCategory(
+        title: nameController.text.trim(),
+        type: selectedType,
+        icon: selectedIcon,
+        color: selectedColor,
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return SingleChildScrollView(
-      physics: const AlwaysScrollableScrollPhysics(
-        parent: BouncingScrollPhysics(),
+    return FormSheet(
+      title: 'New category',
+      description: 'Group transactions so analytics stay meaningful.',
+      leading: LeadingTile.emoji(
+        selectedIcon.isEmpty ? '📦' : selectedIcon,
+        color: parseHexColor(selectedColor),
+        size: 44,
       ),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'Add Category',
-              style: theme.typography.large.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.foreground,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Category Name:',
-              style: theme.typography.small.copyWith(
-                color: colorScheme.foreground,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              controller: nameController,
-              placeholder: const Text('Category name'),
-              onSubmitted: (_) => FocusScope.of(context).unfocus(),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Type:',
-              style: theme.typography.small.copyWith(
-                color: colorScheme.foreground,
-              ),
-            ),
-            const SizedBox(height: 8),
-            SelectableGroup<String>(
-              initialValue: selectedType,
-              options: [
-                SelectableGroupOption(
-                  value: 'expense',
-                  widget: Row(
-                    children: [
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowDown01,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Expense',
-                        style: theme.typography.small
-                      ),
-                    ],
-                  ),
-                ),
-                SelectableGroupOption(
-                  value: 'income',
-                  widget: Row(
-                    children: [
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedArrowUp01,
-                        size: 18,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Income',
-                        style: theme.typography.small
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-              onChanged: (value) {
-                setState(() {
-                  selectedType = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Icon (emoji):',
-              style: theme.typography.small.copyWith(
-                color: colorScheme.foreground,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextField(
-              initialValue: selectedIcon,
-              maxLength: 1,
-              onSubmitted: (_) => FocusScope.of(context).unfocus(),
-              placeholder: const Text('Enter emoji'),
-              onChanged: (value) {
-                setState(() {
-                  selectedIcon = value;
-                });
-              },
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Color:',
-              style: theme.typography.small.copyWith(
-                color: colorScheme.foreground,
-              ),
-            ),
-            const SizedBox(height: 8),
-            ColorSelector(
-              initialColor: selectedColor,
-              onChanged: (value) {
-                setState(() {
-                  selectedColor = value;
-                });
-              },
-            ),
-            const SizedBox(height: 24),
-            SizedBox(
-              width: double.infinity,
-              child: PrimaryButton(
-                onPressed: () {
-                  if (nameController.text.isNotEmpty) {
-                    Navigator.of(context).pop();
-                    widget.bloc.add(
-                      FinanceSettingsAddCategory(
-                        title: nameController.text,
-                        type: selectedType,
-                        icon: selectedIcon,
-                        color: selectedColor,
-                      ),
-                    );
-                  }
-                },
-                child: Text(
-                  'Add',
-                  style: theme.typography.small,
-                ),
-              ),
-            ),
-          ],
+      submit: FormSubmitButton(label: 'Create category', onPressed: _submit),
+      children: [
+        AppFormField(
+          label: 'Name',
+          child: TextField(
+            controller: nameController,
+            placeholder: const Text('Groceries'),
+            onSubmitted: (_) => _submit(),
+          ),
         ),
-      ),
+        AppFormField(
+          label: 'Type',
+          child: SelectableGroup<String>(
+            initialValue: selectedType,
+            options: const [
+              SelectableGroupOption(
+                value: 'expense',
+                widget: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    HugeIcon(icon: HugeIcons.strokeRoundedArrowUpRight01),
+                    SizedBox(width: AppSpacing.xs + 2),
+                    Text('Expense'),
+                  ],
+                ),
+              ),
+              SelectableGroupOption(
+                value: 'income',
+                widget: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    HugeIcon(icon: HugeIcons.strokeRoundedArrowDownLeft01),
+                    SizedBox(width: AppSpacing.xs + 2),
+                    Text('Income'),
+                  ],
+                ),
+              ),
+            ],
+            onChanged: (value) => setState(() => selectedType = value),
+          ),
+        ),
+        AppFormField(
+          label: 'Emoji',
+          child: TextField(
+            initialValue: selectedIcon,
+            maxLength: 2,
+            placeholder: const Text('🛒'),
+            onChanged: (value) => setState(() => selectedIcon = value),
+          ),
+        ),
+        AppFormField(
+          label: 'Colour',
+          child: ColorSelector(
+            initialColor: selectedColor,
+            onChanged: (value) => setState(() => selectedColor = value),
+          ),
+        ),
+      ],
     );
   }
 }

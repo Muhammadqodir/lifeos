@@ -92,7 +92,7 @@ class _SetPasscodePageState extends State<SetPasscodePage> {
       child: Scaffold(
         child: Column(
           children: [
-            AppHeader(title: 'Set Passcode'),
+            AppHeader(title: 'Set passcode'),
             Expanded(
               child: SafeArea(
                 top: false,

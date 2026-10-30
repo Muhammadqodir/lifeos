@@ -30,9 +30,6 @@ class _FinanceSettingsPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
     return BlocListener<FinanceSettingsBloc, FinanceSettingsState>(
       listener: (context, state) {
         if (state is FinanceSettingsOperationSuccess) {
@@ -46,7 +43,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
         }
       },
       child: Scaffold(
-        headers: [AppHeader(title: 'Finance Settings')],
+        headers: [AppHeader(title: 'Finance settings')],
         child: BlocBuilder<FinanceSettingsBloc, FinanceSettingsState>(
           builder: (context, state) {
             if (state is FinanceSettingsLoading) {
@@ -54,44 +51,11 @@ class _FinanceSettingsPageContent extends StatelessWidget {
             }
 
             if (state is FinanceSettingsError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedAlert02,
-                      size: 48,
-                      color: colorScheme.destructive,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load settings',
-                      style: theme.typography.normal.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        state.message,
-                        style: theme.typography.small.copyWith(
-                          color: colorScheme.mutedForeground,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    PrimaryButton(
-                      onPressed: () {
-                        context.read<FinanceSettingsBloc>().add(
-                          const FinanceSettingsLoadData(),
-                        );
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
+              return ErrorState(
+                title: "Couldn't load settings",
+                message: state.message,
+                onRetry: () => context.read<FinanceSettingsBloc>().add(
+                  const FinanceSettingsLoadData(),
                 ),
               );
             }
@@ -103,7 +67,10 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                   : (state as FinanceSettingsOperationSuccess).previousState;
 
               return SingleChildScrollView(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppSpacing.page,
+                  vertical: AppSpacing.lg,
+                ),
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
@@ -112,9 +79,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       _buildDefaultCurrencySection(context, loadedState),
-                      const SizedBox(height: 12),
-                      _buildCategoriesSection(context, loadedState),
-                      const SizedBox(height: 24),
+                      ..._buildCategoriesSection(context, loadedState),
                     ],
                   ),
                 ),
@@ -132,215 +97,125 @@ class _FinanceSettingsPageContent extends StatelessWidget {
     BuildContext context,
     FinanceSettingsLoaded state,
   ) {
-    return SettingsSection(
-      title: 'Default Currency',
-      subTitle: 'Set your preferred currency',
-      icon: HugeIcon(icon: HugeIcons.strokeRoundedMoneyExchange02),
-      content: SizedBox(
-        width: double.infinity,
-        child: Select<int>(
-          value: state.defaultCurrencyId,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
-          itemBuilder: (context, item) {
-            final currency = state.userCurrencies.firstWhere(
-              (c) => c.id == item,
-            );
-            return Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // Text(currency.icon, style: Theme.of(context).typography.small),
-                // const SizedBox(width: 12),
-                Text(
-                  currency.name,
-                  style: Theme.of(
-                    context,
-                  ).typography.small.copyWith(fontWeight: FontWeight.w600),
-                ),
-              ],
-            );
-          },
-          onChanged: (value) {
-            if (value != null) {
-              context.read<FinanceSettingsBloc>().add(
-                FinanceSettingsUpdateDefaultCurrency(value),
-              );
-            }
-          },
-          popup: SelectPopup(
-            items: SelectItemList(
-              children: state.userCurrencies
-                  .map(
-                    (currency) => SelectItemButton<int>(
-                      value: currency.id,
-                      child: Row(
-                        children: [
-                          // Text(
-                          //   currency.icon,
-                          //   style: Theme.of(context).typography.base,
-                          // ),
-                          // const SizedBox(width: 16),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  currency.code,
-                                  style: Theme.of(context).typography.small
-                                      .copyWith(fontWeight: FontWeight.w600),
-                                ),
-                                Text(
-                                  currency.name,
-                                  style: Theme.of(context).typography.xSmall,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
+    return AppListSection(
+      title: 'Currency',
+      footer: 'Totals and analytics are converted to this currency.',
+      children: [
+        AppListTile(
+          leading: LeadingTile.icon(HugeIcons.strokeRoundedMoneyExchange02),
+          title: 'Default currency',
+          trailing: SizedBox(
+            width: 180,
+            child: Select<int>(
+              value: state.defaultCurrencyId,
+              itemBuilder: (context, item) {
+                final currency = state.userCurrencies.firstWhere(
+                  (c) => c.id == item,
+                );
+                return Text(
+                  '${currency.code} · ${currency.name}',
+                  overflow: TextOverflow.ellipsis,
+                );
+              },
+              onChanged: (value) {
+                if (value != null) {
+                  context.read<FinanceSettingsBloc>().add(
+                    FinanceSettingsUpdateDefaultCurrency(value),
+                  );
+                }
+              },
+              popup: SelectPopup(
+                items: SelectItemList(
+                  children: [
+                    for (final currency in state.userCurrencies)
+                      SelectItemButton<int>(
+                        value: currency.id,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(currency.code, style: context.text.label),
+                            Text(currency.name, style: context.text.caption),
+                          ],
+                        ),
                       ),
-                    ),
-                  )
-                  .toList(),
+                  ],
+                ),
+              ).call,
             ),
-          ).call,
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  Widget _buildCategoriesSection(
+  List<Widget> _buildCategoriesSection(
     BuildContext context,
     FinanceSettingsLoaded state,
   ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    final expenseCategories = state.categories
-        .where((c) => c.type == TransactionCategoryType.expense)
-        .toList();
-    final incomeCategories = state.categories
-        .where((c) => c.type == TransactionCategoryType.income)
-        .toList();
-
-    return SettingsSection(
-      title: "Categories",
-      subTitle: "Organize your transactions",
-      icon: HugeIcon(
-        icon: HugeIcons.strokeRoundedFolderLibrary,
-        size: 32,
-        color: colorScheme.primary,
+    final groups = [
+      (
+        'Expense categories',
+        state.categories
+            .where((c) => c.type == TransactionCategoryType.expense)
+            .toList(),
       ),
-      trailing: IconButton.primary(
-        onPressed: () => _showAddCategoryDialog(context),
-        icon: HugeIcon(
-          icon: HugeIcons.strokeRoundedAdd01,
-          strokeWidth: 3,
-          size: 16,
-        ),
+      (
+        'Income categories',
+        state.categories
+            .where((c) => c.type == TransactionCategoryType.income)
+            .toList(),
       ),
-      content: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Text(
-            'Expense Categories',
-            style: theme.typography.xSmall.copyWith(
-              fontWeight: FontWeight.w600,
-              color: colorScheme.foreground,
+    ];
+
+    return [
+      for (final (title, categories) in groups)
+        AppListSection(
+          title: title,
+          count: categories.length,
+          headerTrailing: GhostButton(
+            size: ButtonSize.small,
+            density: ButtonDensity.compact,
+            leading: const HugeIcon(
+              icon: HugeIcons.strokeRoundedAdd01,
+              size: AppIconSize.sm,
+            ),
+            onPressed: () => _showAddCategoryDialog(context),
+            child: const Text('Add'),
+          ),
+          empty: Padding(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Text(
+              'No categories yet',
+              style: context.text.caption,
+              textAlign: TextAlign.center,
             ),
           ),
-          const SizedBox(height: 8),
-          _buildCategoryList(context, expenseCategories, state),
-
-          const SizedBox(height: 16),
-
-          // Income Categories
-          Text(
-            'Income Categories',
-            style: theme.typography.xSmall.copyWith(
-              fontWeight: FontWeight.w600,
-              color: colorScheme.foreground,
-            ),
-          ),
-          const SizedBox(height: 8),
-          _buildCategoryList(context, incomeCategories, state),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildCategoryList(
-    BuildContext context,
-    List<TransactionCategoryDto> categories,
-    FinanceSettingsLoaded state,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    if (categories.isEmpty) {
-      return Padding(
-        padding: const EdgeInsets.all(12),
-        child: Center(
-          child: Text(
-            'No categories added yet',
-            style: theme.typography.xSmall.copyWith(
-              color: colorScheme.mutedForeground,
-            ),
-          ),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: EdgeInsets.all(0),
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: categories.length,
-      separatorBuilder: (context, index) =>
-          Divider(height: 1, color: colorScheme.border),
-      itemBuilder: (context, index) {
-        final category = categories[index];
-        final isSystemCategory = category.userId == null;
-
-        return GestureDetector(
-          onTap: () {},
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 0, vertical: 12),
-            child: Row(
-              children: [
-                CategoryIcon(icon: category.icon, color: category.color),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    category.title,
-                    style: theme.typography.small.copyWith(
-                      color: colorScheme.foreground,
-                    ),
-                  ),
+          children: [
+            for (final category in categories)
+              AppListTile(
+                leading: CategoryIcon(
+                  icon: category.icon,
+                  color: category.color,
                 ),
-                isSystemCategory
-                    ? SecondaryBadge(
-                        child: Text(
-                          'System',
-                          style: theme.typography.xSmall.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      )
-                    : IconButton.ghost(
-                        icon: HugeIcon(
-                          icon: HugeIcons.strokeRoundedDelete02,
-                          size: 20,
-                          color: colorScheme.destructive,
-                        ),
-                        onPressed: () =>
-                            _confirmRemoveCategory(context, category),
-                      ),
-              ],
-            ),
-          ),
-        );
-      },
-    );
+                title: category.title,
+                trailing: category.userId == null
+                    ? const AppBadge.neutral(label: 'Built-in')
+                    : null,
+                actions: [
+                  if (category.userId != null)
+                    AppAction(
+                      label: 'Delete category',
+                      icon: HugeIcons.strokeRoundedDelete02,
+                      destructive: true,
+                      onSelected: () =>
+                          _confirmRemoveCategory(context, category),
+                    ),
+                ],
+              ),
+          ],
+        ),
+    ];
   }
 
   void _showAddCategoryDialog(BuildContext context) {
@@ -357,8 +232,9 @@ class _FinanceSettingsPageContent extends StatelessWidget {
     TransactionCategoryDto category,
   ) async {
     bool? confirmed = await Dialogs.showConfirmDialog(
-      title: 'Remove Category',
-      message: 'Are you sure you want to remove "${category.title}" category?',
+      title: 'Delete category?',
+      message:
+          '"${category.title}" will be removed. Existing transactions keep their history.',
       context: context,
       confirmLabel: 'Delete',
       destructive: true,
@@ -371,67 +247,5 @@ class _FinanceSettingsPageContent extends StatelessWidget {
         );
       }
     }
-  }
-}
-
-class SettingsSection extends StatelessWidget {
-  const SettingsSection({
-    super.key,
-    required this.title,
-    required this.subTitle,
-    required this.icon,
-    required this.content,
-    this.trailing,
-  });
-
-  final String title;
-  final String subTitle;
-  final HugeIcon icon;
-  final Widget content;
-  final Widget? trailing;
-
-  @override
-  Widget build(BuildContext context) {
-    return Card(
-      padding: EdgeInsets.all(12),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              HugeIcon(
-                icon: icon.icon,
-                size: 24,
-                color: Theme.of(context).colorScheme.primary,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      style: Theme.of(context).typography.small.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: Theme.of(context).colorScheme.foreground,
-                      ),
-                    ),
-                    Text(
-                      subTitle,
-                      style: Theme.of(context).typography.xSmall.copyWith(
-                        color: Theme.of(context).colorScheme.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (trailing != null) trailing!,
-            ],
-          ),
-          const SizedBox(height: 12),
-          content,
-        ],
-      ),
-    );
   }
 }

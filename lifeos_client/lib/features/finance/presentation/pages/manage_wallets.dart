@@ -69,7 +69,7 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
       child: Scaffold(
         headers: [
           AppHeader(
-            title: 'Manage Wallets',
+            title: 'Wallets',
             // actions: [
             //   HeaderAction(
             //     icon: HugeIcons.strokeRoundedAdd01,

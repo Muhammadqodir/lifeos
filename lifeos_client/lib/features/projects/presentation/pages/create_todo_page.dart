@@ -70,7 +70,7 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
             return Scaffold(
               headers: [
                 AppHeader(
-                  title: 'Create Todo',
+                  title: 'New todo',
                   actions: [
                     HeaderAction(
                       icon: HugeIcons.strokeRoundedCheckmarkCircle02,

@@ -66,7 +66,6 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
 
   @override
   Widget build(BuildContext context) {
-    final colorScheme = Theme.of(context).colorScheme;
     final outerContext = context;
 
     return BlocListener<AddWalletBloc, AddWalletState>(
@@ -84,7 +83,7 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
         }
       },
       child: Scaffold(
-        headers: [AppHeader(title: 'Add Wallet')],
+        headers: [AppHeader(title: 'New wallet')],
         child: BlocBuilder<AddWalletBloc, AddWalletState>(
           builder: (context, state) {
             if (state is AddWalletLoadingCurrencies) {
@@ -92,41 +91,11 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
             }
 
             if (state is AddWalletCurrenciesError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedAlert02,
-                      size: 48,
-                      color: colorScheme.destructive,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load currencies',
-                      style: Theme.of(context).typography.normal.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      state.message,
-                      style: Theme.of(context).typography.small.copyWith(
-                        color: colorScheme.mutedForeground,
-                      ),
-                      textAlign: TextAlign.center,
-                    ),
-                    const SizedBox(height: 24),
-                    PrimaryButton(
-                      onPressed: () {
-                        context.read<AddWalletBloc>().add(
-                          const AddWalletLoadCurrencies(),
-                        );
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
+              return ErrorState(
+                title: "Couldn't load currencies",
+                message: state.message,
+                onRetry: () => context.read<AddWalletBloc>().add(
+                  const AddWalletLoadCurrencies(),
                 ),
               );
             }
@@ -135,252 +104,133 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
             final isSubmitting = state is AddWalletSubmitting;
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
-              physics: AlwaysScrollableScrollPhysics(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.page,
+                vertical: AppSpacing.lg,
+              ),
+              physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              child: ContentWidth(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Wallet Name Field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Wallet Name',
-                        style: Theme.of(context).typography.small,
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
+              child: ContentWidth(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppFormField(
+                      label: 'Name',
+                      child: TextField(
                         initialValue: _walletName,
-                        placeholder: const Text('e.g., My Cash Wallet'),
+                        placeholder: const Text('Main card'),
                         onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                        onChanged: (value) {
-                          setState(() {
-                            _walletName = value;
-                          });
-                        },
+                        onChanged: (value) =>
+                            setState(() => _walletName = value),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Currency Selection
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Currency',
-                        style: Theme.of(context).typography.small,
-                      ),
-                      const SizedBox(height: 8),
-                      if (currencies.isEmpty)
-                        Container(
-                          padding: const EdgeInsets.all(12),
-                          decoration: BoxDecoration(
-                            color: colorScheme.muted,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                          child: Text(
-                            'No currencies available',
-                            style: Theme.of(context).typography.normal.copyWith(
-                              color: colorScheme.mutedForeground,
-                            ),
-                          ),
-                        )
-                      else
-                        SizedBox(
-                          width: double.infinity,
-                          child: Select<int>(
-                            placeholder: Text(
-                              "Select currency",
-                              style: Theme.of(context).typography.small
-                                  .copyWith(color: colorScheme.mutedForeground),
-                            ),
-                            value: _selectedCurrencyId,
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 10,
-                            ),
-                            itemBuilder: (context, item) {
-                              final currency = currencies.firstWhere(
-                                (c) => c.id == item,
-                              );
-                              return Row(
+                    ),
+                    AppFormField(
+                      label: 'Type',
+                      child: SelectableGroup<WalletType>(
+                        scrollable: true,
+                        initialValue: _selectedWalletType,
+                        options: [
+                          for (final type in WalletType.values)
+                            SelectableGroupOption(
+                              value: type,
+                              widget: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  // Text(currency.icon, style: Theme.of(context).typography.small),
-                                  // const SizedBox(width: 12),
-                                  Text(
-                                    currency.name,
-                                    style: Theme.of(context).typography.small
-                                        .copyWith(fontWeight: FontWeight.w600),
+                                  HugeIcon(
+                                    icon: FinanceConstants.getWalletTypeIcon(
+                                      type,
+                                    ),
+                                  ),
+                                  const SizedBox(width: AppSpacing.xs + 2),
+                                  Flexible(
+                                    child: Text(
+                                      FinanceConstants.getWalletTypeName(type),
+                                    ),
                                   ),
                                 ],
-                              );
-                            },
-                            onChanged: (value) {
-                              if (value != null) {
-                                setState(() {
-                                  _selectedCurrencyId = value;
-                                });
-                              }
-                            },
-                            popup: SelectPopup(
-                              items: SelectItemList(
-                                children: currencies
-                                    .map(
-                                      (currency) => SelectItemButton<int>(
+                              ),
+                            ),
+                        ],
+                        onChanged: (type) =>
+                            setState(() => _selectedWalletType = type),
+                      ),
+                    ),
+                    AppFormField(
+                      label: 'Currency',
+                      child: currencies.isEmpty
+                          ? Text(
+                              'No currencies available',
+                              style: context.text.itemSubtitle,
+                            )
+                          : Select<int>(
+                              placeholder: const Text('Choose currency'),
+                              value: _selectedCurrencyId,
+                              itemBuilder: (context, item) {
+                                final currency = currencies.firstWhere(
+                                  (c) => c.id == item,
+                                );
+                                return Text(
+                                  '${currency.code} · ${currency.name}',
+                                );
+                              },
+                              onChanged: (value) {
+                                if (value != null) {
+                                  setState(() => _selectedCurrencyId = value);
+                                }
+                              },
+                              popup: SelectPopup(
+                                items: SelectItemList(
+                                  children: [
+                                    for (final currency in currencies)
+                                      SelectItemButton<int>(
                                         value: currency.id,
-                                        child: Row(
+                                        child: Column(
+                                          crossAxisAlignment:
+                                              CrossAxisAlignment.start,
+                                          mainAxisSize: MainAxisSize.min,
                                           children: [
-                                            // Text(
-                                            //   currency.icon,
-                                            //   style: Theme.of(context).typography.base,
-                                            // ),
-                                            // const SizedBox(width: 16),
-                                            Expanded(
-                                              child: Column(
-                                                crossAxisAlignment:
-                                                    CrossAxisAlignment.start,
-                                                mainAxisSize: MainAxisSize.min,
-                                                children: [
-                                                  Text(
-                                                    currency.code,
-                                                    style: Theme.of(context)
-                                                        .typography
-                                                        .small
-                                                        .copyWith(
-                                                          fontWeight:
-                                                              FontWeight.w600,
-                                                        ),
-                                                  ),
-                                                  Text(
-                                                    currency.name,
-                                                    style: Theme.of(
-                                                      context,
-                                                    ).typography.xSmall,
-                                                  ),
-                                                ],
-                                              ),
+                                            Text(
+                                              currency.code,
+                                              style: context.text.label,
+                                            ),
+                                            Text(
+                                              currency.name,
+                                              style: context.text.caption,
                                             ),
                                           ],
                                         ),
                                       ),
-                                    )
-                                    .toList(),
-                              ),
-                            ).call,
+                                  ],
+                                ),
+                              ).call,
+                            ),
+                    ),
+                    AppListSection(
+                      margin: const EdgeInsets.only(bottom: AppSpacing.lg),
+                      dividerIndent: AppSpacing.md,
+                      children: [
+                        AppListTile(
+                          title: 'Active',
+                          subtitle: "Inactive wallets don't appear when adding transactions",
+                          onTap: () => setState(() => _isActive = !_isActive),
+                          trailing: Switch(
+                            value: _isActive,
+                            onChanged: (value) =>
+                                setState(() => _isActive = value),
                           ),
                         ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Wallet Type
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Wallet Type',
-                        style: Theme.of(context).typography.small,
-                      ),
-                      const SizedBox(height: 8),
-                      SelectableGroup(
-                        scrollable: true,
-                        initialValue: _selectedWalletType,
-                        options: WalletType.values.map((type) {
-                          return SelectableGroupOption(
-                            value: type,
-                            widget: Row(
-                              children: [
-                                HugeIcon(
-                                  icon: FinanceConstants.getWalletTypeIcon(
-                                    type,
-                                  ),
-                                  size: 18,
-                                ),
-                                const SizedBox(width: 4),
-                                Text(
-                                  FinanceConstants.getWalletTypeName(type),
-                                  style: Theme.of(context).typography.small,
-                                ),
-                              ],
-                            ),
-                          );
-                        }).toList(),
-                        onChanged: (WalletType v) {
-                          setState(() {
-                            _selectedWalletType = v;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Active Toggle
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Active',
-                              style: Theme.of(context).typography.small
-                                  .copyWith(fontWeight: FontWeight.w500),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Inactive wallets won\'t show in transactions',
-                              style: Theme.of(context).typography.small
-                                  .copyWith(color: colorScheme.mutedForeground),
-                            ),
-                          ],
-                        ),
-                      ),
-                      Checkbox(
-                        state: _isActive
-                            ? CheckboxState.checked
-                            : CheckboxState.unchecked,
-                        onChanged: (value) {
-                          setState(() {
-                            _isActive = value == CheckboxState.checked;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 24),
-
-                  // Submit Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: PrimaryButton(
-                      onPressed: !isSubmitting
-                          ? () => _handleFormSubmit(outerContext)
-                          : null,
-                      child: isSubmitting
-                          ? const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                SizedBox(width: 12),
-                                Text('Creating...'),
-                              ],
-                            )
-                          : const Text('Create Wallet'),
+                      ],
                     ),
-                  ),
-                ],
-              )),
+                    FormSubmitButton(
+                      label: 'Create wallet',
+                      loadingLabel: 'Creating…',
+                      loading: isSubmitting,
+                      onPressed: () => _handleFormSubmit(outerContext),
+                    ),
+                  ],
+                ),
+              ),
             );
           },
         ),

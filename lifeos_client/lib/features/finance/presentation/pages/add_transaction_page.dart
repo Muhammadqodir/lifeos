@@ -3,7 +3,6 @@
 import 'package:lifeos_client/features/finance/data/models/wallet_dto.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
 import '../../data/models/transaction_dto.dart';
 import '../bloc/add_transaction_bloc.dart';
@@ -35,8 +34,6 @@ class _AddTransactionPageContent extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final outerContext = context;
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
     return BlocListener<AddTransactionBloc, AddTransactionState>(
       listener: (context, state) {
@@ -53,52 +50,19 @@ class _AddTransactionPageContent extends StatelessWidget {
         }
       },
       child: Scaffold(
-        headers: [AppHeader(title: 'Add Transaction')],
+        headers: [AppHeader(title: 'New transaction')],
         child: BlocBuilder<AddTransactionBloc, AddTransactionState>(
           builder: (context, state) {
             if (state is AddTransactionLoadingData) {
-              return LoadingState(message: 'Loading...');
+              return LoadingState(message: 'Loading wallets…');
             }
 
             if (state is AddTransactionLoadError) {
-              return Center(
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedAlert02,
-                      size: 48,
-                      color: colorScheme.destructive,
-                    ),
-                    const SizedBox(height: 16),
-                    Text(
-                      'Failed to load data',
-                      style: Theme.of(context).typography.normal.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: colorScheme.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 32),
-                      child: Text(
-                        state.message,
-                        style: Theme.of(context).typography.small.copyWith(
-                          color: colorScheme.mutedForeground,
-                        ),
-                        textAlign: TextAlign.center,
-                      ),
-                    ),
-                    const SizedBox(height: 24),
-                    PrimaryButton(
-                      onPressed: () {
-                        context.read<AddTransactionBloc>().add(
-                          const AddTransactionLoadData(),
-                        );
-                      },
-                      child: const Text('Retry'),
-                    ),
-                  ],
+              return ErrorState(
+                title: "Couldn't load wallets and categories",
+                message: state.message,
+                onRetry: () => context.read<AddTransactionBloc>().add(
+                  const AddTransactionLoadData(),
                 ),
               );
             }
@@ -132,10 +96,7 @@ class _AddTransactionPageContent extends StatelessWidget {
     AddTransactionReady state, {
     required bool isSubmitting,
   }) {
-    DateTime _value = state.occurredAt;
-
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final occurredAt = state.occurredAt;
 
     return Column(
       children: [
@@ -157,12 +118,8 @@ class _AddTransactionPageContent extends StatelessWidget {
                     );
                   },
                 ),
-                const SizedBox(height: 20),
-
-                // Dynamic form based on transaction type
                 _buildTypeSpecificFields(context, state),
-
-                const SizedBox(height: 20),
+                const SizedBox(height: AppSpacing.lg),
 
                 // Category (only for income/expense)
                 if (state.type == TransactionType.income ||
@@ -178,105 +135,58 @@ class _AddTransactionPageContent extends StatelessWidget {
                       );
                     },
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: AppSpacing.lg),
                 ],
 
-                // Description
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Description (optional)',
-                      style: Theme.of(context).typography.small.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.foreground,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    TextField(
-                      initialValue: state.description,
-                      placeholder: const Text('Add a note...'),
-                      maxLines: 3,
-                      onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                      onChanged: (value) {
-                        context.read<AddTransactionBloc>().add(
-                          AddTransactionDescriptionChanged(value),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-
-                Text(
-                  'Date & Time',
-                  style: Theme.of(context).typography.small.copyWith(
-                    fontWeight: FontWeight.w500,
-                    color: colorScheme.foreground,
+                AppFormField(
+                  label: 'Note',
+                  optional: true,
+                  child: TextField(
+                    initialValue: state.description,
+                    placeholder: const Text('Dinner with friends'),
+                    maxLines: 3,
+                    onChanged: (value) {
+                      context.read<AddTransactionBloc>().add(
+                        AddTransactionDescriptionChanged(value),
+                      );
+                    },
                   ),
                 ),
-                const SizedBox(height: 8),
-                // Date/Time
-                DatePicker(
-                  value: _value,
-                  mode: PromptMode.dialog,
-                  // Title shown at the top of the dialog variant.
-                  dialogTitle: const Text('Select Date'),
-                  stateBuilder: (date) {
-                    if (date.isAfter(DateTime.now())) {
-                      return DateState.disabled;
+                AppFormField(
+                  label: 'Date',
+                  child: DatePicker(
+                    value: occurredAt,
+                    mode: PromptMode.dialog,
+                    dialogTitle: const Text('Transaction date'),
+                    stateBuilder: (date) => date.isAfter(DateTime.now())
+                        ? DateState.disabled
+                        : DateState.enabled,
+                    onChanged: (value) {
+                      context.read<AddTransactionBloc>().add(
+                        AddTransactionOccurredAtChanged(value!),
+                      );
+                    },
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                FormSubmitButton(
+                  label: 'Add transaction',
+                  loadingLabel: 'Saving…',
+                  loading: isSubmitting,
+                  onPressed: () {
+                    if (!state.isValid) {
+                      AppToast.error(
+                        context,
+                        'Check the form',
+                        message: _getValidationError(state),
+                      );
+                      return;
                     }
-                    return DateState.enabled;
-                  },
-                  onChanged: (value) {
                     context.read<AddTransactionBloc>().add(
-                      AddTransactionOccurredAtChanged(value!),
+                      const AddTransactionSubmitted(),
                     );
                   },
                 ),
-
-                const SizedBox(height: 24), // Space for bottom button
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 0),
-                  child: PrimaryButton(
-                    onPressed: isSubmitting
-                        ? null
-                        : () {
-                            // Check if form is valid
-                            if (!state.isValid) {
-                              // Show validation error
-                              String errorMessage = _getValidationError(state);
-                              AppToast.error(
-                                context,
-                                'Check the form',
-                                message: errorMessage,
-                              );
-                              return;
-                            }
-
-                            context.read<AddTransactionBloc>().add(
-                              const AddTransactionSubmitted(),
-                            );
-                          },
-                    child: isSubmitting
-                        ? const Row(
-                            mainAxisAlignment: MainAxisAlignment.center,
-                            children: [
-                              SizedBox(
-                                width: 16,
-                                height: 16,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2,
-                                ),
-                              ),
-                              SizedBox(width: 12),
-                              Text('Creating...'),
-                            ],
-                          )
-                        : const Text('Create Transaction'),
-                  ),
-                ),
-
                 const SizedBox(height: 24), // Space for bottom button
               ],
             )),
@@ -336,7 +246,7 @@ class _AddTransactionPageContent extends StatelessWidget {
         return Column(
           children: [
             WalletSelector(
-              label: 'From Wallet',
+              label: 'From',
               wallets: state.wallets,
               selectedWalletId: state.fromWalletId,
               onChanged: (walletId) {
@@ -346,11 +256,11 @@ class _AddTransactionPageContent extends StatelessWidget {
                   );
                 }
               },
-              placeholder: 'Select source wallet',
+              placeholder: 'Choose wallet',
             ),
             const SizedBox(height: 16),
             WalletSelector(
-              label: 'To Wallet',
+              label: 'To',
               wallets: state.wallets,
               selectedWalletId: state.toWalletId,
               onChanged: (walletId) {
@@ -360,7 +270,7 @@ class _AddTransactionPageContent extends StatelessWidget {
                   );
                 }
               },
-              placeholder: 'Select destination wallet',
+              placeholder: 'Choose wallet',
             ),
             const SizedBox(height: 16),
             Column(
@@ -392,10 +302,8 @@ class _AddTransactionPageContent extends StatelessWidget {
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Exchange Rate: ${_calculateExchangeRate(state, fromWallet, toWallet)}',
-                    style: Theme.of(context).typography.xSmall.copyWith(
-                      color: Theme.of(context).colorScheme.mutedForeground,
-                    ),
+                    'Rate: ${_calculateExchangeRate(state, fromWallet, toWallet)}',
+                    style: context.text.caption,
                   ),
                 ],
               ],
@@ -471,36 +379,36 @@ class _AddTransactionPageContent extends StatelessWidget {
       case TransactionType.income:
       case TransactionType.expense:
         if (state.walletId == null) {
-          return 'Please select a wallet';
+          return 'Choose a wallet.';
         }
         if (state.amount.isEmpty) {
-          return 'Please enter an amount';
+          return 'Enter an amount.';
         }
         if (double.tryParse(state.amount) == null ||
             double.parse(state.amount) <= 0) {
-          return 'Please enter a valid amount greater than 0';
+          return 'Enter an amount greater than 0.';
         }
         if (state.categoryId == null) {
-          return 'Please select a category';
+          return 'Choose a category.';
         }
         break;
 
       case TransactionType.transfer:
         if (state.fromWalletId == null) {
-          return 'Please select a source wallet';
+          return 'Choose the wallet to move money from.';
         }
         if (state.toWalletId == null) {
-          return 'Please select a destination wallet';
+          return 'Choose the wallet to move money to.';
         }
         if (state.fromWalletId == state.toWalletId) {
-          return 'Source and destination wallets must be different';
+          return 'Choose two different wallets.';
         }
         if (state.amount.isEmpty) {
-          return 'Please enter an amount';
+          return 'Enter an amount.';
         }
         if (double.tryParse(state.amount) == null ||
             double.parse(state.amount) <= 0) {
-          return 'Please enter a valid amount greater than 0';
+          return 'Enter an amount greater than 0.';
         }
         // Check for exchange amount if currencies are different
         final fromWallet = state.wallets
@@ -516,17 +424,17 @@ class _AddTransactionPageContent extends StatelessWidget {
 
         if (isDifferentCurrency) {
           if (state.exchangeAmount.isEmpty) {
-            return 'Please enter the exchange amount';
+            return 'Enter the amount received.';
           }
           if (double.tryParse(state.exchangeAmount) == null ||
               double.parse(state.exchangeAmount) <= 0) {
-            return 'Please enter a valid exchange amount greater than 0';
+            return 'Enter a received amount greater than 0.';
           }
         }
         if (state.feePercentage == null && state.customFeeValue.isNotEmpty) {
           final customFee = double.tryParse(state.customFeeValue);
           if (customFee == null || customFee < 0) {
-            return 'Please enter a valid fee percentage';
+            return 'Enter a valid fee percentage.';
           }
         }
         break;
@@ -535,6 +443,6 @@ class _AddTransactionPageContent extends StatelessWidget {
         return 'Exchange type is deprecated';
     }
 
-    return 'Please fill in all required fields';
+    return 'Fill in the required fields.';
   }
 }

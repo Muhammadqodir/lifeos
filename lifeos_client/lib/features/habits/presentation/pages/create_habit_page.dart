@@ -95,7 +95,7 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
           return Scaffold(
             headers: [
               AppHeader(
-                title: 'Create Habit',
+                title: 'New habit',
                 actions: [
                   HeaderAction(
                     icon: HugeIcons.strokeRoundedCheckmarkCircle02,

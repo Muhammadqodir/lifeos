@@ -116,7 +116,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
         }
       },
       child: Scaffold(
-        headers: [AppHeader(title: 'Complete Workout')],
+        headers: [AppHeader(title: 'Finish workout')],
         child: Form(
           key: _formKey,
           child: Column(

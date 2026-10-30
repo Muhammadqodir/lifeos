@@ -18,6 +18,10 @@ class SelectableGroup<T> extends StatefulWidget {
   final double runSpacing;
   final bool scrollable;
 
+  /// Controlled mode where `value: null` means "nothing selected" instead of
+  /// defaulting to the first option.
+  final bool allowEmpty;
+
   const SelectableGroup({
     super.key,
     required this.options,
@@ -27,6 +31,7 @@ class SelectableGroup<T> extends StatefulWidget {
     this.spacing = 8,
     this.runSpacing = 8,
     this.scrollable = false,
+    this.allowEmpty = false,
   });
 
   @override
@@ -46,8 +51,10 @@ class _SelectableGroupState<T> extends State<SelectableGroup<T>> {
       _selectedValue = widget.value;
     } else if (widget.initialValue != null) {
       _selectedValue = widget.initialValue;
-    } else if (widget.options.isNotEmpty) {
+    } else if (widget.options.isNotEmpty && !widget.allowEmpty) {
       _selectedValue = widget.options.first.value;
+    } else {
+      _selectedValue = null;
     }
 
     if (widget.scrollable) {
@@ -63,7 +70,8 @@ class _SelectableGroupState<T> extends State<SelectableGroup<T>> {
   void didUpdateWidget(SelectableGroup<T> oldWidget) {
     super.didUpdateWidget(oldWidget);
     // Update selected value if controlled via value prop
-    if (widget.value != null && widget.value != _selectedValue) {
+    if ((widget.value != null || widget.allowEmpty) &&
+        widget.value != _selectedValue) {
       setState(() {
         _selectedValue = widget.value;
       });
@@ -193,7 +201,6 @@ class _SelectableGroupState<T> extends State<SelectableGroup<T>> {
     final row = Row(
       spacing: widget.spacing,
       children: [
-        const SizedBox(width: AppSpacing.page - 8),
         ...widget.options.map((option) {
           final isSelected = _selectedValue == option.value;
           return AppPressable(
@@ -220,7 +227,6 @@ class _SelectableGroupState<T> extends State<SelectableGroup<T>> {
             ),
           );
         }),
-        const SizedBox(width: AppSpacing.page - 8),
       ],
     );
 

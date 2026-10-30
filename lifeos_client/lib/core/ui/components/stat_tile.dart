@@ -58,14 +58,18 @@ class StatTile extends StatelessWidget {
             ],
           ),
           const SizedBox(height: AppSpacing.xs + 2),
-          Text(
-            value,
-            maxLines: 1,
-            style: context.theme.typography.x2Large.copyWith(
-              fontWeight: FontWeight.w700,
-              color: colors.foreground,
-              fontFeatures: const [FontFeature.tabularFigures()],
-              height: 1.1,
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: context.theme.typography.x2Large.copyWith(
+                fontWeight: FontWeight.w700,
+                color: colors.foreground,
+                fontFeatures: const [FontFeature.tabularFigures()],
+                height: 1.1,
+              ),
             ),
           ),
           if (caption != null) ...[

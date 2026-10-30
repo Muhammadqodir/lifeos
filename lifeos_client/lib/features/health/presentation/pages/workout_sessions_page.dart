@@ -38,7 +38,7 @@ class _WorkoutSessionsPageState extends State<WorkoutSessionsPage> {
     return BlocProvider<WorkoutSessionsBloc>.value(
       value: _bloc,
       child: Scaffold(
-        headers: [AppHeader(title: "Workout History")],
+        headers: [AppHeader(title: 'Workout history')],
         child: _buildBody(context),
       ),
     );

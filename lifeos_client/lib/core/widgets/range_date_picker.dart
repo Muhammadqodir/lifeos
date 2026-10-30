@@ -1,5 +1,8 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../ui/app_theme_x.dart';
+import '../ui/tokens.dart';
+
 class RangeDatePicker extends StatefulWidget {
   final DateTime dateFrom;
   final DateTime dateTo;
@@ -34,14 +37,14 @@ class _RangeDatePickerState extends State<RangeDatePicker> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Select Period', style: Theme.of(context).typography.xSmall),
-        const SizedBox(height: 8),
+        Text('Period', style: context.text.label),
+        const SizedBox(height: AppSpacing.sm - 2),
         SizedBox(
           width: double.infinity,
           child: DateRangePicker(
             value: _value,
             mode: PromptMode.dialog,
-            dialogTitle: const Text('Select Date Range'),
+            dialogTitle: const Text('Choose period'),
             onChanged: (value) {
               setState(() {
                 _value = value;

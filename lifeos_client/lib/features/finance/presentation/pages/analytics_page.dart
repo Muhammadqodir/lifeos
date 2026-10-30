@@ -76,7 +76,7 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
           children: [
             // Text(currency.icon, style: const TextStyle(fontSize: 16)),
             // const SizedBox(width: 8),
-            Text(currency.code, style: const TextStyle(fontSize: 14)),
+            Text(currency.code),
           ],
         );
       },
@@ -99,20 +99,8 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
                           crossAxisAlignment: CrossAxisAlignment.start,
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              currency.code,
-                              style: const TextStyle(
-                                fontSize: 14,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                            Text(
-                              currency.name,
-                              style: const TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF6B7280),
-                              ),
-                            ),
+                            Text(currency.code, style: context.text.label),
+                            Text(currency.name, style: context.text.caption),
                           ],
                         ),
                       ),
@@ -141,16 +129,12 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
         builder: (context) => Scaffold(
           headers: [
             AppHeader(
-              title: "Analytics",
+              title: 'Analytics',
               actions: [
                 if (_isLoadingCurrencies)
                   const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    child: SizedBox(
-                      width: 24,
-                      height: 24,
-                      child: CircularProgressIndicator(strokeWidth: 2),
-                    ),
+                    padding: EdgeInsets.symmetric(horizontal: AppSpacing.sm),
+                    child: CircularProgressIndicator(size: 18),
                   )
                 else
                   _buildCurrencyDropdown(context),
@@ -208,11 +192,16 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
       child: BlocBuilder<AnalyticsBloc, AnalyticsState>(
         builder: (context, state) {
           if (state is AnalyticsLoading || state is AnalyticsInitial) {
-            return const LoadingState(message: 'Loading analytics data...');
+            return const LoadingState(message: 'Loading analytics…');
           }
 
           if (state is AnalyticsFailure) {
-            return _buildErrorState(context, state);
+            return ErrorState(
+              title: "Couldn't load analytics",
+              message: state.message,
+              onRetry: () =>
+                  context.read<AnalyticsBloc>().add(const AnalyticsRetried()),
+            );
           }
 
           if (state is AnalyticsEmpty) {
@@ -220,49 +209,46 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
           }
 
           if (state is AnalyticsSuccess) {
+            final analytics = state.analytics;
             return SingleChildScrollView(
-              child: ContentWidth(child: Padding(
-                padding: const EdgeInsets.all(16),
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.page,
+                vertical: AppSpacing.lg,
+              ),
+              child: ContentWidth(
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    // Date Range Selector
                     RangeDatePicker(
                       dateFrom: state.dateFrom,
                       dateTo: state.dateTo,
                       onDateRangeChanged: _onDateRangeChanged,
                     ),
-                    const SizedBox(height: 20),
-
-                    // Summary Cards
-                    AnalyticsSummaryCard(analytics: state.analytics),
-                    const SizedBox(height: 20),
-
-                    // Expense by Category Pie Chart
-                    if (state.analytics.expenseByCategory.isNotEmpty) ...[
-                      const SizedBox(height: 12),
+                    const SizedBox(height: AppSpacing.lg),
+                    AnalyticsSummaryCard(analytics: analytics),
+                    const SizedBox(height: AppSpacing.md),
+                    PieChartSection(
+                      title: 'Expenses by category',
+                      categories: analytics.expenseByCategory,
+                      totalAmount: analytics.totalExpense,
+                      currencyIcon: analytics.currencyIcon,
+                    ),
+                    if (analytics.incomeByCategory.isNotEmpty) ...[
+                      const SizedBox(height: AppSpacing.md),
                       PieChartSection(
-                        title: 'Expense Distribution',
-                        categories: state.analytics.expenseByCategory,
-                        totalAmount: state.analytics.totalExpense,
-                        currencyIcon: state.analytics.currencyIcon,
+                        title: 'Income by category',
+                        categories: analytics.incomeByCategory,
+                        totalAmount: analytics.totalIncome,
+                        currencyIcon: analytics.currencyIcon,
                       ),
-                      const SizedBox(height: 24),
                     ],
-
-                    // Income by Category Pie Chart
-                    if (state.analytics.incomeByCategory.isNotEmpty) ...[
-                      PieChartSection(
-                        title: 'Income Distribution',
-                        categories: state.analytics.incomeByCategory,
-                        totalAmount: state.analytics.totalIncome,
-                        currencyIcon: state.analytics.currencyIcon,
-                      ),
-                      const SizedBox(height: 24),
-                    ],
+                    const SizedBox(height: AppSpacing.xl),
                   ],
                 ),
-              )),
+              ),
             );
           }
 
@@ -272,72 +258,31 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
     );
   }
 
-  Widget _buildErrorState(BuildContext context, AnalyticsFailure state) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
+  Widget _buildEmptyState(BuildContext context, AnalyticsEmpty state) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.page,
+        vertical: AppSpacing.lg,
+      ),
+      child: ContentWidth(
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const HugeIcon(icon: HugeIcons.strokeRoundedAlert02, size: 48),
-            const SizedBox(height: 16),
-            Text(
-              'Something went wrong',
-              style: Theme.of(context).typography.large,
-              textAlign: TextAlign.center,
+            RangeDatePicker(
+              dateFrom: state.dateFrom,
+              dateTo: state.dateTo,
+              onDateRangeChanged: _onDateRangeChanged,
             ),
-            const SizedBox(height: 8),
-            Text(
-              state.message,
-              style: Theme.of(context).typography.base,
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 24),
-            PrimaryButton(
-              onPressed: () {
-                context.read<AnalyticsBloc>().add(const AnalyticsRetried());
-              },
-              child: const Text('Retry'),
+            const Expanded(
+              child: EmptyState(
+                icon: HugeIcon(icon: HugeIcons.strokeRoundedPieChart),
+                title: 'Nothing to analyse yet',
+                description:
+                    'Add income or expenses in this period to see the breakdown.',
+              ),
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _buildEmptyState(BuildContext context, AnalyticsEmpty state) {
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          RangeDatePicker(
-            dateFrom: state.dateFrom,
-            dateTo: state.dateTo,
-            onDateRangeChanged: _onDateRangeChanged,
-          ),
-          const SizedBox(height: 20),
-          Expanded(
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const HugeIcon(icon: HugeIcons.strokeRoundedPieChart, size: 48),
-                const SizedBox(height: 16),
-                Text(
-                  'No data available',
-                  style: Theme.of(context).typography.large,
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  'Add some transactions to see analytics',
-                  style: Theme.of(context).typography.base,
-                  textAlign: TextAlign.center,
-                ),
-              ],
-            ),
-          ),
-        ],
       ),
     );
   }
