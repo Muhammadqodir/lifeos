@@ -96,9 +96,7 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                         optional: true,
                         child: TextField(
                           controller: _commentController,
-                          placeholder: const Text(
-                            'Enter description (optional)',
-                          ),
+                          placeholder: const Text('Details, links, acceptance criteria'),
                           enabled: !isSubmitting,
                           onChanged: (value) {
                             _bloc.add(CommentChanged(value));

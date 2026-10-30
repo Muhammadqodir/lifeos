@@ -184,6 +184,7 @@ class _RegisterPageState extends State<RegisterPage> {
                         'Already have an account?',
                         style: context.text.itemSubtitle,
                       ),
+                      const SizedBox(width: AppSpacing.xs),
                       GhostButton(
                         size: ButtonSize.small,
                         density: ButtonDensity.compact,
