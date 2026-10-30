@@ -23,8 +23,6 @@ class StoreHabitRequest extends FormRequest
      */
     public function rules(): array
     {
-        \Log::info('=== STORE HABIT REQUEST ===');
-        \Log::info('Raw input:', $this->all());
 
         return [
             'title' => 'required|string|min:3|max:120',

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Syncable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +14,7 @@ use App\Models\HabitEntry;
 
 class Habit extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Syncable;
 
     // Status constants
     public const STATUS_ACTIVE = 'active';

@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\V1\ExerciseProgressController;
 use App\Http\Controllers\Api\V1\FxRatesController;
 use App\Http\Controllers\Api\V1\ProjectController;
 use App\Http\Controllers\Api\V1\SleepEntryController;
+use App\Http\Controllers\Api\V1\SyncController;
 use App\Http\Controllers\Api\V1\TodoController;
 use App\Http\Controllers\Api\V1\TransactionCategoryController;
 use App\Http\Controllers\Api\V1\TransactionController;
@@ -118,6 +119,10 @@ Route::prefix('v1')->group(function () {
         Route::get('todos/counts-by-status', [TodoController::class, 'getCountsByStatus']);
         Route::apiResource('todos', TodoController::class);
         Route::patch('todos/{todo}/status', [TodoController::class, 'updateStatus']);
+
+        // Local-first sync (projects, todos, habits, habit entries)
+        Route::get('sync/pull', [SyncController::class, 'pull']);
+        Route::post('sync/push', [SyncController::class, 'push']);
 
         // Habits routes
         Route::get('habits/today', [HabitController::class, 'todayStatus']);

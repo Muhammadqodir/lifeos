@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\Syncable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -10,7 +11,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Project extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory, SoftDeletes, Syncable;
 
     /**
      * The attributes that are mass assignable.
@@ -53,6 +54,14 @@ class Project extends Model
                 $project->tags = array_map(function ($tag) {
                     return strtolower(trim($tag));
                 }, $project->tags);
+            }
+        });
+
+        // Todos go with their project. Without this they stayed on Home and
+        // in the sync feed pointing at a project nobody can open.
+        static::deleted(function (Project $project) {
+            if (! $project->isForceDeleting()) {
+                $project->todos()->get()->each->delete();
             }
         });
     }
