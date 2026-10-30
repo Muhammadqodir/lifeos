@@ -8,7 +8,7 @@ use App\Http\Requests\UpdateTransactionRequest;
 use App\Http\Resources\TransactionResource;
 use App\Models\Transaction;
 use App\Services\TransactionService;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -113,12 +113,12 @@ class TransactionController extends Controller
     /**
      * Remove the specified transaction.
      */
-    public function destroy(Transaction $transaction): JsonResponse
+    public function destroy(Transaction $transaction): Response
     {
         $this->authorize('delete', $transaction);
 
         $transaction->delete();
 
-        return response()->json(null, 204);
+        return $this->noContent();
     }
 }

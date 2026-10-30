@@ -57,19 +57,21 @@ class ExerciseProgressTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
-            'exercise' => ['id', 'name'],
-            'points' => [
-                '*' => [
-                    'date',
-                    'volume',
-                    'best_set_weight',
-                    'best_e1rm',
+            'data' => [
+                'exercise' => ['id', 'name'],
+                'points' => [
+                    '*' => [
+                        'date',
+                        'volume',
+                        'best_set_weight',
+                        'best_e1rm',
+                    ],
                 ],
             ],
         ]);
 
         // Check calculations
-        $points = $response->json('points');
+        $points = $response->json('data.points');
         $this->assertCount(1, $points);
         $this->assertEquals(1280, $points[0]['volume']); // 80 * 8 * 2 sets
         $this->assertEquals(80, $points[0]['best_set_weight']);
@@ -106,6 +108,6 @@ class ExerciseProgressTest extends TestCase
         $response = $this->getJson("/api/v1/gym/exercises/{$exercise->id}/progress");
 
         $response->assertStatus(200);
-        $this->assertCount(0, $response->json('points'));
+        $this->assertCount(0, $response->json('data.points'));
     }
 }

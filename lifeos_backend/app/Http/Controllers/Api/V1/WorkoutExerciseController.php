@@ -7,7 +7,7 @@ use App\Http\Requests\StoreWorkoutExerciseRequest;
 use App\Http\Resources\WorkoutExerciseResource;
 use App\Models\WorkoutExercise;
 use App\Models\WorkoutSession;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class WorkoutExerciseController extends Controller
 {
@@ -26,12 +26,12 @@ class WorkoutExerciseController extends Controller
         return new WorkoutExerciseResource($workoutExercise);
     }
 
-    public function destroy(WorkoutExercise $workoutExercise): JsonResponse
+    public function destroy(WorkoutExercise $workoutExercise): Response
     {
         $this->authorize('delete', $workoutExercise);
 
         $workoutExercise->delete();
 
-        return response()->json(['message' => 'Workout exercise deleted successfully']);
+        return $this->noContent();
     }
 }

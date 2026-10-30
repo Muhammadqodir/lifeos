@@ -219,7 +219,7 @@ class ProjectTest extends TestCase
 
         $response = $this->deleteJson("/api/v1/projects/{$project->id}");
 
-        $response->assertOk();
+        $response->assertNoContent();
 
         $this->assertSoftDeleted('projects', [
             'id' => $project->id,

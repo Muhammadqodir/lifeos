@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateSleepEntryRequest;
 use App\Http\Resources\SleepEntryResource;
 use App\Models\SleepEntry;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 use Illuminate\Support\Facades\DB;
@@ -50,13 +51,13 @@ class SleepEntryController extends Controller
         return new SleepEntryResource($sleepEntry->fresh());
     }
 
-    public function destroy(SleepEntry $sleepEntry): JsonResponse
+    public function destroy(SleepEntry $sleepEntry): Response
     {
         $this->authorize('delete', $sleepEntry);
 
         $sleepEntry->delete();
 
-        return response()->json(['message' => 'Sleep entry deleted successfully']);
+        return $this->noContent();
     }
 
     public function summary(Request $request): JsonResponse
@@ -89,7 +90,7 @@ class SleepEntryController extends Controller
             ];
         })->values();
 
-        return response()->json([
+        return $this->ok([
             'count' => $count,
             'avg_duration_hours' => $avgDuration ? round($avgDuration, 2) : null,
             'avg_quality' => $avgQuality ? round($avgQuality, 2) : null,

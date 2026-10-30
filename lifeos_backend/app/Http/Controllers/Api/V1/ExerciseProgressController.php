@@ -49,7 +49,7 @@ class ExerciseProgressController extends Controller
             ];
         })->sortBy('date')->values();
 
-        return response()->json([
+        return $this->ok([
             'exercise' => new ExerciseResource($exercise),
             'points' => $pointsByDate,
         ]);

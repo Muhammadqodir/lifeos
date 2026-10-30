@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateWellbeingEntryRequest;
 use App\Http\Resources\WellbeingEntryResource;
 use App\Models\WellbeingEntry;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -49,13 +50,13 @@ class WellbeingEntryController extends Controller
         return new WellbeingEntryResource($wellbeingEntry->fresh());
     }
 
-    public function destroy(WellbeingEntry $wellbeingEntry): JsonResponse
+    public function destroy(WellbeingEntry $wellbeingEntry): Response
     {
         $this->authorize('delete', $wellbeingEntry);
 
         $wellbeingEntry->delete();
 
-        return response()->json(['message' => 'Wellbeing entry deleted successfully']);
+        return $this->noContent();
     }
 
     public function summary(Request $request): JsonResponse
@@ -84,7 +85,7 @@ class WellbeingEntryController extends Controller
             ];
         })->values();
 
-        return response()->json([
+        return $this->ok([
             'count' => $count,
             'avg_energy' => $avgEnergy ? round($avgEnergy, 2) : null,
             'avg_stress' => $avgStress ? round($avgStress, 2) : null,

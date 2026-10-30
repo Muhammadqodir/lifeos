@@ -8,6 +8,7 @@ use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
@@ -32,10 +33,10 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
+        return $this->created([
             'user' => new UserResource($user),
             'token' => $token,
-        ], 201);
+        ]);
     }
 
     /**
@@ -62,7 +63,7 @@ class AuthController extends Controller
 
         $token = $user->createToken('auth_token')->plainTextToken;
 
-        return response()->json([
+        return $this->ok([
             'user' => new UserResource($user),
             'token' => $token,
         ]);
@@ -71,7 +72,7 @@ class AuthController extends Controller
     /**
      * Logout the authenticated user.
      */
-    public function logout(): JsonResponse
+    public function logout(): Response
     {
         /** @var User $user */
         $user = Auth::user();
@@ -84,18 +85,14 @@ class AuthController extends Controller
             $token->delete();
         }
 
-        return response()->json([
-            'message' => 'Logged out successfully',
-        ]);
+        return $this->noContent();
     }
 
     /**
      * Get the authenticated user.
      */
-    public function me(): JsonResponse
+    public function me(): UserResource
     {
-        return response()->json([
-            'user' => new UserResource(Auth::user()),
-        ]);
+        return new UserResource(Auth::user());
     }
 }

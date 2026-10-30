@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreHabitRequest;
 use App\Http\Requests\UpdateHabitRequest;
 use App\Http\Resources\HabitResource;
 use App\Models\Habit;
+use App\Services\HabitStatsService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Carbon;
 
 class HabitController extends Controller
 {
@@ -82,45 +82,25 @@ class HabitController extends Controller
     /**
      * Remove the specified habit.
      */
-    public function destroy(Habit $habit): JsonResponse
+    public function destroy(Habit $habit): Response
     {
         $this->authorize('delete', $habit);
 
         $habit->delete();
 
-        return response()->json([
-            'message' => 'Habit deleted successfully',
-        ]);
+        return $this->noContent();
     }
 
     /**
      * Get statistics for a specific habit.
      */
-    public function stats(Request $request, Habit $habit): JsonResponse
+    public function stats(Request $request, Habit $habit, HabitStatsService $stats): JsonResponse
     {
         $this->authorize('view', $habit);
 
         $days = max(1, min((int) $request->input('days', 30), 366));
 
-        $stats = [
-            'current_streak' => $habit->getCurrentStreak(),
-            'longest_streak' => $habit->getLongestStreak(),
-            'completion_rate' => $habit->getCompletionRate($days),
-            'is_completed_today' => $habit->isCompletedToday(),
-            'total_entries' => $habit->entries()->count(),
-        ];
-
-        // Get entries for the last N days for charting
-        $startDate = Carbon::today()->subDays($days - 1);
-        $endDate = Carbon::today();
-
-        $entries = $habit->getEntriesInRange($startDate, $endDate);
-
-        $stats['entries_by_date'] = $entries->mapWithKeys(function ($entry) {
-            return [$entry->date->format('Y-m-d') => true];
-        });
-
-        return response()->json($stats);
+        return $this->ok($stats->stats($habit, $days));
     }
 
     /**

@@ -2,11 +2,13 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreExerciseRequest;
 use App\Http\Resources\ExerciseResource;
 use App\Models\Exercise;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ExerciseController extends Controller
@@ -44,25 +46,19 @@ class ExerciseController extends Controller
         return new ExerciseResource($exercise);
     }
 
-    public function destroy(Exercise $exercise)
+    public function destroy(Exercise $exercise): Response
     {
         // Only allow deleting user's own custom exercises
         if ($exercise->user_id !== auth()->id()) {
-            return response()->json([
-                'message' => 'Unauthorized to delete this exercise',
-            ], 403);
+            throw ApiException::forbidden('Unauthorized to delete this exercise');
         }
 
         if ($exercise->is_system) {
-            return response()->json([
-                'message' => 'Cannot delete system exercises',
-            ], 403);
+            throw ApiException::forbidden('Cannot delete system exercises');
         }
 
         $exercise->delete();
 
-        return response()->json([
-            'message' => 'Exercise deleted successfully',
-        ]);
+        return $this->noContent();
     }
 }

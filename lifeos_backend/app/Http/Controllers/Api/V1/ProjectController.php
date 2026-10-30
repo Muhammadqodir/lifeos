@@ -10,6 +10,7 @@ use App\Models\Project;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProjectController extends Controller
@@ -79,10 +80,7 @@ class ProjectController extends Controller
             },
         ]);
 
-        return response()->json([
-            'data' => new ProjectResource($project),
-            'message' => 'Project created successfully.',
-        ], 201);
+        return $this->created(new ProjectResource($project));
     }
 
     /**
@@ -101,9 +99,7 @@ class ProjectController extends Controller
             },
         ]);
 
-        return response()->json([
-            'data' => new ProjectResource($project),
-        ]);
+        return $this->ok(new ProjectResource($project));
     }
 
     /**
@@ -115,23 +111,18 @@ class ProjectController extends Controller
 
         $project->update($request->validated());
 
-        return response()->json([
-            'data' => new ProjectResource($project->fresh()),
-            'message' => 'Project updated successfully.',
-        ]);
+        return $this->ok(new ProjectResource($project->fresh()));
     }
 
     /**
      * Remove the specified project (soft delete).
      */
-    public function destroy(Request $request, Project $project): JsonResponse
+    public function destroy(Request $request, Project $project): Response
     {
         $this->authorize('delete', $project);
 
         $project->delete();
 
-        return response()->json([
-            'message' => 'Project deleted successfully.',
-        ]);
+        return $this->noContent();
     }
 }

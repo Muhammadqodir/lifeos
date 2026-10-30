@@ -8,6 +8,7 @@ use App\Http\Requests\UpdateWalletRequest;
 use App\Http\Resources\WalletResource;
 use App\Models\Wallet;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class WalletController extends Controller
@@ -86,13 +87,13 @@ class WalletController extends Controller
     /**
      * Remove the specified wallet (set is_active to false).
      */
-    public function destroy(Wallet $wallet): JsonResponse
+    public function destroy(Wallet $wallet): Response
     {
         $this->authorize('delete', $wallet);
 
         $wallet->update(['is_active' => false]);
 
-        return response()->json(null, 204);
+        return $this->noContent();
     }
 
     /**
@@ -104,12 +105,10 @@ class WalletController extends Controller
 
         $balance = $wallet->transactionEntries()->sum('amount');
 
-        return response()->json([
-            'data' => [
-                'wallet_id' => $wallet->id,
-                'balance' => (float) $balance,
-                'currency_id' => $wallet->currency_id,
-            ]
+        return $this->ok([
+            'wallet_id' => $wallet->id,
+            'balance' => (float) $balance,
+            'currency_id' => $wallet->currency_id,
         ]);
     }
 }

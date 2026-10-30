@@ -8,7 +8,7 @@ use App\Http\Requests\UpdateWorkoutSetRequest;
 use App\Http\Resources\WorkoutSetResource;
 use App\Models\WorkoutExercise;
 use App\Models\WorkoutSet;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 
 class WorkoutSetController extends Controller
 {
@@ -33,12 +33,12 @@ class WorkoutSetController extends Controller
         return new WorkoutSetResource($set->fresh());
     }
 
-    public function destroy(WorkoutSet $set): JsonResponse
+    public function destroy(WorkoutSet $set): Response
     {
         $this->authorize('delete', $set);
 
         $set->delete();
 
-        return response()->json(['message' => 'Workout set deleted successfully']);
+        return $this->noContent();
     }
 }

@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Exceptions\ApiException;
 use App\Http\Requests\StoreHabitEntryRequest;
 use App\Http\Resources\HabitEntryResource;
 use App\Models\Habit;
 use App\Models\HabitEntry;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Carbon;
 
 class HabitEntryController extends Controller
 {
@@ -45,7 +45,7 @@ class HabitEntryController extends Controller
     /**
      * Store a newly created habit entry.
      */
-    public function store(StoreHabitEntryRequest $request, Habit $habit): HabitEntryResource|\Illuminate\Http\JsonResponse
+    public function store(StoreHabitEntryRequest $request, Habit $habit): HabitEntryResource
     {
         $this->authorize('view', $habit);
 
@@ -55,10 +55,7 @@ class HabitEntryController extends Controller
             ->first();
 
         if ($existingEntry) {
-            return response()->json([
-                'message' => 'Entry already exists for this date',
-                'data' => new HabitEntryResource($existingEntry),
-            ], 409);
+            throw ApiException::conflict('Entry already exists for this date', 'habit_entry_exists');
         }
 
         $entry = HabitEntry::create([
@@ -85,15 +82,13 @@ class HabitEntryController extends Controller
     /**
      * Remove the specified habit entry.
      */
-    public function destroy(HabitEntry $habitEntry): JsonResponse
+    public function destroy(HabitEntry $habitEntry): Response
     {
         $this->authorize('delete', $habitEntry->habit);
 
         $habitEntry->delete();
 
-        return response()->json([
-            'message' => 'Habit entry deleted successfully',
-        ]);
+        return $this->noContent();
     }
 
     /**
@@ -116,7 +111,7 @@ class HabitEntryController extends Controller
             return $entry->date->format('Y-m-d');
         });
 
-        return response()->json([
+        return $this->ok([
             'entries_by_date' => $groupedByDate,
         ]);
     }

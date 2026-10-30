@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\HabitStatsService;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -26,12 +27,17 @@ class HabitResource extends JsonResource
             'reminder_time' => $this->reminder_time ? substr($this->reminder_time, 0, 5) : null,
             'goal_duration' => $this->goal_duration,
             'tags' => $this->tags ?? [],
-            'current_streak' => $this->when($request->input('with_stats'), fn() => $this->getCurrentStreak()),
-            'longest_streak' => $this->when($request->input('with_stats'), fn() => $this->getLongestStreak()),
-            'completion_rate' => $this->when($request->input('with_stats'), fn() => $this->getCompletionRate()),
+            'current_streak' => $this->when($request->input('with_stats'), fn() => $this->stats()->currentStreak($this->resource)),
+            'longest_streak' => $this->when($request->input('with_stats'), fn() => $this->stats()->longestStreak($this->resource)),
+            'completion_rate' => $this->when($request->input('with_stats'), fn() => $this->stats()->completionRate($this->resource)),
             'is_completed_today' => $this->when($request->input('with_today'), fn() => $this->isCompletedToday()),
             'created_at' => $this->created_at?->toISOString(),
             'updated_at' => $this->updated_at?->toISOString(),
         ];
+    }
+
+    private function stats(): HabitStatsService
+    {
+        return app(HabitStatsService::class);
     }
 }

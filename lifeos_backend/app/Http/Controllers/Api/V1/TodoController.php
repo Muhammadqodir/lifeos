@@ -11,6 +11,8 @@ use App\Models\Todo;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Validation\ValidationException;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class TodoController extends Controller
@@ -77,7 +79,7 @@ class TodoController extends Controller
         $projectId = $request->get('project_id');
 
         if (!$projectId) {
-            return response()->json(['error' => 'project_id is required'], 400);
+            throw ValidationException::withMessages(['project_id' => ['The project id field is required.']]);
         }
 
         $counts = Todo::where('user_id', $request->user()->id)
@@ -96,9 +98,7 @@ class TodoController extends Controller
             $result[$status] = $counts[$status] ?? 0;
         }
 
-        return response()->json([
-            'data' => $result,
-        ]);
+        return $this->ok($result);
     }
 
     /**
@@ -118,10 +118,7 @@ class TodoController extends Controller
 
         $todo->load('project');
 
-        return response()->json([
-            'data' => new TodoResource($todo),
-            'message' => 'Todo created successfully.',
-        ], 201);
+        return $this->created(new TodoResource($todo));
     }
 
     /**
@@ -133,9 +130,7 @@ class TodoController extends Controller
 
         $todo->load('project');
 
-        return response()->json([
-            'data' => new TodoResource($todo),
-        ]);
+        return $this->ok(new TodoResource($todo));
     }
 
     /**
@@ -149,10 +144,7 @@ class TodoController extends Controller
 
         $todo->load('project');
 
-        return response()->json([
-            'data' => new TodoResource($todo->fresh(['project'])),
-            'message' => 'Todo updated successfully.',
-        ]);
+        return $this->ok(new TodoResource($todo->fresh(['project'])));
     }
 
     /**
@@ -175,23 +167,18 @@ class TodoController extends Controller
 
         $todo->load('project');
 
-        return response()->json([
-            'data' => new TodoResource($todo->fresh(['project'])),
-            'message' => 'Todo status updated successfully.',
-        ]);
+        return $this->ok(new TodoResource($todo->fresh(['project'])));
     }
 
     /**
      * Remove the specified todo (soft delete).
      */
-    public function destroy(Request $request, Todo $todo): JsonResponse
+    public function destroy(Request $request, Todo $todo): Response
     {
         $this->authorize('delete', $todo);
 
         $todo->delete();
 
-        return response()->json([
-            'message' => 'Todo deleted successfully.',
-        ]);
+        return $this->noContent();
     }
 }

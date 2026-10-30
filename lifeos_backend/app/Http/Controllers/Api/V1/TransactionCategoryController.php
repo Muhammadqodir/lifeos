@@ -7,7 +7,7 @@ use App\Http\Requests\StoreCategoryRequest;
 use App\Http\Requests\UpdateCategoryRequest;
 use App\Http\Resources\TransactionCategoryResource;
 use App\Models\TransactionCategory;
-use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
@@ -64,12 +64,12 @@ class TransactionCategoryController extends Controller
     /**
      * Remove the specified transaction category.
      */
-    public function destroy(Request $request, TransactionCategory $transaction_category): JsonResponse
+    public function destroy(Request $request, TransactionCategory $transaction_category): Response
     {
         $this->authorize('delete', $transaction_category);
 
         $transaction_category->delete();
 
-        return response()->json(null, 204);
+        return $this->noContent();
     }
 }

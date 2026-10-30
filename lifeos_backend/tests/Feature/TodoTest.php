@@ -388,7 +388,7 @@ class TodoTest extends TestCase
 
         $response = $this->deleteJson("/api/v1/todos/{$todo->id}");
 
-        $response->assertOk();
+        $response->assertNoContent();
 
         $this->assertSoftDeleted('todos', [
             'id' => $todo->id,

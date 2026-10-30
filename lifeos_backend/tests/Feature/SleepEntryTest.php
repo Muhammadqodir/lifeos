@@ -90,10 +90,12 @@ class SleepEntryTest extends TestCase
 
         $response->assertStatus(200);
         $response->assertJsonStructure([
-            'count',
-            'avg_duration_hours',
-            'avg_quality',
-            'points',
+            'data' => [
+                'count',
+                'avg_duration_hours',
+                'avg_quality',
+                'points',
+            ],
         ]);
     }
 }

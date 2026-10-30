@@ -7,18 +7,22 @@ use App\Http\Requests\StoreCompleteWorkoutRequest;
 use App\Http\Requests\StoreWorkoutSessionRequest;
 use App\Http\Requests\UpdateWorkoutSessionRequest;
 use App\Http\Resources\WorkoutSessionResource;
-use App\Models\WorkoutCompletion;
 use App\Models\WorkoutSession;
+use App\Services\WorkoutService;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Response;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
 
 class WorkoutSessionController extends Controller
 {
     use AuthorizesRequests;
+
+    public function __construct(private readonly WorkoutService $workouts)
+    {
+    }
+
     public function index(Request $request): AnonymousResourceCollection
     {
         $query = WorkoutSession::where('user_id', auth()->id())
@@ -53,49 +57,9 @@ class WorkoutSessionController extends Controller
      */
     public function storeComplete(StoreCompleteWorkoutRequest $request): WorkoutSessionResource
     {
-        DB::beginTransaction();
+        $session = $this->workouts->recordCompleted(auth()->id(), $request->validated());
 
-        try {
-            // Create workout session
-            $session = WorkoutSession::create([
-                'user_id' => auth()->id(),
-                'started_at' => $request->started_at,
-                'ended_at' => $request->ended_at,
-                'note' => $request->note,
-            ]);
-
-            // Create exercises and sets
-            foreach ($request->exercises as $exerciseData) {
-                $workoutExercise = $session->workoutExercises()->create([
-                    'exercise_id' => $exerciseData['exercise_id'],
-                    'order_index' => $exerciseData['order_index'],
-                    'note' => $exerciseData['note'] ?? null,
-                ]);
-
-                // Create sets for this exercise
-                foreach ($exerciseData['sets'] as $setData) {
-                    $workoutExercise->sets()->create([
-                        'set_index' => $setData['set_index'],
-                        'weight_kg' => $setData['weight_kg'] ?? null,
-                        'reps' => $setData['reps'] ?? null,
-                        'duration_seconds' => $setData['duration_seconds'] ?? null,
-                        'distance_meters' => $setData['distance_meters'] ?? null,
-                        'rpe' => $setData['rpe'] ?? null,
-                        'is_done' => $setData['is_done'] ?? true,
-                    ]);
-                }
-            }
-
-            DB::commit();
-
-            // Load relationships and return
-            $session->load(['workoutExercises.exercise', 'workoutExercises.sets']);
-
-            return new WorkoutSessionResource($session);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        return new WorkoutSessionResource($session);
     }
 
     /**
@@ -103,16 +67,12 @@ class WorkoutSessionController extends Controller
      */
     public function storeCompleteWithPhoto(Request $request): WorkoutSessionResource
     {
-        // Validate the request
         $request->validate([
             'workout_data' => 'required|json',
             'photo' => 'nullable|image|max:10240', // max 10MB
         ]);
 
-        $workoutData = json_decode($request->workout_data, true);
-
-        // Validate workout data structure
-        $validated = validator($workoutData, [
+        $validated = validator(json_decode($request->workout_data, true), [
             'started_at' => 'required|date',
             'ended_at' => 'required|date|after:started_at',
             'note' => 'nullable|string',
@@ -139,73 +99,13 @@ class WorkoutSessionController extends Controller
             'completion.notes' => 'nullable|string',
         ])->validate();
 
-        DB::beginTransaction();
+        $session = $this->workouts->recordCompleted(
+            auth()->id(),
+            $validated,
+            $request->file('photo'),
+        );
 
-        try {
-            // Create workout session
-            $session = WorkoutSession::create([
-                'user_id' => auth()->id(),
-                'started_at' => $validated['started_at'],
-                'ended_at' => $validated['ended_at'],
-                'note' => $validated['note'] ?? null,
-            ]);
-
-            // Create exercises and sets
-            foreach ($validated['exercises'] as $exerciseData) {
-                $workoutExercise = $session->workoutExercises()->create([
-                    'exercise_id' => $exerciseData['exercise_id'],
-                    'order_index' => $exerciseData['order_index'],
-                    'note' => $exerciseData['note'] ?? null,
-                ]);
-
-                foreach ($exerciseData['sets'] as $setData) {
-                    $workoutExercise->sets()->create([
-                        'set_index' => $setData['set_index'],
-                        'weight_kg' => $setData['weight_kg'] ?? null,
-                        'reps' => $setData['reps'] ?? null,
-                        'duration_seconds' => $setData['duration_seconds'] ?? null,
-                        'distance_meters' => $setData['distance_meters'] ?? null,
-                        'rpe' => $setData['rpe'] ?? null,
-                        'is_done' => $setData['is_done'] ?? true,
-                    ]);
-                }
-            }
-
-            // Handle photo upload
-            $photoPath = null;
-            if ($request->hasFile('photo')) {
-                $photoPath = $request->file('photo')->store(
-                    'workout_photos/' . auth()->id(),
-                    'public'
-                );
-            }
-
-            // Create completion data
-            if (isset($validated['completion'])) {
-                WorkoutCompletion::create([
-                    'workout_session_id' => $session->id,
-                    'photo_path' => $photoPath,
-                    'body_weight_kg' => $validated['completion']['body_weight_kg'] ?? null,
-                    'height_cm' => $validated['completion']['height_cm'] ?? null,
-                    'biceps_cm' => $validated['completion']['biceps_cm'] ?? null,
-                    'chest_cm' => $validated['completion']['chest_cm'] ?? null,
-                    'waist_cm' => $validated['completion']['waist_cm'] ?? null,
-                    'thighs_cm' => $validated['completion']['thighs_cm'] ?? null,
-                    'calfs_cm' => $validated['completion']['calfs_cm'] ?? null,
-                    'notes' => $validated['completion']['notes'] ?? null,
-                ]);
-            }
-
-            DB::commit();
-
-            // Load relationships and return
-            $session->load(['workoutExercises.exercise', 'workoutExercises.sets', 'completion']);
-
-            return new WorkoutSessionResource($session);
-        } catch (\Exception $e) {
-            DB::rollBack();
-            throw $e;
-        }
+        return new WorkoutSessionResource($session);
     }
 
     public function show(WorkoutSession $workout): WorkoutSessionResource
@@ -226,13 +126,13 @@ class WorkoutSessionController extends Controller
         return new WorkoutSessionResource($workout->fresh());
     }
 
-    public function destroy(WorkoutSession $workout): JsonResponse
+    public function destroy(WorkoutSession $workout): Response
     {
         $this->authorize('delete', $workout);
 
         $workout->delete();
 
-        return response()->json(['message' => 'Workout session deleted successfully']);
+        return $this->noContent();
 
     }
 
@@ -265,51 +165,12 @@ class WorkoutSessionController extends Controller
         })->values();
 
         // Calculate current streak (consecutive days from today backwards)
-        $currentStreak = $this->calculateCurrentStreak();
+        $currentStreak = $this->workouts->currentStreak(auth()->id());
 
-        return response()->json([
+        return $this->ok([
             'count' => $sessions->count(),
             'current_streak' => $currentStreak,
             'sessions' => $sessionPoints,
         ]);
-    }
-
-    private function calculateCurrentStreak(): int
-    {
-        $streak = 0;
-        $currentDate = now()->startOfDay();
-
-        // Check if there's a workout today or yesterday (to account for streak continuation)
-        $hasWorkoutToday = WorkoutSession::where('user_id', auth()->id())
-            ->whereDate('started_at', $currentDate)
-            ->exists();
-
-        $hasWorkoutYesterday = WorkoutSession::where('user_id', auth()->id())
-            ->whereDate('started_at', $currentDate->copy()->subDay())
-            ->exists();
-
-        // If no workout today or yesterday, streak is 0
-        if (!$hasWorkoutToday && !$hasWorkoutYesterday) {
-            return 0;
-        }
-
-        // Start counting from today or yesterday based on which has a workout
-        $checkDate = $hasWorkoutToday ? $currentDate : $currentDate->copy()->subDay();
-
-        // Count consecutive days backwards
-        while (true) {
-            $hasWorkout = WorkoutSession::where('user_id', auth()->id())
-                ->whereDate('started_at', $checkDate)
-                ->exists();
-
-            if ($hasWorkout) {
-                $streak++;
-                $checkDate = $checkDate->copy()->subDay();
-            } else {
-                break;
-            }
-        }
-
-        return $streak;
     }
 }

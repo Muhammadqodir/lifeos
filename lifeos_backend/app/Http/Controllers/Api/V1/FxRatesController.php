@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Api\V1;
 
+use App\Exceptions\ApiException;
 use App\Http\Controllers\Controller;
 use App\Services\FxRates\FxRateService;
 use Illuminate\Http\JsonResponse;
@@ -36,12 +37,9 @@ class FxRatesController extends Controller
         );
 
         if (empty($targets)) {
-            return response()->json([
-                'message' => 'The target field must contain at least one currency code.',
-                'errors' => [
-                    'target' => ['The target field must contain at least one currency code.']
-                ]
-            ], 422);
+            throw ValidationException::withMessages([
+                'target' => ['The target field must contain at least one currency code.'],
+            ]);
         }
 
         try {
@@ -50,22 +48,12 @@ class FxRatesController extends Controller
                 $targets
             );
 
-            return response()->json([
-                'data' => $result->toArray(),
-                'meta' => [
-                    'source' => $result->source,
-                ]
-            ]);
+            return $this->ok($result->toArray(), ['source' => $result->source]);
         } catch (ValidationException $e) {
-            return response()->json([
-                'message' => 'The given data was invalid.',
-                'errors' => $e->errors()
-            ], 422);
+            throw $e;
         } catch (\Exception $e) {
-            return response()->json([
-                'message' => 'Failed to fetch exchange rates.',
-                'error' => $e->getMessage()
-            ], 500);
+            report($e);
+            throw ApiException::upstream('Failed to fetch exchange rates.');
         }
     }
 }
