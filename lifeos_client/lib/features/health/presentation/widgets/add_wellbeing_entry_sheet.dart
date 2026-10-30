@@ -6,6 +6,7 @@ import '../bloc/wellbeing_entry_event.dart';
 import '../bloc/wellbeing_entry_state.dart';
 import '../bloc/health_home_bloc.dart';
 import '../bloc/health_home_event.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class AddWellbeingEntrySheet extends StatefulWidget {
   const AddWellbeingEntrySheet({super.key});
@@ -38,26 +39,13 @@ class _AddWellbeingEntrySheetState extends State<AddWellbeingEntrySheet> {
           // Refresh the health home data
           context.read<HealthHomeBloc>().add(const HealthHomeRefreshed());
 
-          showToast(
-            context: context,
-            builder: (ctx, overlay) {
-              return Utils.buildToast(
-                ctx,
-                overlay,
-                'Success',
-                'Entry created successfully',
-              );
-            },
-            location: ToastLocation.topCenter,
-          );
+          AppToast.success(context, 'Entry created');
           Navigator.of(context).pop();
         } else if (state is WellbeingEntryFailure) {
-          showToast(
-            context: context,
-            builder: (ctx, overlay) {
-              return Utils.buildToast(ctx, overlay, 'Error', state.message);
-            },
-            location: ToastLocation.topCenter,
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },

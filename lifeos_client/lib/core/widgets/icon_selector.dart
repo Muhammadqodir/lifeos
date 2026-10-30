@@ -41,13 +41,6 @@ class _IconSelectorState extends State<IconSelector> {
     }
   }
 
-  void _removeImage() {
-    setState(() {
-      selectedImage = null;
-    });
-    widget.onChanged(null);
-  }
-
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);

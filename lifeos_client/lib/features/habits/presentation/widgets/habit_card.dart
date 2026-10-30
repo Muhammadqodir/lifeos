@@ -1,10 +1,14 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:hugeicons/hugeicons.dart';
-import 'package:lifeos_client/core/widgets/tappable.dart';
-import 'package:lifeos_client/features/habits/data/models/habit_dto.dart';
-import 'package:lifeos_client/features/habits/presentation/pages/habit_stat_page.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../../../../core/ui/ui.dart';
+import '../../../../core/utils/color_utils.dart';
+import '../../data/models/habit_dto.dart';
+import '../pages/habit_stat_page.dart';
+
+/// Habit row: colour swatch, streak and frequency, and a check-in button
+/// tinted with the habit's colour.
 class HabitCard extends StatelessWidget {
   final HabitDto habit;
   final VoidCallback onCheckIn;
@@ -17,123 +21,82 @@ class HabitCard extends StatelessWidget {
     this.isUpdating = false,
   });
 
-  Color _getColorFromHex(String hexColor) {
-    final hex = hexColor.replaceAll('#', '');
-    return Color(int.parse('FF$hex', radix: 16));
-  }
-
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final habitColor = _getColorFromHex(habit.color);
+    final habitColor = parseHexColor(habit.color);
     final isCompleted = habit.isCompletedToday ?? false;
-    print(habit);
+    final streak = habit.currentStreak ?? 0;
 
-    return Tappable(
-      lowerBound: 0.98,
-      onTap: () {
-        Navigator.of(context).push(
-          CupertinoPageRoute(builder: (context) => HabitStatPage(habit: habit)),
-        );
-      },
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
-        children: [
-          // Color indicator
-          Container(
-            width: 4,
-            height: 42,
-            decoration: BoxDecoration(
-              color: habitColor,
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          const SizedBox(width: 8),
-          // Content
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  habit.title,
-                  style: theme.typography.small.copyWith(
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                // Stats row
-                Row(
-                  children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedFire,
-                      size: 14,
-                      color: colorScheme.mutedForeground,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '${habit.currentStreak ?? 0} streak',
-                      style: theme.typography.xSmall.copyWith(
-                        color: colorScheme.mutedForeground,
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedClock01,
-                      size: 14,
-                      color: colorScheme.mutedForeground,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _getFrequencyText(),
-                      style: theme.typography.xSmall.copyWith(
-                        color: colorScheme.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-          if (!isUpdating) ...[
-            IconButton.ghost(
-              size: ButtonSize.xSmall,
-              icon: HugeIcon(
-                icon: isCompleted
-                    ? HugeIcons.strokeRoundedCheckmarkSquare02
-                    : HugeIcons.strokeRoundedSquare,
-                color: colorScheme.primary,
-                strokeWidth: 2,
-              ),
-              onPressed: isCompleted ? null : onCheckIn,
-            ),
-          ] else ...[
-            Row(
-              children: [
-                SizedBox(width: 12),
-                const SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(strokeWidth: 2),
-                ),
-              ],
-            ),
-          ],
-        ],
+    return AppListTile(
+      leading: LeadingTile.icon(HugeIcons.strokeRoundedFire, color: habitColor),
+      title: habit.title,
+      subtitle: [
+        if (streak > 0) '$streak day streak' else 'No streak yet',
+        _frequencyLabel(),
+      ].join(' · '),
+      loading: isUpdating,
+      trailing: HabitCheckButton(
+        color: habitColor,
+        done: isCompleted,
+        onTap: isCompleted ? null : onCheckIn,
       ),
+      onTap: () => Navigator.of(
+        context,
+      ).push(CupertinoPageRoute(builder: (_) => HabitStatPage(habit: habit))),
     );
   }
 
-  String _getFrequencyText() {
-    switch (habit.frequency) {
-      case 'daily':
-        return 'Daily';
-      case 'weekly':
-        return 'Weekly';
-      case 'monthly':
-        return 'Monthly';
-      default:
-        return habit.frequency;
-    }
+  String _frequencyLabel() => switch (habit.frequency) {
+    'daily' => 'Daily',
+    'weekly' => 'Weekly',
+    'monthly' => 'Monthly',
+    _ => habit.frequency,
+  };
+}
+
+/// Circular check-in control. Filled with the habit colour once done.
+class HabitCheckButton extends StatelessWidget {
+  const HabitCheckButton({
+    super.key,
+    required this.color,
+    required this.done,
+    this.onTap,
+  });
+
+  final Color color;
+  final bool done;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final semantic = context.semantic;
+    return Tooltip(
+      tooltip: (context) =>
+          TooltipContainer(child: Text(done ? 'Done today' : 'Check in')),
+      child: AppPressable(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        semanticLabel: done ? 'Done today' : 'Check in',
+        padding: const EdgeInsets.all(AppSpacing.xs),
+        child: AnimatedContainer(
+          duration: AppDurations.base,
+          width: 28,
+          height: 28,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: done ? color : semantic.tint(color),
+            border: Border.all(color: color, width: 1.6),
+          ),
+          child: Center(
+            child: HugeIcon(
+              icon: HugeIcons.strokeRoundedTick02,
+              size: 15,
+              strokeWidth: 2.5,
+              color: done ? const Color(0xFFFFFFFF) : color,
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }

@@ -2,8 +2,8 @@ import 'package:intl/intl.dart';
 import 'package:lifeos_client/core/widgets/badge.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../data/models/todo_dto.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class TodoDetailsPage extends StatelessWidget {
   final TodoDto todo;
@@ -49,18 +49,7 @@ class TodoDetailsPage extends StatelessWidget {
     final colorScheme = theme.colorScheme;
 
     return Scaffold(
-      headers: [
-        CustomAppBar(
-          title: 'Todo Details',
-          leftActions: [
-            AppBarAction(
-              icon: HugeIcons.strokeRoundedArrowLeft01,
-              tooltip: 'Back',
-              onTap: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      ],
+      headers: [AppHeader(title: 'Todo Details')],
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         physics: const AlwaysScrollableScrollPhysics(
@@ -96,26 +85,14 @@ class TodoDetailsPage extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildDetailRow(
-                    context,
-                    'Status',
-                    _titleCase(todo.status),
-                  ),
+                  _buildDetailRow(context, 'Status', _titleCase(todo.status)),
                   _buildDetailRow(
                     context,
                     'Priority',
                     _titleCase(todo.priority),
                   ),
-                  _buildDetailRow(
-                    context,
-                    'Urgency',
-                    _titleCase(todo.urgency),
-                  ),
-                  _buildDetailRow(
-                    context,
-                    'Energy',
-                    _titleCase(todo.energy),
-                  ),
+                  _buildDetailRow(context, 'Urgency', _titleCase(todo.urgency)),
+                  _buildDetailRow(context, 'Energy', _titleCase(todo.energy)),
                   _buildDetailRow(
                     context,
                     'Planned Date',

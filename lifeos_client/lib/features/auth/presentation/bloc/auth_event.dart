@@ -40,14 +40,17 @@ class AuthRegisterRequested extends AuthEvent {
 
   @override
   List<Object?> get props => [
-        firstName,
-        lastName,
-        fatherName,
-        dateOfBirth,
-        email,
-        password,
-        passwordConfirmation,
-      ];
+    firstName,
+    lastName,
+    fatherName,
+    dateOfBirth,
+    email,
+    password,
+    passwordConfirmation,
+  ];
 }
 
 class AuthLogoutRequested extends AuthEvent {}
+
+/// Raised when the backend rejects the stored token (revoked or deleted).
+class AuthSessionExpired extends AuthEvent {}

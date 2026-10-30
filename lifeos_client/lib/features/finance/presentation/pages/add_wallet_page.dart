@@ -5,11 +5,11 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../data/models/wallet_dto.dart';
 import '../bloc/add_wallet_bloc.dart';
 import '../bloc/add_wallet_event.dart';
 import '../bloc/add_wallet_state.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class AddWalletPage extends StatelessWidget {
   const AddWalletPage({super.key});
@@ -40,35 +40,17 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
   void _handleFormSubmit(BuildContext context) {
     // Validate wallet name
     if (_walletName.trim().isEmpty) {
-      showToast(
-        context: context,
-        builder: (context, overlay) {
-          return Utils.buildToast(
-            context,
-            overlay,
-            'Validation Error',
-            'Please enter a wallet name',
-          );
-        },
-        location: ToastLocation.topCenter,
+      AppToast.error(
+        context,
+        'Check the form',
+        message: 'Enter a wallet name.',
       );
       return;
     }
 
     // Validate currency selection
     if (_selectedCurrencyId == null) {
-      showToast(
-        context: context,
-        builder: (context, overlay) {
-          return Utils.buildToast(
-            context,
-            overlay,
-            'Validation Error',
-            'Please select a currency',
-          );
-        },
-        location: ToastLocation.topCenter,
-      );
+      AppToast.error(context, 'Check the form', message: 'Choose a currency.');
       return;
     }
 
@@ -91,43 +73,19 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
     return BlocListener<AddWalletBloc, AddWalletState>(
       listener: (context, state) {
         if (state is AddWalletSuccess) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Wallet created successfully',
-              );
-            },
-            location: ToastLocation.topCenter,
-          );
+          AppToast.success(context, 'Wallet created');
           Navigator.of(context).pop(true);
         } else if (state is AddWalletError) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(context, overlay, 'Error', state.message);
-            },
-            location: ToastLocation.bottomCenter,
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
           Navigator.of(context).pop(false);
         }
       },
       child: Scaffold(
-        headers: [
-          CustomAppBar(
-            title: 'Add Wallet',
-            leftActions: [
-              AppBarAction(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                tooltip: 'Back',
-                onTap: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        ],
+        headers: [AppHeader(title: 'Add Wallet')],
         child: BlocBuilder<AddWalletBloc, AddWalletState>(
           builder: (context, state) {
             if (state is AddWalletLoadingCurrencies) {
@@ -235,13 +193,16 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                         SizedBox(
                           width: double.infinity,
                           child: Select<int>(
-                            placeholder: Text("Select currency",
-                                style: Theme.of(context)
-                                    .typography
-                                    .small
-                                    .copyWith(color: colorScheme.mutedForeground)),
+                            placeholder: Text(
+                              "Select currency",
+                              style: Theme.of(context).typography.small
+                                  .copyWith(color: colorScheme.mutedForeground),
+                            ),
                             value: _selectedCurrencyId,
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 10,
+                            ),
                             itemBuilder: (context, item) {
                               final currency = currencies.firstWhere(
                                 (c) => c.id == item,
@@ -253,9 +214,8 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                                   // const SizedBox(width: 12),
                                   Text(
                                     currency.name,
-                                    style: Theme.of(context).typography.small.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                    ),
+                                    style: Theme.of(context).typography.small
+                                        .copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ],
                               );
@@ -282,18 +242,25 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                                             // const SizedBox(width: 16),
                                             Expanded(
                                               child: Column(
-                                                crossAxisAlignment: CrossAxisAlignment.start,
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
                                                 mainAxisSize: MainAxisSize.min,
                                                 children: [
                                                   Text(
                                                     currency.code,
-                                                    style: Theme.of(context).typography.small.copyWith(
-                                                      fontWeight: FontWeight.w600,
-                                                    ),
+                                                    style: Theme.of(context)
+                                                        .typography
+                                                        .small
+                                                        .copyWith(
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
                                                   ),
                                                   Text(
                                                     currency.name,
-                                                    style: Theme.of(context).typography.xSmall,
+                                                    style: Theme.of(
+                                                      context,
+                                                    ).typography.xSmall,
                                                   ),
                                                 ],
                                               ),

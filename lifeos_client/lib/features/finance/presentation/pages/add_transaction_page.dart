@@ -7,7 +7,6 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../data/models/transaction_dto.dart';
 import '../bloc/add_transaction_bloc.dart';
 import '../bloc/add_transaction_event.dart';
@@ -17,6 +16,7 @@ import '../widgets/wallet_selector.dart';
 import '../widgets/amount_input_field.dart';
 import '../widgets/category_selector.dart';
 import '../widgets/fee_selector.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class AddTransactionPage extends StatelessWidget {
   const AddTransactionPage({super.key});
@@ -43,43 +43,19 @@ class _AddTransactionPageContent extends StatelessWidget {
     return BlocListener<AddTransactionBloc, AddTransactionState>(
       listener: (context, state) {
         if (state is AddTransactionSuccess) {
-          showToast(
-            context: context,
-            builder: (ctx, overlay) {
-              return Utils.buildToast(
-                ctx,
-                overlay,
-                'Success',
-                'Transaction created successfully',
-              );
-            },
-            location: ToastLocation.topCenter,
-          );
+          AppToast.success(context, 'Transaction created');
 
           Navigator.of(context).pop(true);
         } else if (state is AddTransactionError) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(context, overlay, 'Error', state.message);
-            },
-            location: ToastLocation.topCenter,
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },
       child: Scaffold(
-        headers: [
-          CustomAppBar(
-            title: 'Add Transaction',
-            leftActions: [
-              AppBarAction(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                tooltip: 'Back',
-                onTap: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        ],
+        headers: [AppHeader(title: 'Add Transaction')],
         child: BlocBuilder<AddTransactionBloc, AddTransactionState>(
           builder: (context, state) {
             if (state is AddTransactionLoadingData) {
@@ -272,17 +248,10 @@ class _AddTransactionPageContent extends StatelessWidget {
                             if (!state.isValid) {
                               // Show validation error
                               String errorMessage = _getValidationError(state);
-                              showToast(
-                                context: context,
-                                builder: (context, overlay) {
-                                  return Utils.buildToast(
-                                    context,
-                                    overlay,
-                                    'Validation Error',
-                                    errorMessage,
-                                  );
-                                },
-                                location: ToastLocation.topCenter,
+                              AppToast.error(
+                                context,
+                                'Check the form',
+                                message: errorMessage,
                               );
                               return;
                             }

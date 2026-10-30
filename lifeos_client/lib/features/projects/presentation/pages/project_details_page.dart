@@ -1,5 +1,5 @@
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:lifeos_client/core/config/app_config.dart';
 import 'package:lifeos_client/core/widgets/error_state.dart';
 import 'package:lifeos_client/core/widgets/loading_state.dart';
@@ -11,7 +11,6 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
 import '../../../../utils/toast.dart';
 import '../../../../core/widgets/empty_state.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../../projects/data/models/project_dto.dart';
 import '../../../projects/presentation/bloc/manage_todos_bloc.dart';
 import '../../../projects/presentation/bloc/manage_todos_event.dart';
@@ -20,6 +19,7 @@ import '../../../projects/data/models/todo_dto.dart';
 import '../widgets/todo_card.dart';
 import 'create_todo_page.dart';
 import 'todo_details_page.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class ProjectDetailsPage extends StatefulWidget {
   final ProjectDto project;
@@ -85,37 +85,17 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
         },
         child: Scaffold(
           headers: [
-            CustomAppBar(
+            AppHeader(
               showBorder: false,
               title: widget.project.title,
-              rightActions: [
-                AppBarAction(
+              actions: [
+                HeaderAction(
                   icon: HugeIcons.strokeRoundedAdd01,
                   tooltip: 'Add Todo',
                   onTap: () {
                     _navigateToCreateTodo(context);
                   },
                 ),
-              ],
-              leftActions: [
-                AppBarAction(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  tooltip: 'Back',
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-                if (widget.project.icon != null) ...[
-                  SizedBox(width: 8),
-                  ClipRRect(
-                    borderRadius: BorderRadius.circular(8),
-                    child: CachedNetworkImage(
-                      fit: BoxFit.cover,
-                      imageUrl:
-                          '${AppConfig.serverBaseUrl}/storage/${widget.project.icon!}',
-                      width: 28,
-                      height: 28,
-                    ),
-                  ),
-                ],
               ],
             ),
           ],
@@ -293,11 +273,13 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
             );
           },
           onStatusChanged: ({required String status, DateTime? plannedDate}) {
-            _todosBloc.add(UpdateTodoStatus(
-              todoId: todo.id,
-              status: status,
-              oldStatus: todo.status,
-            ));
+            _todosBloc.add(
+              UpdateTodoStatus(
+                todoId: todo.id,
+                status: status,
+                oldStatus: todo.status,
+              ),
+            );
           },
           onDelete: () {
             _confirmDelete(context, todo);
@@ -332,13 +314,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
   }
 
   void _showErrorToast(String message) {
-    showToast(
-      context: context,
-      location: ToastLocation.topCenter,
-      builder: (context, overlay) {
-        return Utils.buildToast(context, overlay, 'Error', message);
-      },
-    );
+    AppToast.error(context, 'Something went wrong', message: message);
   }
 
   Widget _buildTabOption(List<List<dynamic>> icon, String label, int count) {

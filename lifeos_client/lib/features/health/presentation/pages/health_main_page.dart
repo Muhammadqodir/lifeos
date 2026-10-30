@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/exercise_bloc.dart';
@@ -6,7 +6,6 @@ import 'package:lifeos_client/features/health/presentation/bloc/workout_bloc.dar
 import 'package:lifeos_client/features/health/presentation/pages/exercises_page.dart';
 import 'package:lifeos_client/features/health/presentation/pages/workout_page.dart';
 import 'package:lifeos_client/features/health/presentation/pages/workout_sessions_page.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/injection.dart';
 import 'package:lifeos_client/utils/modal.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -23,6 +22,7 @@ import '../widgets/add_sleep_entry_sheet.dart';
 import '../bloc/sleep_entry_bloc.dart';
 import '../widgets/add_wellbeing_entry_sheet.dart';
 import '../bloc/wellbeing_entry_bloc.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class GymMainPage extends StatefulWidget {
   const GymMainPage({super.key});
@@ -41,10 +41,10 @@ class _GymMainPageState extends State<GymMainPage> {
       builder: (context, state) {
         return Column(
           children: [
-            CustomAppBar(
+            AppHeader(
               title: "Health",
-              rightActions: [
-                AppBarAction(
+              actions: [
+                HeaderAction(
                   icon: HugeIcons.strokeRoundedPlay,
                   tooltip: 'Start workout',
                   onTap: () {
@@ -67,7 +67,7 @@ class _GymMainPageState extends State<GymMainPage> {
                     );
                   },
                 ),
-                AppBarAction(
+                HeaderAction(
                   icon: HugeIcons.strokeRoundedChartUp,
                   tooltip: 'Progress',
                   onTap: () {
@@ -78,7 +78,7 @@ class _GymMainPageState extends State<GymMainPage> {
                     );
                   },
                 ),
-                AppBarAction(
+                HeaderAction(
                   icon: HugeIcons.strokeRoundedDatabaseSetting,
                   tooltip: 'Workout Settings',
                   onTap: () {
@@ -178,9 +178,7 @@ class _GymMainPageState extends State<GymMainPage> {
                       BlocProvider<SleepEntryBloc>(
                         create: (context) => getIt<SleepEntryBloc>(),
                       ),
-                      BlocProvider<HealthHomeBloc>.value(
-                        value: healthHomeBloc,
-                      ),
+                      BlocProvider<HealthHomeBloc>.value(value: healthHomeBloc),
                     ],
                     child: const AddSleepEntrySheet(),
                   ),
@@ -205,9 +203,7 @@ class _GymMainPageState extends State<GymMainPage> {
                       BlocProvider<WellbeingEntryBloc>(
                         create: (context) => getIt<WellbeingEntryBloc>(),
                       ),
-                      BlocProvider<HealthHomeBloc>.value(
-                        value: healthHomeBloc,
-                      ),
+                      BlocProvider<HealthHomeBloc>.value(value: healthHomeBloc),
                     ],
                     child: const AddWellbeingEntrySheet(),
                   ),

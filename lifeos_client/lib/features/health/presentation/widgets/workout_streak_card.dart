@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lifeos_client/core/widgets/streak_card.dart';
 import 'package:lifeos_client/features/health/domain/repositories/workout_repository.dart';
@@ -22,10 +22,12 @@ class WorkoutStreakCard extends StatelessWidget {
 
     // Convert workout sessions to generic streak data points
     final dataPoints = workoutSummary.sessions
-        .map((session) => StreakDataPoint(
-              date: session.date,
-              hasActivity: session.hasSession,
-            ))
+        .map(
+          (session) => StreakDataPoint(
+            date: session.date,
+            hasActivity: session.hasSession,
+          ),
+        )
         .toList();
 
     return StreakCard(
@@ -56,8 +58,8 @@ class WorkoutStreakCard extends StatelessWidget {
           },
           child: Builder(
             builder: (context) {
-              final hasActiveWorkout =
-                  getIt<WorkoutRepository>().hasActiveWorkout();
+              final hasActiveWorkout = getIt<WorkoutRepository>()
+                  .hasActiveWorkout();
               return Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

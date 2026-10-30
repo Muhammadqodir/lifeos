@@ -1,30 +1,42 @@
-import 'package:lifeos_client/features/health/presentation/pages/health_main_page.dart';
-import 'package:lifeos_client/features/home/presentation/bloc/home_bloc.dart';
-import 'package:lifeos_client/features/home/presentation/bloc/home_event.dart';
-import 'package:lifeos_client/features/home/presentation/pages/home_page.dart';
-import 'package:lifeos_client/features/navigation/presentation/pages/other_page.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_side_navigation.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/fade_indexed_stack.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/navigation_item_data.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
+import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
+
+import '../../../../core/ui/ui.dart';
 import '../../../../injection.dart';
 import '../../../finance/presentation/pages/finance_main_page.dart';
 import '../../../finance/presentation/providers/amount_visibility_provider.dart';
 import '../../../health/presentation/bloc/health_home_bloc.dart';
 import '../../../health/presentation/bloc/health_home_event.dart';
-import '../../../projects/presentation/pages/projects_main_page.dart';
+import '../../../health/presentation/pages/health_main_page.dart';
+import '../../../home/presentation/bloc/home_bloc.dart';
+import '../../../home/presentation/bloc/home_event.dart';
+import '../../../home/presentation/pages/home_page.dart';
 import '../../../projects/presentation/bloc/manage_projects_bloc.dart';
 import '../../../projects/presentation/bloc/manage_projects_event.dart';
 import '../../../projects/presentation/bloc/manage_todos_bloc.dart';
+import '../../../projects/presentation/pages/projects_main_page.dart';
 import '../bloc/navigation_bloc.dart';
 import '../bloc/navigation_event.dart';
 import '../bloc/navigation_state.dart';
 import '../widgets/custom_bottom_navigation.dart';
+import '../widgets/custom_side_navigation.dart';
+import '../widgets/fade_indexed_stack.dart';
+import '../widgets/navigation_item_data.dart';
+import 'other_page.dart';
 
-/// Main page with bottom navigation bar
+/// App shell. Adapts navigation to the window:
+///
+/// * compact  (iPhone)            – bottom tab bar
+/// * medium   (iPad portrait)     – icon rail
+/// * expanded (iPad landscape/Mac) – full sidebar
+///
+/// Each tab owns a nested [Navigator], so detail pages open inside the
+/// content area (the sidebar stays visible) and every tab keeps its own
+/// back stack, like a native tab bar controller.
 class MainPage extends StatelessWidget {
   const MainPage({super.key});
 
@@ -32,73 +44,50 @@ class MainPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider(
       create: (_) => NavigationBloc(),
-      child: const _MainPageContent(),
+      child: const _MainShell(),
     );
   }
 }
 
-class _MainPageContent extends StatelessWidget {
-  const _MainPageContent();
+class _MainShell extends StatefulWidget {
+  const _MainShell();
 
-  /// List of navigation items
-  static final List<NavigationItemData> _navigationItems = [
-    const NavigationItemData(
-      label: 'Home',
-      icon: HugeIcons.strokeRoundedHome01,
-    ),
-    const NavigationItemData(
+  @override
+  State<_MainShell> createState() => _MainShellState();
+}
+
+class _MainShellState extends State<_MainShell> {
+  static const List<NavigationItemData> _items = [
+    NavigationItemData(label: 'Home', icon: HugeIcons.strokeRoundedHome01),
+    NavigationItemData(
       label: 'Finances',
       icon: HugeIcons.strokeRoundedWallet03,
     ),
-    const NavigationItemData(
+    NavigationItemData(
       label: 'Health',
       icon: HugeIcons.strokeRoundedBodyPartMuscle,
     ),
-    const NavigationItemData(
+    NavigationItemData(
       label: 'Projects',
       icon: HugeIcons.strokeRoundedFolder01,
     ),
-    const NavigationItemData(
-      label: 'Other',
+    NavigationItemData(
+      label: 'More',
       icon: HugeIcons.strokeRoundedDashboardCircle,
     ),
   ];
 
-  @override
-  Widget build(BuildContext context) {
-    return BlocBuilder<NavigationBloc, NavigationState>(
-      builder: (context, state) {
-        return Scaffold(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              final useMobileLayout = constraints.maxWidth < 600;
-              return Scaffold(
-                footers: [
-                  if (useMobileLayout)
-                    _buildBottomNavigationBar(context, state),
-                ],
-                child: Row(
-                  children: [
-                    if (!useMobileLayout)
-                      _buildSideNavigationBar(context, state),
-                    Expanded(
-                      child: FadeIndexedStack(
-                        index: state.currentIndex,
-                        children: _buildPages(),
-                      ),
-                    ),
-                  ],
-                ),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
+  final List<GlobalKey<NavigatorState>> _navigatorKeys = List.generate(
+    _items.length,
+    (_) => GlobalKey<NavigatorState>(),
+  );
 
-  /// Builds all pages once and maintains their state
-  List<Widget> _buildPages() {
+  late final List<Widget> _tabs = _buildTabs();
+
+  List<Widget> _buildTabs() {
+    Widget tab(int index, Widget page) =>
+        _TabNavigator(navigatorKey: _navigatorKeys[index], child: page);
+
     return [
       MultiBlocProvider(
         providers: [
@@ -107,47 +96,131 @@ class _MainPageContent extends StatelessWidget {
           ),
           BlocProvider(create: (_) => getIt<ManageTodosBloc>()),
         ],
-        child: const HomePage(),
+        child: tab(0, const HomePage()),
       ),
       ChangeNotifierProvider(
         create: (_) => AmountVisibilityProvider(),
-        child: const FinanceMainPage(),
+        child: tab(1, const FinanceMainPage()),
       ),
       BlocProvider(
         create: (_) => getIt<HealthHomeBloc>()..add(const HealthHomeStarted()),
-        child: const GymMainPage(),
+        child: tab(2, const GymMainPage()),
       ),
       BlocProvider(
         create: (_) =>
             getIt<ManageProjectsBloc>()..add(const ManageProjectsLoad()),
-        child: const ProjectsMainPage(),
+        child: tab(3, const ProjectsMainPage()),
       ),
-      const OtherPage(),
+      tab(4, const OtherPage()),
     ];
   }
 
-  /// Builds the side navigation bar
-  Widget _buildSideNavigationBar(BuildContext context, NavigationState state) {
-    return CustomSideNavigation(
-      currentIndex: state.currentIndex,
-      onTap: (index) {
-        context.read<NavigationBloc>().add(TabSelected(index));
-      },
-      items: _navigationItems,
-    );
+  void _selectTab(int index) {
+    final bloc = context.read<NavigationBloc>();
+    if (bloc.state.currentIndex == index) {
+      // Re-selecting the active tab returns to its root page.
+      _navigatorKeys[index].currentState?.popUntil((route) => route.isFirst);
+      return;
+    }
+    bloc.add(TabSelected(index));
   }
 
-  /// Builds the bottom navigation bar
-  Widget _buildBottomNavigationBar(
-    BuildContext context,
-    NavigationState state,
-  ) {
-    return CustomBottomNavigation(
-      currentIndex: state.currentIndex,
-      onTap: (index) {
-        context.read<NavigationBloc>().add(TabSelected(index));
+  void _popCurrentTab() {
+    final index = context.read<NavigationBloc>().state.currentIndex;
+    _navigatorKeys[index].currentState?.maybePop();
+  }
+
+  Map<ShortcutActivator, VoidCallback> get _shortcuts {
+    final useMeta = isApplePlatform;
+    final digits = [
+      LogicalKeyboardKey.digit1,
+      LogicalKeyboardKey.digit2,
+      LogicalKeyboardKey.digit3,
+      LogicalKeyboardKey.digit4,
+      LogicalKeyboardKey.digit5,
+    ];
+    return {
+      for (var i = 0; i < _items.length; i++)
+        SingleActivator(digits[i], meta: useMeta, control: !useMeta): () =>
+            _selectTab(i),
+      SingleActivator(
+        LogicalKeyboardKey.bracketLeft,
+        meta: useMeta,
+        control: !useMeta,
+      ): _popCurrentTab,
+    };
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return BlocBuilder<NavigationBloc, NavigationState>(
+      builder: (context, state) {
+        final content = FadeIndexedStack(
+          index: state.currentIndex,
+          children: _tabs,
+        );
+
+        return NavigatorPopHandler(
+          // Android back / predictive back pops inside the active tab first.
+          onPopWithResult: (_) => _popCurrentTab(),
+          child: CallbackShortcuts(
+            bindings: _shortcuts,
+            child: Focus(
+              autofocus: true,
+              child: LayoutBuilder(
+                builder: (context, constraints) {
+                  final windowClass = WindowClass.fromWidth(
+                    constraints.maxWidth,
+                  );
+                  if (windowClass.isCompact) {
+                    return Scaffold(
+                      footers: [
+                        CustomBottomNavigation(
+                          currentIndex: state.currentIndex,
+                          onTap: _selectTab,
+                          items: _items,
+                        ),
+                      ],
+                      child: content,
+                    );
+                  }
+                  return Scaffold(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        CustomSideNavigation(
+                          currentIndex: state.currentIndex,
+                          onTap: _selectTab,
+                          items: _items,
+                          collapsed: !windowClass.isExpanded,
+                        ),
+                        Expanded(child: content),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ),
+        );
       },
-      items: _navigationItems,
+    );
+  }
+}
+
+/// Nested navigator hosting one tab's back stack.
+class _TabNavigator extends StatelessWidget {
+  const _TabNavigator({required this.navigatorKey, required this.child});
+
+  final GlobalKey<NavigatorState> navigatorKey;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Navigator(
+      key: navigatorKey,
+      onGenerateRoute: (settings) =>
+          CupertinoPageRoute(settings: settings, builder: (_) => child),
     );
   }
 }

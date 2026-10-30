@@ -8,6 +8,7 @@ import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../bloc/exercise_bloc.dart';
 import '../bloc/exercise_event.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class AddExerciseDialog extends StatefulWidget {
   const AddExerciseDialog({super.key});
@@ -136,9 +137,7 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                     height: 150,
                     width: double.infinity,
                     decoration: BoxDecoration(
-                      border: Border.all(
-                        color: colorScheme.border,
-                      ),
+                      border: Border.all(color: colorScheme.border),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Stack(
@@ -217,17 +216,10 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
                       : muscleGroupController.text.trim();
 
                   if (name.isEmpty) {
-                    showToast(
-                      context: context,
-                      builder: (context, overlay) {
-                        return Utils.buildToast(
-                          context,
-                          overlay,
-                          'Validation Error',
-                          'Please enter exercise name',
-                        );
-                      },
-                      location: ToastLocation.topCenter,
+                    AppToast.error(
+                      context,
+                      'Check the form',
+                      message: 'Enter an exercise name.',
                     );
                     return;
                   }

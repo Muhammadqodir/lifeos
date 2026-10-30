@@ -1,4 +1,5 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart'
+    show CupertinoColors, CupertinoDatePicker, CupertinoDatePickerMode;
 import 'package:hugeicons/hugeicons.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
@@ -95,10 +96,12 @@ class _TimeSelectState extends State<TimeSelect> {
                       });
                       // Notify parent of the time change
                       if (widget.onTimeChanged != null) {
-                        widget.onTimeChanged!(TimeOfDay(
-                          hour: tempDate.hour,
-                          minute: tempDate.minute,
-                        ));
+                        widget.onTimeChanged!(
+                          TimeOfDay(
+                            hour: tempDate.hour,
+                            minute: tempDate.minute,
+                          ),
+                        );
                       }
                       Navigator.of(context).pop();
                     },

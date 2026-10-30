@@ -8,11 +8,11 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../data/models/wallet_dto.dart';
 import '../bloc/manage_wallets_bloc.dart';
 import '../bloc/manage_wallets_event.dart';
 import '../bloc/manage_wallets_state.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class ManageWalletsPage extends StatelessWidget {
   const ManageWalletsPage({super.key});
@@ -58,41 +58,21 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
     return BlocListener<ManageWalletsBloc, ManageWalletsState>(
       listener: (context, state) {
         if (state is ManageWalletsDeleteSuccess) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Wallet deleted successfully',
-              );
-            },
-            location: ToastLocation.topCenter,
-          );
+          AppToast.success(context, 'Wallet deleted');
         } else if (state is ManageWalletsDeleteError) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(context, overlay, 'Error', state.message);
-            },
-            location: ToastLocation.bottomCenter,
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },
       child: Scaffold(
         headers: [
-          CustomAppBar(
+          AppHeader(
             title: 'Manage Wallets',
-            leftActions: [
-              AppBarAction(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                tooltip: 'Back',
-                onTap: () => Navigator.of(context).pop(),
-              ),
-            ],
-            // rightActions: [
-            //   AppBarAction(
+            // actions: [
+            //   HeaderAction(
             //     icon: HugeIcons.strokeRoundedAdd01,
             //     tooltip: 'Add wallet',
             //     onTap: () => _navigateToAddWallet(context),

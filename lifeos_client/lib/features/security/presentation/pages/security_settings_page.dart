@@ -1,14 +1,14 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/widgets/action_list_item.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../bloc/security_bloc.dart';
 import '../bloc/security_event.dart';
 import '../bloc/security_state.dart';
 import 'set_passcode_page.dart';
 import '../../../../utils/toast.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class SecuritySettingsPage extends StatefulWidget {
   const SecuritySettingsPage({super.key});
@@ -55,7 +55,9 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
           DestructiveButton(
             onPressed: () {
               Navigator.of(context).pop();
-              context.read<SecurityBloc>().add(SecurityClearPasscodeRequested());
+              context.read<SecurityBloc>().add(
+                SecurityClearPasscodeRequested(),
+              );
             },
             child: const Text('Remove'),
           ),
@@ -71,46 +73,19 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
     return BlocListener<SecurityBloc, SecurityState>(
       listener: (context, state) {
         if (state is SecurityPasscodeCleared) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Passcode removed successfully',
-              );
-            },
-            location: ToastLocation.topCenter,
-          );
+          AppToast.success(context, 'Passcode removed');
         } else if (state is SecurityError) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Error',
-                state.message,
-              );
-            },
-            location: ToastLocation.topCenter,
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },
       child: Scaffold(
         child: Column(
           children: [
-            CustomAppBar(
-              title: 'Security',
-              leftActions: [
-                AppBarAction(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  tooltip: 'Back',
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
+            AppHeader(title: 'Security'),
             Expanded(
               child: BlocBuilder<SecurityBloc, SecurityState>(
                 builder: (context, state) {
@@ -118,11 +93,14 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                     return const Center(child: CircularProgressIndicator());
                   }
 
-                  final hasPasscode = state is SecuritySettingsLoaded &&
+                  final hasPasscode =
+                      state is SecuritySettingsLoaded &&
                       state.settings.hasPasscode;
-                  final biometricEnabled = state is SecuritySettingsLoaded &&
+                  final biometricEnabled =
+                      state is SecuritySettingsLoaded &&
                       state.settings.biometricEnabled;
-                  final biometricAvailable = state is SecuritySettingsLoaded &&
+                  final biometricAvailable =
+                      state is SecuritySettingsLoaded &&
                       state.settings.biometricAvailable;
 
                   return SingleChildScrollView(
@@ -233,8 +211,8 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                                         hasPasscode && biometricEnabled
                                             ? 'Enabled'
                                             : hasPasscode
-                                                ? 'Disabled - Enable when setting passcode'
-                                                : 'Set a passcode first',
+                                            ? 'Disabled - Enable when setting passcode'
+                                            : 'Set a passcode first',
                                         style: TextStyle(
                                           fontSize: 12,
                                           color:

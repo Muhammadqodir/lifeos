@@ -8,11 +8,11 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
 import '../../../../utils/toast.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../bloc/finance_settings_bloc.dart';
 import '../bloc/finance_settings_event.dart';
 import '../bloc/finance_settings_state.dart';
 import '../../data/models/transaction_category_dto.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class FinanceSettingsPage extends StatelessWidget {
   const FinanceSettingsPage({super.key});
@@ -38,36 +38,17 @@ class _FinanceSettingsPageContent extends StatelessWidget {
     return BlocListener<FinanceSettingsBloc, FinanceSettingsState>(
       listener: (context, state) {
         if (state is FinanceSettingsOperationSuccess) {
-          showToast(
-            context: context,
-            builder: (ctx, overlay) {
-              return Utils.buildToast(ctx, overlay, 'Success', state.message);
-            },
-            location: ToastLocation.topCenter,
-          );
+          AppToast.success(context, state.message);
         } else if (state is FinanceSettingsError) {
-          showToast(
-            context: context,
-            builder: (ctx, overlay) {
-              return Utils.buildToast(ctx, overlay, 'Error', state.message);
-            },
-            location: ToastLocation.topCenter,
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },
       child: Scaffold(
-        headers: [
-          CustomAppBar(
-            title: 'Finance Settings',
-            leftActions: [
-              AppBarAction(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                tooltip: 'Back',
-                onTap: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        ],
+        headers: [AppHeader(title: 'Finance Settings')],
         child: BlocBuilder<FinanceSettingsBloc, FinanceSettingsState>(
           builder: (context, state) {
             if (state is FinanceSettingsLoading) {
@@ -390,7 +371,6 @@ class _FinanceSettingsPageContent extends StatelessWidget {
     }
   }
 }
-
 
 class SettingsSection extends StatelessWidget {
   const SettingsSection({

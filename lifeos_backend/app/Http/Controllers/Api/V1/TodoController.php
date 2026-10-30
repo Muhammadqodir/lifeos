@@ -40,12 +40,13 @@ class TodoController extends Controller
         }
 
         // Filter by planned_date range
+        // whereDate accepts both "Y-m-d" and full ISO timestamps on every driver.
         if ($request->filled('planned_from')) {
-            $query->where('planned_date', '>=', $request->planned_from);
+            $query->whereDate('planned_date', '>=', $request->date('planned_from'));
         }
 
         if ($request->filled('planned_to')) {
-            $query->where('planned_date', '<=', $request->planned_to);
+            $query->whereDate('planned_date', '<=', $request->date('planned_to'));
         }
 
         // Search by title

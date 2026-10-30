@@ -54,7 +54,9 @@ dependencies:
   
   # Service locator
   get_it: ^8.0.2
-  shadcn_flutter: ^0.0.47
+  # Pinned: 0.0.47 does not compile on Flutter 3.47 (RepeatMode export clash);
+  # 0.0.54+ replaces the dialog API. Upgrade deliberately.
+  shadcn_flutter: 0.0.48
   fl_chart: ^1.1.1
   rename_app: ^1.6.5
   flutter_launcher_icons: ^0.14.4

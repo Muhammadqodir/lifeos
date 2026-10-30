@@ -3,7 +3,6 @@ import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../data/models/currency_dto.dart';
 import '../../domain/repositories/finance_repository.dart';
 import '../bloc/analytics_bloc.dart';
@@ -12,6 +11,7 @@ import '../bloc/analytics_state.dart';
 import '../widgets/pie_chart_section.dart';
 import '../../../../core/widgets/range_date_picker.dart';
 import '../widgets/analytics_summary_card.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class AnalyticsPage extends StatefulWidget {
   const AnalyticsPage({super.key});
@@ -141,17 +141,9 @@ class _AnalyticsPageState extends State<AnalyticsPage> {
       child: Builder(
         builder: (context) => Scaffold(
           headers: [
-            CustomAppBar(
+            AppHeader(
               title: "Analytics",
-              leftActions: [
-                AppBarAction(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-              rightActions: [
+              actions: [
                 if (_isLoadingCurrencies)
                   const Padding(
                     padding: EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -193,7 +185,6 @@ class _AnalyticsPageContent extends StatefulWidget {
 }
 
 class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
-
   @override
   void initState() {
     super.initState();
@@ -259,7 +250,7 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
                       ),
                       const SizedBox(height: 24),
                     ],
-                    
+
                     // Income by Category Pie Chart
                     if (state.analytics.incomeByCategory.isNotEmpty) ...[
                       PieChartSection(
@@ -270,7 +261,6 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
                       ),
                       const SizedBox(height: 24),
                     ],
-
                   ],
                 ),
               ),

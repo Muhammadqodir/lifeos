@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart' show TextInputAction;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/widgets/color_selector.dart';
@@ -8,9 +8,9 @@ import 'package:lifeos_client/core/widgets/time_select.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/create_habit_bloc.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/create_habit_event.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/create_habit_state.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class CreateHabitPage extends StatefulWidget {
   const CreateHabitPage({super.key});
@@ -41,24 +41,18 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
 
   void _submitForm() {
     if (_titleController.text.trim().isEmpty) {
-      showToast(
-        context: context,
-        location: ToastLocation.topCenter,
-        builder: (context, overlay) {
-          return Utils.buildToast(
-            context,
-            overlay,
-            'Error',
-            'Please enter a habit title',
-          );
-        },
+      AppToast.error(
+        context,
+        'Check the form',
+        message: 'Enter a habit title.',
       );
       return;
     }
 
     // Strip FF alpha channel from color if present (backend expects 6-char hex)
     String colorForBackend = _selectedColor;
-    if (_selectedColor.length == 8 && _selectedColor.toUpperCase().startsWith('FF')) {
+    if (_selectedColor.length == 8 &&
+        _selectedColor.toUpperCase().startsWith('FF')) {
       colorForBackend = _selectedColor.substring(2);
     }
 
@@ -85,26 +79,13 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
     return BlocListener<CreateHabitBloc, CreateHabitState>(
       listener: (context, state) {
         if (state is CreateHabitSuccess) {
-          showToast(
-            context: context,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Habit created successfully',
-              );
-            },
-          );
+          AppToast.success(context, 'Habit created');
           Navigator.of(context).pop(true);
         } else if (state is CreateHabitFailure) {
-          showToast(
-            context: context,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(context, overlay, 'Error', state.message);
-            },
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },
@@ -114,17 +95,10 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
 
           return Scaffold(
             headers: [
-              CustomAppBar(
+              AppHeader(
                 title: 'Create Habit',
-                leftActions: [
-                  AppBarAction(
-                    icon: HugeIcons.strokeRoundedArrowLeft01,
-                    tooltip: 'Back',
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
-                ],
-                rightActions: [
-                  AppBarAction(
+                actions: [
+                  HeaderAction(
                     icon: HugeIcons.strokeRoundedCheckmarkCircle02,
                     tooltip: 'Create',
                     onTap: isSubmitting ? null : _submitForm,

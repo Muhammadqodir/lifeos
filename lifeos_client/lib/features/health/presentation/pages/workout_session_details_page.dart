@@ -1,10 +1,10 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/features/health/data/models/workout_session_dto.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/server.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:intl/intl.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class WorkoutSessionDetailsPage extends StatelessWidget {
   final WorkoutSessionDto workout;
@@ -52,18 +52,7 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
     final totalVolume = weightTotals.values.fold(0.0, (a, b) => a + b);
 
     return Scaffold(
-      headers: [
-        CustomAppBar(
-          title: 'Workout Details',
-          leftActions: [
-            AppBarAction(
-              icon: HugeIcons.strokeRoundedArrowLeft01,
-              tooltip: 'Back',
-              onTap: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      ],
+      headers: [AppHeader(title: 'Workout Details')],
       child: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         physics: const AlwaysScrollableScrollPhysics(
@@ -187,7 +176,9 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
                       ClipRRect(
                         borderRadius: BorderRadius.circular(12),
                         child: CachedNetworkImage(
-                          imageUrl: ServerUtills.getServerStorageUrl(workout.completion!.photoPath!),
+                          imageUrl: StorageUrl.resolve(
+                            workout.completion!.photoPath!,
+                          ),
                           height: 300,
                           width: double.infinity,
                           fit: BoxFit.cover,

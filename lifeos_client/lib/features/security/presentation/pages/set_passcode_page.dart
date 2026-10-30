@@ -2,11 +2,11 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../utils/toast.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../bloc/security_bloc.dart';
 import '../bloc/security_event.dart';
 import '../bloc/security_state.dart';
 import '../widgets/passcode_input.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class SetPasscodePage extends StatefulWidget {
   const SetPasscodePage({super.key});
@@ -42,11 +42,11 @@ class _SetPasscodePageState extends State<SetPasscodePage> {
     } else {
       if (passcode == _firstPasscode) {
         context.read<SecurityBloc>().add(
-              SecuritySetPasscodeRequested(
-                passcode: passcode,
-                enableBiometric: _enableBiometric,
-              ),
-            );
+          SecuritySetPasscodeRequested(
+            passcode: passcode,
+            enableBiometric: _enableBiometric,
+          ),
+        );
       } else {
         setState(() {
           _isError = true;
@@ -77,29 +77,13 @@ class _SetPasscodePageState extends State<SetPasscodePage> {
     return BlocListener<SecurityBloc, SecurityState>(
       listener: (context, state) {
         if (state is SecurityPasscodeSet) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Passcode set successfully',
-              );
-            },
-          );
+          AppToast.success(context, 'Passcode set');
           Navigator.of(context).pop(true);
         } else if (state is SecurityError) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Error',
-                state.message,
-              );
-            },
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         } else if (state is SecuritySettingsLoaded) {
           setState(() {
@@ -110,16 +94,7 @@ class _SetPasscodePageState extends State<SetPasscodePage> {
       child: Scaffold(
         child: Column(
           children: [
-            CustomAppBar(
-              title: 'Set Passcode',
-              leftActions: [
-                AppBarAction(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  tooltip: 'Back',
-                  onTap: () => Navigator.of(context).pop(),
-                ),
-              ],
-            ),
+            AppHeader(title: 'Set Passcode'),
             Expanded(
               child: SafeArea(
                 top: false,
@@ -163,12 +138,12 @@ class _SetPasscodePageState extends State<SetPasscodePage> {
                           ),
                         ),
                       ],
-                const SizedBox(height: 48),
-                PasscodeInput(
-                  onCompleted: _handlePasscodeCompleted,
-                  onChanged: _handlePasscodeChanged,
-                  isError: _isError,
-                ),
+                      const SizedBox(height: 48),
+                      PasscodeInput(
+                        onCompleted: _handlePasscodeCompleted,
+                        onChanged: _handlePasscodeChanged,
+                        isError: _isError,
+                      ),
                       if (_biometricAvailable && !_isConfirming) ...[
                         const SizedBox(height: 48),
                         Container(
@@ -176,9 +151,7 @@ class _SetPasscodePageState extends State<SetPasscodePage> {
                           decoration: BoxDecoration(
                             color: theme.colorScheme.muted.withOpacity(0.3),
                             borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: theme.colorScheme.border,
-                            ),
+                            border: Border.all(color: theme.colorScheme.border),
                           ),
                           child: Row(
                             children: [
@@ -204,7 +177,8 @@ class _SetPasscodePageState extends State<SetPasscodePage> {
                                       'Unlock with biometric authentication',
                                       style: TextStyle(
                                         fontSize: 12,
-                                        color: theme.colorScheme.mutedForeground,
+                                        color:
+                                            theme.colorScheme.mutedForeground,
                                       ),
                                     ),
                                   ],

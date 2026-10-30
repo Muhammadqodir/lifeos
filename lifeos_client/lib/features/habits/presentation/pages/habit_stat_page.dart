@@ -5,9 +5,9 @@ import 'package:lifeos_client/features/habits/data/models/habit_dto.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habit_stats_bloc.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habit_stats_event.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habit_stats_state.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/injection.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class HabitStatPage extends StatefulWidget {
   final HabitDto habit;
@@ -57,17 +57,10 @@ class _HabitStatPageState extends State<HabitStatPage> {
             ..add(LoadHabitStats(widget.habit.id)),
       child: Scaffold(
         headers: [
-          CustomAppBar(
+          AppHeader(
             title: widget.habit.title,
-            leftActions: [
-              AppBarAction(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                tooltip: 'Back',
-                onTap: () => Navigator.of(context).pop(),
-              ),
-            ],
-            rightActions: [
-              AppBarAction(
+            actions: [
+              HeaderAction(
                 icon: HugeIcons.strokeRoundedArchive,
                 tooltip: "Archive",
                 onTap: () {

@@ -1,4 +1,3 @@
-import 'package:flutter/cupertino.dart';
 import 'package:lifeos_client/core/widgets/tappable.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -9,10 +8,7 @@ class StreakDataPoint {
   final String date; // Format: 'yyyy-MM-dd'
   final bool hasActivity;
 
-  const StreakDataPoint({
-    required this.date,
-    required this.hasActivity,
-  });
+  const StreakDataPoint({required this.date, required this.hasActivity});
 }
 
 /// A reusable streak card widget that displays a week view of activities
@@ -129,7 +125,7 @@ class StreakCard extends StatelessWidget {
               return Expanded(
                 child: Center(
                   child: Tappable(
-                    onTap: (){
+                    onTap: () {
                       if (onDayTap != null) {
                         onDayTap!(dataPoint);
                       }
@@ -159,10 +155,7 @@ class StreakCard extends StatelessWidget {
               );
             }).toList(),
           ),
-          if (child != null) ...[
-            const SizedBox(height: 20),
-            child!,
-          ],
+          if (child != null) ...[const SizedBox(height: 20), child!],
         ],
       ),
     );

@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/theme/app_colors.dart';
@@ -11,12 +11,12 @@ import '../../../../core/widgets/error_state.dart';
 import '../../../../core/widgets/loading_state.dart';
 import '../../../../core/widgets/tappable.dart';
 import '../../../../injection.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../../data/models/workout_session_dto.dart';
 import '../bloc/workout_sessions_bloc.dart';
 import '../bloc/workout_sessions_event.dart';
 import '../bloc/workout_sessions_state.dart';
 import 'workout_session_details_page.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class WorkoutSessionsPage extends StatefulWidget {
   const WorkoutSessionsPage({super.key});
@@ -45,18 +45,7 @@ class _WorkoutSessionsPageState extends State<WorkoutSessionsPage> {
     return BlocProvider<WorkoutSessionsBloc>.value(
       value: _bloc,
       child: Scaffold(
-        headers: [
-          CustomAppBar(
-            title: "Workout History",
-            leftActions: [
-              AppBarAction(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                tooltip: 'Back',
-                onTap: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        ],
+        headers: [AppHeader(title: "Workout History")],
         child: _buildBody(context),
       ),
     );
@@ -67,25 +56,12 @@ class _WorkoutSessionsPageState extends State<WorkoutSessionsPage> {
     return BlocConsumer<WorkoutSessionsBloc, WorkoutSessionsState>(
       listener: (context, state) {
         if (state is WorkoutSessionsDeleteSuccess) {
-          showToast(
-            context: parentContext,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Workout Deleted',
-                'The workout has been deleted successfully.',
-              );
-            },
-          );
+          AppToast.success(parentContext, 'Workout deleted');
         } else if (state is WorkoutSessionsDeleteError) {
-          showToast(
-            context: parentContext,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(context, overlay, 'Error', state.message);
-            },
+          AppToast.error(
+            parentContext,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },

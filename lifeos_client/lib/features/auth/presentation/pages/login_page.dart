@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -6,6 +6,7 @@ import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
 import 'register_page.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -40,17 +41,10 @@ class _LoginPageState extends State<LoginPage> {
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            showToast(
-              context: context,
-              builder: (context, overlay) {
-                return Utils.buildToast(
-                  context,
-                  overlay,
-                  'Error',
-                  state.message,
-                );
-              },
-              location: ToastLocation.topCenter,
+            AppToast.error(
+              context,
+              'Something went wrong',
+              message: state.message,
             );
 
             // Clear password but keep email when error occurs

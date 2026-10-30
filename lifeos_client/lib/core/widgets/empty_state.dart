@@ -1,5 +1,10 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../ui/app_theme_x.dart';
+import '../ui/tokens.dart';
+
+/// Placeholder for an empty screen or section: icon, headline, one line of
+/// explanation and an optional call to action.
 class EmptyState extends StatelessWidget {
   final String title;
   final String description;
@@ -7,46 +12,71 @@ class EmptyState extends StatelessWidget {
   final Widget? icon;
   final EdgeInsets padding;
 
+  /// Tint for the icon badge; defaults to neutral.
+  final Color? color;
+
   const EmptyState({
     super.key,
     required this.title,
     required this.description,
     this.action,
     this.icon,
-    this.padding = const EdgeInsets.all(32),
+    this.color,
+    this.padding = const EdgeInsets.all(AppSpacing.xxl),
   });
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = context.colors;
+    final text = context.text;
 
     return Center(
       child: Padding(
         padding: padding,
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            if (icon != null) icon!,
-            if (icon != null) const SizedBox(height: 16),
-            Text(
-              title,
-              style: theme.typography.normal.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.foreground,
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 360),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (icon != null) ...[
+                Container(
+                  width: 56,
+                  height: 56,
+                  decoration: BoxDecoration(
+                    color: color == null
+                        ? colors.muted
+                        : context.semantic.tint(color!),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Center(
+                    child: IconTheme.merge(
+                      data: IconThemeData(
+                        size: AppIconSize.lg,
+                        color: color ?? colors.mutedForeground,
+                      ),
+                      child: icon!,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+              ],
+              Text(
+                title,
+                style: text.sectionTitle,
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 8),
-            Text(
-              description,
-              style: theme.typography.xSmall.copyWith(
-                color: colorScheme.mutedForeground,
+              const SizedBox(height: AppSpacing.xs),
+              Text(
+                description,
+                style: text.itemSubtitle,
+                textAlign: TextAlign.center,
               ),
-              textAlign: TextAlign.center,
-            ),
-            if (action != null) ...[const SizedBox(height: 24), action!],
-          ],
+              if (action != null) ...[
+                const SizedBox(height: AppSpacing.xl),
+                action!,
+              ],
+            ],
+          ),
         ),
       ),
     );

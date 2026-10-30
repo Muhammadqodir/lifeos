@@ -4,12 +4,12 @@ import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:lifeos_client/features/health/data/models/exercise_dto.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/add_exercise_dialog.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_card.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../bloc/exercise_bloc.dart';
 import '../bloc/exercise_event.dart';
 import '../bloc/exercise_state.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class ExercisesPage extends StatefulWidget {
   const ExercisesPage({super.key});
@@ -39,18 +39,11 @@ class _ExercisesPageState extends State<ExercisesPage> {
     final outerContext = context;
     return Scaffold(
       headers: [
-        CustomAppBar(
+        AppHeader(
           showBorder: false,
           title: 'My Exercises',
-          leftActions: [
-            AppBarAction(
-              icon: HugeIcons.strokeRoundedArrowLeft01,
-              tooltip: 'Back',
-              onTap: () => Navigator.of(context).pop(),
-            ),
-          ],
-          rightActions: [
-            AppBarAction(
+          actions: [
+            HeaderAction(
               icon: HugeIcons.strokeRoundedAdd01,
               tooltip: 'Add Exercise',
               onTap: () => showAddExerciseDialog(context),
@@ -92,7 +85,7 @@ class _ExercisesPageState extends State<ExercisesPage> {
           ),
         ),
         SizedBox(height: 12),
-        Divider()
+        Divider(),
       ],
       child: Column(
         children: [
@@ -114,38 +107,17 @@ class _ExercisesPageState extends State<ExercisesPage> {
     return BlocConsumer<ExerciseBloc, ExerciseState>(
       listener: (context, state) {
         if (state is ExerciseCreated) {
-          showToast(
-            context: outerContext,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Exercise "${state.exercise.name}" created!',
-              );
-            },
-            location: ToastLocation.topCenter,
+          AppToast.success(
+            outerContext,
+            'Exercise "${state.exercise.name}" created',
           );
         } else if (state is ExerciseDeleted) {
-          showToast(
-            context: outerContext,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Exercise deleted successfully',
-              );
-            },
-            location: ToastLocation.topCenter,
-          );
+          AppToast.success(outerContext, 'Exercise deleted');
         } else if (state is ExerciseError) {
-          showToast(
-            context: outerContext,
-            builder: (context, overlay) {
-              return Utils.buildToast(context, overlay, 'Error', state.message);
-            },
-            location: ToastLocation.topCenter,
+          AppToast.error(
+            outerContext,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },

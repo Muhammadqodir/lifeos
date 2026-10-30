@@ -1,70 +1,25 @@
-import 'dart:async';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
-import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../ui/components/app_pressable.dart';
 
-class Tappable extends StatefulWidget {
+/// Press feedback for surfaces that paint their own background (cards,
+/// tiles). Thin wrapper over [AppPressable] without a hover fill.
+class Tappable extends StatelessWidget {
   final Widget child;
-  final void Function() onTap;
+  final VoidCallback onTap;
+
+  /// Unused; press scale is now uniform across the app.
   final double lowerBound;
+
   const Tappable({
-    Key? key,
+    super.key,
     required this.child,
     required this.onTap,
-    this.lowerBound = 0.9,
-  }) : super(key: key);
-
-  @override
-  _TappableState createState() => _TappableState();
-}
-
-class _TappableState extends State<Tappable> with TickerProviderStateMixin {
-  double squareScaleA = 1;
-  late AnimationController _controllerA;
-  @override
-  void initState() {
-    _controllerA = AnimationController(
-      vsync: this,
-      lowerBound: widget.lowerBound,
-      upperBound: 1.0,
-      value: 1,
-      duration: Duration(milliseconds: 100),
-    );
-    _controllerA.addListener(() {
-      setState(() {
-        squareScaleA = _controllerA.value;
-      });
-    });
-    super.initState();
-  }
+    this.lowerBound = 0.98,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        _controllerA.reverse();
-        SystemSound.play(SystemSoundType.click);
-        widget.onTap();
-      },
-      onTapDown: (dp) {
-        _controllerA.reverse();
-      },
-      onTapUp: (dp) {
-        Timer(Duration(milliseconds: 150), () {
-          _controllerA.fling();
-        });
-      },
-      onTapCancel: () {
-        _controllerA.fling();
-      },
-      child: Transform.scale(scale: squareScaleA, child: widget.child),
-    );
-  }
-
-  @override
-  void dispose() {
-    _controllerA.dispose();
-    super.dispose();
+    return AppPressable(onTap: onTap, highlight: false, child: child);
   }
 }

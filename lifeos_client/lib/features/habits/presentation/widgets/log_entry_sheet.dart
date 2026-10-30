@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/services.dart' show TextInputAction;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/widgets/date_select.dart';
@@ -9,6 +9,7 @@ import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_event.
 import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_state.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class LogEntrySheet extends StatefulWidget {
   final int habitId;
@@ -33,14 +34,14 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
     final dateString = _selectedDate.toIso8601String().split('T')[0];
 
     context.read<LogEntryBloc>().add(
-          LogEntrySubmitted(
-            habitId: widget.habitId,
-            date: dateString,
-            note: _noteController.text.trim().isEmpty
-                ? null
-                : _noteController.text.trim(),
-          ),
-        );
+      LogEntrySubmitted(
+        habitId: widget.habitId,
+        date: dateString,
+        note: _noteController.text.trim().isEmpty
+            ? null
+            : _noteController.text.trim(),
+      ),
+    );
   }
 
   @override
@@ -53,32 +54,14 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
           // Refresh the habits list
           context.read<HabitsListBloc>().add(const HabitsListRefreshed());
 
-          showToast(
-            context: context,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Habit entry logged successfully',
-              );
-            },
-          );
+          AppToast.success(context, 'Habit entry logged');
 
           Navigator.of(context).pop();
         } else if (state is LogEntryFailure) {
-          showToast(
-            context: context,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Error',
-                state.message,
-              );
-            },
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },
@@ -115,10 +98,7 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
               // Date selector
               const Text(
                 'Date',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
               DateSelect(
@@ -133,10 +113,7 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
               // Note (optional)
               const Text(
                 'Note (Optional)',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                ),
+                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
               ),
               const SizedBox(height: 8),
               TextField(

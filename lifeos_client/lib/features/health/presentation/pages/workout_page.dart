@@ -9,11 +9,11 @@ import 'package:lifeos_client/features/health/presentation/pages/workout_camera_
 import 'package:lifeos_client/features/health/presentation/pages/workout_completion_page.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_selection_sheet.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_sets.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/modal.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class WorkoutPage extends StatefulWidget {
   const WorkoutPage({super.key});
@@ -70,29 +70,30 @@ class _WorkoutPageState extends State<WorkoutPage> {
     }
   }
 
-  Future<void> _finishWorkout(BuildContext context, WorkoutInProgress state) async {
+  Future<void> _finishWorkout(
+    BuildContext context,
+    WorkoutInProgress state,
+  ) async {
     // First validate the workout
     context.read<WorkoutBloc>().add(FinishWorkout());
-    
+
     // Wait a bit to see if there's a validation error
     await Future.delayed(const Duration(milliseconds: 100));
-    
+
     if (!context.mounted) return;
-    
+
     // Check if we're still in WorkoutInProgress (validation passed)
     // ignore: use_build_context_synchronously
     final currentState = context.read<WorkoutBloc>().state;
     if (currentState is! WorkoutInProgress) return;
-    
+
     // Capture the WorkoutBloc before navigation
     final workoutBloc = context.read<WorkoutBloc>();
-    
+
     // Navigate to camera page
     // ignore: use_build_context_synchronously
     final String? photoPath = await Navigator.of(context).push<String>(
-      MaterialPageRoute(
-        builder: (context) => const WorkoutCameraPage(),
-      ),
+      MaterialPageRoute(builder: (context) => const WorkoutCameraPage()),
     );
 
     // Navigate to completion page if camera returned a result (photo or skip)
@@ -119,12 +120,10 @@ class _WorkoutPageState extends State<WorkoutPage> {
     return BlocConsumer<WorkoutBloc, WorkoutState>(
       listener: (context, state) {
         if (state is WorkoutError) {
-          showToast(
-            context: context,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(context, overlay, 'Error', state.message);
-            },
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },
@@ -134,17 +133,8 @@ class _WorkoutPageState extends State<WorkoutPage> {
 
         return Scaffold(
           headers: [
-            CustomAppBar(
+            AppHeader(
               title: isInProgress ? 'Workout in Progress' : 'Start Workout',
-              leftActions: [
-                AppBarAction(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  tooltip: 'Back',
-                  onTap: () async {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
             ),
           ],
           child: SingleChildScrollView(

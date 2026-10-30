@@ -1,9 +1,8 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:lifeos_client/features/finance/presentation/pages/add_transaction_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/analytics_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/finance_settings_page.dart';
 import 'package:lifeos_client/features/finance/presentation/pages/manage_wallets.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -23,6 +22,7 @@ import '../widgets/wallet_carousel.dart';
 import '../widgets/transaction_tile.dart';
 import '../../../../core/widgets/empty_state.dart';
 import 'add_wallet_page.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class FinanceMainPage extends StatefulWidget {
   const FinanceMainPage({super.key});
@@ -67,42 +67,31 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
               // When transaction is deleted, refresh wallets to update balances
               if (state is ManageTransactionsDeleteSuccess) {
                 _walletsBloc.add(const ManageWalletsRefresh());
-                showToast(
-                  context: context,
-                  location: ToastLocation.topCenter,
-                  builder: (context, overlay) {
-                    return Utils.buildToast(
-                      context,
-                      overlay,
-                      'Transaction Deleted',
-                      'The transaction has been deleted successfully.',
-                    );
-                  },
-                );
+                AppToast.success(context, 'Transaction deleted');
               }
             },
           ),
         ],
         child: Column(
           children: [
-            CustomAppBar(
+            AppHeader(
               title: "Finances",
-              rightActions: [
-                AppBarAction(
+              actions: [
+                HeaderAction(
                   icon: HugeIcons.strokeRoundedAdd01,
                   tooltip: 'Add Transaction',
                   onTap: () {
                     _navigateToAddTransaction(context);
                   },
                 ),
-                AppBarAction(
+                HeaderAction(
                   icon: HugeIcons.strokeRoundedPieChart,
                   tooltip: 'Analytics',
                   onTap: () {
                     _navigateToAnalytics(context);
                   },
                 ),
-                AppBarAction(
+                HeaderAction(
                   icon: HugeIcons.strokeRoundedDatabaseSetting,
                   tooltip: 'Finance Settings',
                   onTap: () {
@@ -364,15 +353,10 @@ class _FinanceMainPageState extends State<FinanceMainPage> {
   }
 
   void _showComingSoonToast(BuildContext context, String feature) {
-    showToast(
-      context: context,
-      builder: (context, overlay) => Utils.buildToast(
-        context,
-        overlay,
-        'Coming Soon',
-        '$feature feature is not yet implemented',
-      ),
-      location: ToastLocation.topCenter,
+    AppToast.info(
+      context,
+      'Coming soon',
+      message: '$feature is not available yet.',
     );
   }
 }

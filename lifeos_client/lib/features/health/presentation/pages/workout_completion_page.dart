@@ -6,9 +6,9 @@ import 'package:lifeos_client/features/health/data/models/workout_session_dto.da
 import 'package:lifeos_client/features/health/presentation/bloc/workout_bloc.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/workout_event.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/workout_state.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class WorkoutCompletionPage extends StatefulWidget {
   final String? photoPath;
@@ -103,45 +103,21 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
     return BlocListener<WorkoutBloc, WorkoutState>(
       listener: (context, state) {
         if (state is WorkoutSaved) {
-          showToast(
-            context: context,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Workout completed successfully!',
-              );
-            },
-          );
+          AppToast.success(context, 'Workout completed');
           // Pop back to main health page
           Navigator.of(context).popUntil((route) => route.isFirst);
         }
 
         if (state is WorkoutError) {
-          showToast(
-            context: context,
-            location: ToastLocation.topCenter,
-            builder: (context, overlay) {
-              return Utils.buildToast(context, overlay, 'Error', state.message);
-            },
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },
       child: Scaffold(
-        headers: [
-          CustomAppBar(
-            title: 'Complete Workout',
-            leftActions: [
-              AppBarAction(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                tooltip: 'Back',
-                onTap: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        ],
+        headers: [AppHeader(title: 'Complete Workout')],
         child: Form(
           key: _formKey,
           child: Column(

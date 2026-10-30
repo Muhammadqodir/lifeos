@@ -1,4 +1,10 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart'
+    show
+        CupertinoDatePicker,
+        CupertinoDatePickerMode,
+        CupertinoTextThemeData,
+        CupertinoTheme,
+        CupertinoThemeData;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -7,6 +13,7 @@ import '../bloc/sleep_entry_event.dart';
 import '../bloc/sleep_entry_state.dart';
 import '../bloc/health_home_bloc.dart';
 import '../bloc/health_home_event.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class AddSleepEntrySheet extends StatefulWidget {
   const AddSleepEntrySheet({super.key});
@@ -69,34 +76,16 @@ class _AddSleepEntrySheetState extends State<AddSleepEntrySheet> {
           // Refresh the health home data
           context.read<HealthHomeBloc>().add(const HealthHomeRefreshed());
 
-          showToast(
-            context: context,
-            builder: (ctx, overlay) {
-              return Utils.buildToast(
-                ctx,
-                overlay,
-                'Success',
-                'Entry created successfully',
-              );
-            },
-            location: ToastLocation.topCenter,
-          );
+          AppToast.success(context, 'Entry created');
           Navigator.of(context).pop();
         } else if (state is SleepEntryFailure) {
           // Show error
-          showToast(
-            context: context,
-            builder: (ctx, overlay) {
-              return Utils.buildToast(
-                ctx,
-                overlay,
-                'Error',
-                state.message.contains('already have')
-                    ? 'Entry already exists for this date'
-                    : 'Failed to create entry',
-              );
-            },
-            location: ToastLocation.topCenter,
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message.contains('already have')
+                ? 'Entry already exists for this date'
+                : 'Failed to create entry',
           );
         }
       },

@@ -1,15 +1,18 @@
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lifeos_client/features/habits/data/models/habit_dto.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_bloc.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_event.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_state.dart';
-import 'package:lifeos_client/features/habits/presentation/pages/habits_main_page.dart';
-import 'package:lifeos_client/features/habits/presentation/widgets/habit_card.dart';
-import 'package:lifeos_client/features/home/presentation/bloc/home_bloc.dart';
-import 'package:lifeos_client/features/home/presentation/bloc/home_event.dart';
-import 'package:lifeos_client/features/home/presentation/widgets/home_section_header.dart';
-import 'package:lifeos_client/injection.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+
+import '../../../../core/ui/ui.dart';
+import '../../../../injection.dart';
+import '../../../habits/data/models/habit_dto.dart';
+import '../../../habits/presentation/bloc/habits_list_bloc.dart';
+import '../../../habits/presentation/bloc/log_entry_bloc.dart';
+import '../../../habits/presentation/bloc/log_entry_event.dart';
+import '../../../habits/presentation/bloc/log_entry_state.dart';
+import '../../../habits/presentation/pages/habits_main_page.dart';
+import '../../../habits/presentation/widgets/habit_card.dart';
+import '../bloc/home_bloc.dart';
+import '../bloc/home_event.dart';
 
 class HomeHabitsSection extends StatefulWidget {
   final List<HabitDto> habits;
@@ -27,80 +30,84 @@ class _HomeHabitsSectionState extends State<HomeHabitsSection> {
   Widget build(BuildContext context) {
     if (widget.habits.isEmpty) return const SizedBox.shrink();
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    final done = widget.habits.where((h) => h.isCompletedToday ?? false).length;
+
+    return AppListSection(
+      title: 'Habits',
+      headerTrailing: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            '$done of ${widget.habits.length} done',
+            style: context.text.caption,
+          ),
+          const SizedBox(width: AppSpacing.xs),
+          GhostButton(
+            size: ButtonSize.small,
+            density: ButtonDensity.compact,
+            onPressed: () => _openAllHabits(context),
+            child: const Text('View all'),
+          ),
+        ],
+      ),
       children: [
-        HomeSectionHeader(
-          title: 'Habits for Today',
-          onViewAll: () {
-            Navigator.of(context).push(
-              PageRouteBuilder(
-                pageBuilder: (_, __, ___) => const HabitsMainPage(),
-                transitionsBuilder: (_, animation, __, child) =>
-                    FadeTransition(opacity: animation, child: child),
-              ),
-            );
-          },
-        ),
-        const SizedBox(height: 12),
-        ...widget.habits.map((habit) {
-          final isUpdating = _updatingHabitId == habit.id;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 8),
-            child: HabitCard(
-              habit: habit,
-              isUpdating: isUpdating,
-              onCheckIn: () {
-                if (!isUpdating) {
-                  _toggleHabitCompletion(context, habit.id);
-                }
-              },
-            ),
-          );
-        }),
-        const SizedBox(height: 24),
+        for (final habit in widget.habits)
+          HabitCard(
+            habit: habit,
+            isUpdating: _updatingHabitId == habit.id,
+            onCheckIn: () {
+              if (_updatingHabitId == null) {
+                _toggleHabitCompletion(context, habit.id);
+              }
+            },
+          ),
       ],
     );
   }
 
-  Future<void> _toggleHabitCompletion(
-    BuildContext context,
-    int habitId,
-  ) async {
+  Future<void> _openAllHabits(BuildContext context) async {
+    await Navigator.of(context).push(
+      CupertinoPageRoute(
+        builder: (_) => BlocProvider<HabitsListBloc>(
+          create: (_) => getIt<HabitsListBloc>(),
+          child: const HabitsMainPage(),
+        ),
+      ),
+    );
+    // Check-ins made on the habits page should show up here too.
+    if (context.mounted) context.read<HomeBloc>().add(const HomeRefreshed());
+  }
+
+  Future<void> _toggleHabitCompletion(BuildContext context, int habitId) async {
     setState(() => _updatingHabitId = habitId);
-
+    final logEntryBloc = getIt<LogEntryBloc>();
     try {
-      final logEntryBloc = getIt<LogEntryBloc>();
       final now = DateTime.now();
-      final dateString =
-          '${now.year}-${now.month.toString().padLeft(2, '0')}-${now.day.toString().padLeft(2, '0')}';
-      final completedAtString =
-          '$dateString ${now.hour.toString().padLeft(2, '0')}:${now.minute.toString().padLeft(2, '0')}:${now.second.toString().padLeft(2, '0')}';
-
+      String two(int v) => v.toString().padLeft(2, '0');
+      final date = '${now.year}-${two(now.month)}-${two(now.day)}';
       logEntryBloc.add(
         LogEntrySubmitted(
           habitId: habitId,
-          date: dateString,
-          completedAt: completedAtString,
+          date: date,
+          completedAt:
+              '$date ${two(now.hour)}:${two(now.minute)}:${two(now.second)}',
           note: null,
         ),
       );
 
-      await for (final state in logEntryBloc.stream) {
-        if (state is LogEntrySuccess) {
-          if (mounted) {
-            setState(() => _updatingHabitId = null);
-            context.read<HomeBloc>().add(const HomeRefreshed());
-          }
-          break;
-        } else if (state is LogEntryFailure) {
-          if (mounted) setState(() => _updatingHabitId = null);
-          break;
-        }
+      final result = await logEntryBloc.stream.firstWhere(
+        (state) => state is LogEntrySuccess || state is LogEntryFailure,
+      );
+      if (!context.mounted) return;
+      if (result is LogEntryFailure) {
+        AppToast.error(context, "Couldn't check in", message: result.message);
+      } else {
+        context.read<HomeBloc>().add(const HomeRefreshed());
       }
-
-      logEntryBloc.close();
     } catch (_) {
+      if (context.mounted) AppToast.error(context, "Couldn't check in");
+    } finally {
+      await logEntryBloc.close();
       if (mounted) setState(() => _updatingHabitId = null);
     }
   }

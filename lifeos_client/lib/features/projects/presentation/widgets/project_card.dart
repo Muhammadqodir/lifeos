@@ -1,11 +1,14 @@
-import 'package:cached_network_image/cached_network_image.dart';
-import 'package:flutter/cupertino.dart';
-import 'package:lifeos_client/core/config/app_config.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:hugeicons/hugeicons.dart';
-import '../../data/models/project_dto.dart';
-import '../../../projects/presentation/pages/project_details_page.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../../../../core/ui/ui.dart';
+import '../../../../core/utils/color_utils.dart';
+import '../../data/models/project_dto.dart';
+import '../pages/project_details_page.dart';
+import 'project_leading.dart';
+
+/// Project summary card: identity, description, progress and tags.
 class ProjectCard extends StatelessWidget {
   final ProjectDto project;
   final VoidCallback? onTap;
@@ -18,175 +21,147 @@ class ProjectCard extends StatelessWidget {
     this.onDelete,
   });
 
+  void _open(BuildContext context) {
+    if (onTap != null) {
+      onTap!();
+      return;
+    }
+    Navigator.of(context).push(
+      CupertinoPageRoute(builder: (_) => ProjectDetailsPage(project: project)),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final colors = context.colors;
+    final text = context.text;
+    final accent = parseHexColor(project.color);
+    final open = project.pendingTodosCount;
+    final done = project.completedTodosCount;
+    final total = open + done;
+    final progress = total == 0 ? 0.0 : done / total;
 
-    // Parse color from hex string
-    Color projectColor = _parseColor(project.color);
-
-    return GestureDetector(
-      onTap: onTap ??
-          () {
-            Navigator.of(context).push(
-              CupertinoPageRoute(
-                builder: (context) => ProjectDetailsPage(project: project),
-              ),
-            );
-          },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-        decoration: BoxDecoration(
-          color: colorScheme.card,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: colorScheme.border, width: 1),
+    final actions = [
+      AppAction(
+        label: 'Open',
+        icon: HugeIcons.strokeRoundedArrowRight01,
+        onSelected: () => _open(context),
+      ),
+      if (onDelete != null)
+        AppAction(
+          label: 'Delete project',
+          icon: HugeIcons.strokeRoundedDelete02,
+          destructive: true,
+          onSelected: onDelete!,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Header with color indicator and actions
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: colorScheme.border, width: 1),
-                ),
-              ),
-              child: Row(
+    ];
+
+    return AppContextActions(
+      actions: actions,
+      child: AppPressable(
+        onTap: () => _open(context),
+        highlight: false,
+        borderRadius: context.theme.cardRadius,
+        child: Container(
+          padding: const EdgeInsets.fromLTRB(
+            AppSpacing.lg,
+            AppSpacing.md,
+            AppSpacing.sm,
+            AppSpacing.lg,
+          ),
+          decoration: BoxDecoration(
+            color: colors.card,
+            borderRadius: context.theme.cardRadius,
+            border: Border.all(color: colors.border),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Row(
                 children: [
-                  project.icon == null
-                      ? Container(
-                          width: 4,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: projectColor,
-                            borderRadius: BorderRadius.circular(2),
-                          ),
-                        )
-                      : ClipRRect(
-                          borderRadius: BorderRadius.circular(12),
-                          child: CachedNetworkImage(
-                            fit: BoxFit.cover,
-                            imageUrl:
-                                "${AppConfig.serverBaseUrl}/storage/${project.icon ?? ''}",
-                            width: 32,
-                            height: 32,
-                          ),
-                        ),
-                  const SizedBox(width: 12),
-                  // Title
+                  ProjectLeading(project: project),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
                           project.title,
-                          style: theme.typography.normal.copyWith(
+                          style: text.itemTitle.copyWith(
                             fontWeight: FontWeight.w600,
-                            color: colorScheme.foreground,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                         ),
-                        if (project.description != null &&
-                            project.description!.isNotEmpty) ...[
-                          const SizedBox(height: 4),
-                          Text(
-                            project.description!,
-                            style: theme.typography.xSmall.copyWith(
-                              color: colorScheme.mutedForeground,
-                            ),
-                            maxLines: 2,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
+                        Text(
+                          open == 1 ? '1 open todo' : '$open open todos',
+                          style: text.itemSubtitle,
+                        ),
                       ],
                     ),
                   ),
-                  const SizedBox(width: 8),
-                  // Delete button
-                  if (onDelete != null)
-                    IconButton.ghost(
-                      icon: const HugeIcon(
-                        icon: HugeIcons.strokeRoundedDelete02,
-                        size: 18,
-                      ),
-                      onPressed: onDelete,
-                    ),
+                  AppActionsButton(actions: actions),
                 ],
               ),
-            ),
-            // Content
-            Padding(
-              padding: const EdgeInsets.all(12),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Stats
-                  Row(
-                    children: [
-                      HugeIcon(
-                        icon: HugeIcons.strokeRoundedTaskDone01,
-                        size: 16,
-                        color: colorScheme.mutedForeground,
-                      ),
-                      const SizedBox(width: 6),
-                      Text(
-                        '${project.pendingTodosCount} ${project.pendingTodosCount == 1 ? 'task' : 'tasks'}',
-                        style: theme.typography.small.copyWith(
-                          color: colorScheme.mutedForeground,
+              if (project.description != null &&
+                  project.description!.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.sm),
+                Padding(
+                  padding: const EdgeInsets.only(right: AppSpacing.sm),
+                  child: Text(
+                    project.description!,
+                    style: text.itemSubtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpacing.md),
+              Padding(
+                padding: const EdgeInsets.only(right: AppSpacing.sm),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: SizedBox(
+                          height: 6,
+                          child: Stack(
+                            children: [
+                              Container(color: colors.muted),
+                              FractionallySizedBox(
+                                widthFactor: progress,
+                                child: Container(color: accent),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                    ],
-                  ),
-                  // Tags
-                  if (project.tags.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: project.tags.take(3).map((tag) {
-                        return Container(
-                          padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 4,
-                          ),
-                          decoration: BoxDecoration(
-                            color: colorScheme.muted,
-                            borderRadius: BorderRadius.circular(4),
-                          ),
-                          child: Text(
-                            tag,
-                            style: theme.typography.xSmall.copyWith(
-                              color: colorScheme.mutedForeground,
-                            ),
-                          ),
-                        );
-                      }).toList(),
+                    ),
+                    const SizedBox(width: AppSpacing.sm),
+                    Text(
+                      total == 0 ? 'No todos' : '$done/$total done',
+                      style: text.caption,
                     ),
                   ],
-                ],
+                ),
               ),
-            ),
-          ],
+              if (project.tags.isNotEmpty) ...[
+                const SizedBox(height: AppSpacing.md),
+                Wrap(
+                  spacing: AppSpacing.xs + 2,
+                  runSpacing: AppSpacing.xs + 2,
+                  children: [
+                    for (final tag in project.tags.take(4))
+                      AppBadge.outline(label: tag),
+                  ],
+                ),
+              ],
+            ],
+          ),
         ),
       ),
     );
-  }
-
-  Color _parseColor(String hexColor) {
-    try {
-      // Remove # if present
-      String hex = hexColor.replaceAll('#', '');
-      // Add FF for full opacity if not present
-      if (hex.length == 6) {
-        hex = 'FF$hex';
-      }
-      return Color(int.parse(hex, radix: 16));
-    } catch (e) {
-      // Return a default color if parsing fails
-      return const Color(0xFF6B7280);
-    }
   }
 }

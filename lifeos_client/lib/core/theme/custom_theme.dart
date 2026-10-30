@@ -9,7 +9,7 @@ class CustomTheme {
   /// Light theme with reduced font sizes
   static ThemeData lightTheme() {
     return ThemeData(
-      colorScheme: ColorSchemes.lightDefaultColor,
+      colorScheme: ColorSchemes.lightNeutral,
       radius: 0.7,
       typography: const Typography.geist().scale(_fontScaleFactor),
     );
@@ -18,7 +18,7 @@ class CustomTheme {
   /// Dark theme with reduced font sizes
   static ThemeData darkTheme() {
     return ThemeData(
-      colorScheme: ColorSchemes.darkDefaultColor,
+      colorScheme: ColorSchemes.darkNeutral,
       radius: 0.7,
       typography: const Typography.geist().scale(_fontScaleFactor),
     );

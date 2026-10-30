@@ -1,16 +1,41 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
+import '../../../../core/network/session_events.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository authRepository;
+  StreamSubscription<void>? _sessionSubscription;
 
-  AuthBloc({required this.authRepository}) : super(AuthInitial()) {
+  AuthBloc({required this.authRepository, SessionEvents? sessionEvents})
+    : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginRequested>(_onAuthLoginRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
     on<AuthLogoutRequested>(_onAuthLogoutRequested);
+    on<AuthSessionExpired>(_onAuthSessionExpired);
+    _sessionSubscription = sessionEvents?.onExpired.listen(
+      (_) => add(AuthSessionExpired()),
+    );
+  }
+
+  @override
+  Future<void> close() async {
+    await _sessionSubscription?.cancel();
+    return super.close();
+  }
+
+  void _onAuthSessionExpired(
+    AuthSessionExpired event,
+    Emitter<AuthState> emit,
+  ) {
+    // The interceptor already cleared the token; only react while signed in.
+    if (state is AuthAuthenticated) {
+      emit(AuthUnauthenticated());
+    }
   }
 
   Future<void> _onAuthCheckRequested(
@@ -35,10 +60,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-    
-    // Add delay to simulate network request
-    await Future.delayed(const Duration(seconds: 1));
-    
+
     try {
       final result = await authRepository.login(event.email, event.password);
       emit(AuthAuthenticated(user: result.user));
@@ -53,10 +75,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
-    
-    // Add delay to simulate network request
-    await Future.delayed(const Duration(seconds: 1));
-    
+
     try {
       final params = RegisterParams(
         firstName: event.firstName,

@@ -5,10 +5,10 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
 import '../../../../utils/toast.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../bloc/add_project_bloc.dart';
 import '../bloc/add_project_event.dart';
 import '../bloc/add_project_state.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class AddProjectPage extends StatelessWidget {
   const AddProjectPage({super.key});
@@ -45,17 +45,10 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
 
   void _handleFormSubmit(BuildContext context) {
     if (_projectTitle.trim().isEmpty) {
-      showToast(
-        context: context,
-        builder: (context, overlay) {
-          return Utils.buildToast(
-            context,
-            overlay,
-            'Validation Error',
-            'Please enter a project title',
-          );
-        },
-        location: ToastLocation.topCenter,
+      AppToast.error(
+        context,
+        'Check the form',
+        message: 'Enter a project title.',
       );
       return;
     }
@@ -81,47 +74,18 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
     return BlocListener<AddProjectBloc, AddProjectState>(
       listener: (context, state) {
         if (state is AddProjectSuccess) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Success',
-                'Project created successfully',
-              );
-            },
-            location: ToastLocation.topCenter,
-          );
+          AppToast.success(context, 'Project created');
           Navigator.of(context).pop(true);
         } else if (state is AddProjectError) {
-          showToast(
-            context: context,
-            builder: (context, overlay) {
-              return Utils.buildToast(
-                context,
-                overlay,
-                'Error',
-                state.message,
-              );
-            },
-            location: ToastLocation.topCenter,
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
           );
         }
       },
       child: Scaffold(
-        headers: [
-          CustomAppBar(
-            title: 'Add Project',
-            leftActions: [
-              AppBarAction(
-                icon: HugeIcons.strokeRoundedArrowLeft01,
-                tooltip: 'Back',
-                onTap: () => Navigator.of(context).pop(),
-              ),
-            ],
-          ),
-        ],
+        headers: [AppHeader(title: 'Add Project')],
         child: BlocBuilder<AddProjectBloc, AddProjectState>(
           builder: (context, state) {
             final isSubmitting = state is AddProjectSubmitting;

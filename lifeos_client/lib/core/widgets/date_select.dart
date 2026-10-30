@@ -1,7 +1,5 @@
-import 'package:flutter/cupertino.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import 'package:modal_bottom_sheet/modal_bottom_sheet.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class DateSelect extends StatefulWidget {
@@ -79,9 +77,7 @@ class _DateSelectState extends State<DateSelect> {
           builder: (BuildContext context) {
             return AlertDialog(
               content: DatePickerDialog(
-                initialValue: SingleCalendarValue(
-                  tempDate,
-                ),
+                initialValue: SingleCalendarValue(tempDate),
                 initialViewType: CalendarViewType.date,
                 selectionMode: CalendarSelectionMode.single,
                 onChanged: (v) {
@@ -107,7 +103,7 @@ class _DateSelectState extends State<DateSelect> {
                       widget.onDateChanged!(_selectedDate!);
                     }
                     Navigator.of(context).pop();
-                                    },
+                  },
                   child: const Text('OK'),
                 ),
               ],

@@ -9,10 +9,7 @@ class ProjectsApiClient {
   ProjectsApiClient({required this.dio});
 
   /// Get all projects
-  Future<List<ProjectDto>> getProjects({
-    String? search,
-    int? perPage,
-  }) async {
+  Future<List<ProjectDto>> getProjects({String? search, int? perPage}) async {
     final response = await dio.get(
       '/projects',
       queryParameters: {
@@ -33,10 +30,7 @@ class ProjectsApiClient {
 
   /// Create a new project
   Future<ProjectDto> createProject(Map<String, dynamic> data) async {
-    final response = await dio.post(
-      '/projects',
-      data: data,
-    );
+    final response = await dio.post('/projects', data: data);
     return ProjectDto.fromJson(response.data['data']);
   }
 
@@ -45,35 +39,29 @@ class ProjectsApiClient {
     final response = await dio.post(
       '/projects',
       data: formData,
-      options: Options(
-        contentType: 'multipart/form-data',
-      ),
+      options: Options(contentType: 'multipart/form-data'),
     );
-    
+
     // Check if response has data
     if (response.data == null) {
       throw Exception('Empty response from server');
     }
-    
+
     // Handle both direct object and wrapped data response
     final data = response.data is Map && response.data.containsKey('data')
         ? response.data['data']
         : response.data;
-    
+
     if (data == null) {
       throw Exception('No data in response');
     }
-    
-    
+
     return ProjectDto.fromJson(data as Map<String, dynamic>);
   }
 
   /// Update a project
   Future<ProjectDto> updateProject(int id, Map<String, dynamic> data) async {
-    final response = await dio.put(
-      '/projects/$id',
-      data: data,
-    );
+    final response = await dio.put('/projects/$id', data: data);
     return ProjectDto.fromJson(response.data['data']);
   }
 
@@ -108,17 +96,14 @@ class ProjectsApiClient {
     if (status != null) queryParams['status'] = status;
     if (tag != null) queryParams['tag'] = tag;
     if (plannedFrom != null) {
-      queryParams['planned_from'] = plannedFrom.toIso8601String();
+      queryParams['planned_from'] = _apiDate(plannedFrom);
     }
     if (plannedTo != null) {
-      queryParams['planned_to'] = plannedTo.toIso8601String();
+      queryParams['planned_to'] = _apiDate(plannedTo);
     }
     if (search != null && search.isNotEmpty) queryParams['search'] = search;
 
-    final response = await dio.get(
-      '/todos',
-      queryParameters: queryParams,
-    );
+    final response = await dio.get('/todos', queryParameters: queryParams);
 
     final data = response.data['data'] as List<dynamic>;
     return data.map((json) => TodoDto.fromJson(json)).toList();
@@ -138,23 +123,19 @@ class ProjectsApiClient {
   /// Create a new todo
   Future<TodoDto> createTodo(CreateTodoDto todo) async {
     try {
-      final response = await dio.post(
-        '/todos',
-        data: todo.toJson(),
-      );
+      final response = await dio.post('/todos', data: todo.toJson());
 
       // Handle both direct object and wrapped data response
       final data = response.data is Map && response.data.containsKey('data')
           ? response.data['data']
           : response.data;
-      
+
       if (data == null) {
         throw Exception('No data in response');
       }
 
       return TodoDto.fromJson(data as Map<String, dynamic>);
     } on DioException catch (e) {
-      
       // Handle validation errors (422)
       if (e.response?.statusCode == 422) {
         final errors = e.response?.data['errors'] as Map<String, dynamic>?;
@@ -167,7 +148,7 @@ class ProjectsApiClient {
         }
         throw Exception(e.response?.data['message'] ?? 'Validation failed');
       }
-      
+
       // Handle other HTTP errors
       if (e.response?.data != null && e.response?.data is Map) {
         final message = e.response?.data['message'];
@@ -175,7 +156,7 @@ class ProjectsApiClient {
           throw Exception(message);
         }
       }
-      
+
       throw Exception(e.message ?? 'Failed to create todo');
     }
   }
@@ -188,10 +169,7 @@ class ProjectsApiClient {
 
   /// Update a todo
   Future<TodoDto> updateTodo(int id, Map<String, dynamic> data) async {
-    final response = await dio.put(
-      '/todos/$id',
-      data: data,
-    );
+    final response = await dio.put('/todos/$id', data: data);
 
     return TodoDto.fromJson(response.data['data']);
   }
@@ -203,7 +181,7 @@ class ProjectsApiClient {
     DateTime? plannedDate,
   }) async {
     final data = {'status': status};
-    
+
     if (plannedDate != null) {
       // Format date as YYYY-MM-DD for the backend
       final formattedDate =
@@ -211,10 +189,7 @@ class ProjectsApiClient {
       data['planned_date'] = formattedDate;
     }
 
-    final response = await dio.patch(
-      '/todos/$id/status',
-      data: data,
-    );
+    final response = await dio.patch('/todos/$id/status', data: data);
 
     return TodoDto.fromJson(response.data['data']);
   }
@@ -223,4 +198,10 @@ class ProjectsApiClient {
   Future<void> deleteTodo(int id) async {
     await dio.delete('/todos/$id');
   }
+
+  /// `planned_date` is a date column; send the calendar day only.
+  static String _apiDate(DateTime date) =>
+      '${date.year.toString().padLeft(4, '0')}-'
+      '${date.month.toString().padLeft(2, '0')}-'
+      '${date.day.toString().padLeft(2, '0')}';
 }

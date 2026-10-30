@@ -1,6 +1,5 @@
-import 'dart:ffi';
+import 'package:flutter/services.dart' show TextInputAction;
 
-import 'package:flutter/cupertino.dart';
 import 'package:lifeos_client/core/widgets/date_select.dart';
 import 'package:lifeos_client/core/widgets/time_select.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -9,10 +8,10 @@ import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/widgets/selectable_group.dart';
 import '../../../../injection.dart';
 import '../../../../utils/toast.dart';
-import '../../../navigation/presentation/widgets/custom_app_bar.dart';
 import '../bloc/create_todo_bloc.dart';
 import '../bloc/create_todo_event.dart';
 import '../bloc/create_todo_state.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class CreateTodoPage extends StatefulWidget {
   final int projectId;
@@ -54,31 +53,13 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
       child: BlocListener<CreateTodoBloc, CreateTodoState>(
         listener: (context, state) {
           if (state is CreateTodoSuccess) {
-            showToast(
-              context: context,
-              location: ToastLocation.topCenter,
-              builder: (context, overlay) {
-                return Utils.buildToast(
-                  context,
-                  overlay,
-                  'Success',
-                  'Todo created successfully',
-                );
-              },
-            );
+            AppToast.success(context, 'Todo created');
             Navigator.of(context).pop(true);
           } else if (state is CreateTodoError) {
-            showToast(
-              context: context,
-              location: ToastLocation.topCenter,
-              builder: (context, overlay) {
-                return Utils.buildToast(
-                  context,
-                  overlay,
-                  'Error',
-                  state.message,
-                );
-              },
+            AppToast.error(
+              context,
+              'Something went wrong',
+              message: state.message,
             );
           }
         },
@@ -89,17 +70,10 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
 
             return Scaffold(
               headers: [
-                CustomAppBar(
+                AppHeader(
                   title: 'Create Todo',
-                  leftActions: [
-                    AppBarAction(
-                      icon: HugeIcons.strokeRoundedArrowLeft01,
-                      tooltip: 'Back',
-                      onTap: () => Navigator.of(context).pop(),
-                    ),
-                  ],
-                  rightActions: [
-                    AppBarAction(
+                  actions: [
+                    HeaderAction(
                       icon: HugeIcons.strokeRoundedCheckmarkCircle02,
                       tooltip: 'Create',
                       onTap: isSubmitting

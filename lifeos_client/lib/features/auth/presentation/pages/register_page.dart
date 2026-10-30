@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';
 import '../bloc/auth_event.dart';
 import '../bloc/auth_state.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class RegisterPage extends StatefulWidget {
   const RegisterPage({super.key});
@@ -52,17 +53,10 @@ class _RegisterPageState extends State<RegisterPage> {
       child: BlocListener<AuthBloc, AuthState>(
         listener: (context, state) {
           if (state is AuthError) {
-            showToast(
-              context: context,
-              builder: (context, overlay) {
-                return Utils.buildToast(
-                  context,
-                  overlay,
-                  'Error',
-                  state.message,
-                );
-              },
-              location: ToastLocation.topCenter,
+            AppToast.error(
+              context,
+              'Something went wrong',
+              message: state.message,
             );
           }
         },

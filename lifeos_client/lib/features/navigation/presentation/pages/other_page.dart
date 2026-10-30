@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:lifeos_client/core/theme/presentation/bloc/theme_bloc.dart';
 import 'package:lifeos_client/core/theme/presentation/bloc/theme_event.dart';
 import 'package:lifeos_client/core/theme/presentation/bloc/theme_state.dart';
@@ -7,12 +7,12 @@ import 'package:lifeos_client/features/auth/presentation/bloc/auth_bloc.dart';
 import 'package:lifeos_client/features/auth/presentation/bloc/auth_event.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habits_list_bloc.dart';
 import 'package:lifeos_client/features/habits/presentation/pages/habits_main_page.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/features/security/presentation/pages/security_settings_page.dart';
 import 'package:lifeos_client/injection.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class OtherPage extends StatefulWidget {
   const OtherPage({super.key});
@@ -31,10 +31,10 @@ class _OtherPageState extends State<OtherPage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
-        CustomAppBar(
+        AppHeader(
           title: "Other",
-          rightActions: [
-            AppBarAction(
+          actions: [
+            HeaderAction(
               icon: HugeIcons.strokeRoundedLogout01,
               tooltip: 'Logout',
               onTap: () {
@@ -43,7 +43,7 @@ class _OtherPageState extends State<OtherPage> {
             ),
             BlocBuilder<ThemeBloc, ThemeState>(
               builder: (context, themeState) {
-                return AppBarAction(
+                return HeaderAction(
                   icon: themeState.isDark
                       ? HugeIcons.strokeRoundedSun01
                       : HugeIcons.strokeRoundedMoon,
@@ -97,7 +97,8 @@ class _OtherPageState extends State<OtherPage> {
                 ),
                 ActionListItem(
                   title: "Daily journal",
-                  description: "Write daily journal entries to reflect on your day",
+                  description:
+                      "Write daily journal entries to reflect on your day",
                   onTap: () {},
                   icon: HugeIcon(
                     icon: HugeIcons.strokeRoundedNotebook,

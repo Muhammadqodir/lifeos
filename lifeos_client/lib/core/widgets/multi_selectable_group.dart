@@ -1,12 +1,12 @@
-import 'package:lifeos_client/core/widgets/tappable.dart';
+import 'package:lifeos_client/core/ui/components/app_pressable.dart';
+import 'package:lifeos_client/core/ui/tokens.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 class MultiSelectableGroupOption<T> {
   final T value;
   final Widget widget;
 
-  const MultiSelectableGroupOption(
-      {required this.value, required this.widget});
+  const MultiSelectableGroupOption({required this.value, required this.widget});
 }
 
 class MultiSelectableGroup<T> extends StatefulWidget {
@@ -53,13 +53,19 @@ class _MultiSelectableGroupState<T> extends State<MultiSelectableGroup<T>> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final colors = theme.colorScheme;
     return Wrap(
       spacing: widget.spacing,
       runSpacing: widget.runSpacing,
       children: widget.options.map((option) {
-        final isSelected = _selectedValues.contains(option.value);
-        return Tappable(
-          lowerBound: 0.98,
+        final isSelected = _selectedValue(option.value);
+        final foreground = isSelected
+            ? colors.primaryForeground
+            : colors.mutedForeground;
+        return AppPressable(
+          highlight: !isSelected,
+          borderRadius: theme.chipRadius,
           onTap: () {
             setState(() {
               if (isSelected) {
@@ -71,31 +77,27 @@ class _MultiSelectableGroupState<T> extends State<MultiSelectableGroup<T>> {
             widget.onChanged(List.from(_selectedValues));
           },
           child: AnimatedContainer(
-            duration: const Duration(milliseconds: 200),
+            duration: AppDurations.base,
+            curve: Curves.easeOut,
             decoration: BoxDecoration(
               border: Border.all(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.primary
-                    : Theme.of(context).colorScheme.border,
-                width: 1,
+                color: isSelected ? colors.primary : colors.border,
               ),
               color: isSelected
-                  ? Theme.of(context).colorScheme.primary
-                  : Theme.of(context).colorScheme.muted,
-              borderRadius: BorderRadius.circular(12),
+                  ? colors.primary
+                  : colors.primary.withValues(alpha: 0),
+              borderRadius: theme.chipRadius,
             ),
-            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 12),
+            padding: const EdgeInsets.symmetric(
+              vertical: AppSpacing.sm - 2,
+              horizontal: AppSpacing.md,
+            ),
             child: IconTheme(
-              data: IconThemeData(
-                color: isSelected
-                    ? Theme.of(context).colorScheme.background
-                    : Theme.of(context).colorScheme.primary,
-              ),
+              data: IconThemeData(color: foreground, size: AppIconSize.sm),
               child: DefaultTextStyle(
-                style: TextStyle(
-                  color: isSelected
-                      ? Theme.of(context).colorScheme.background
-                      : Theme.of(context).colorScheme.primary,
+                style: theme.typography.small.copyWith(
+                  color: foreground,
+                  fontWeight: FontWeight.w500,
                 ),
                 child: option.widget,
               ),
@@ -105,4 +107,6 @@ class _MultiSelectableGroupState<T> extends State<MultiSelectableGroup<T>> {
       }).toList(),
     );
   }
+
+  bool _selectedValue(T value) => _selectedValues.contains(value);
 }

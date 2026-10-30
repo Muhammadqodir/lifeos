@@ -1,4 +1,4 @@
-import 'package:flutter/cupertino.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/widgets/empty_state.dart';
@@ -12,10 +12,10 @@ import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_bloc.d
 import 'package:lifeos_client/features/habits/presentation/pages/create_habit_page.dart';
 import 'package:lifeos_client/features/habits/presentation/widgets/habit_card.dart';
 import 'package:lifeos_client/features/habits/presentation/widgets/log_entry_sheet.dart';
-import 'package:lifeos_client/features/navigation/presentation/widgets/custom_app_bar.dart';
 import 'package:lifeos_client/injection.dart';
 import 'package:lifeos_client/utils/modal.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 
 class HabitsMainPage extends StatefulWidget {
   const HabitsMainPage({super.key});
@@ -40,19 +40,10 @@ class _HabitsMainPageState extends State<HabitsMainPage> {
       builder: (context, state) {
         return Scaffold(
           headers: [
-            CustomAppBar(
+            AppHeader(
               title: "Habits",
-              leftActions: [
-                AppBarAction(
-                  icon: HugeIcons.strokeRoundedArrowLeft01,
-                  tooltip: 'Back',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                  },
-                ),
-              ],
-              rightActions: [
-                AppBarAction(
+              actions: [
+                HeaderAction(
                   icon: HugeIcons.strokeRoundedAdd01,
                   tooltip: 'Create Habit',
                   onTap: () {
