@@ -1,5 +1,6 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lifeos_client/core/theme/app_colors.dart';
+import 'package:lifeos_client/core/widgets/kanban_board.dart';
 import 'package:lifeos_client/features/home/presentation/bloc/home_bloc.dart';
 import 'package:lifeos_client/features/home/presentation/bloc/home_state.dart';
 import 'package:lifeos_client/features/home/presentation/widgets/home_section_header.dart';
@@ -40,7 +41,6 @@ class MainPageTodosList extends StatefulWidget {
 class _MainPageTodosListState extends State<MainPageTodosList> {
   int? _updatingTodoId;
   int? _deletingTodoId;
-  String? _hoveredColumnTitle;
 
   List<_ColumnData> get _columns {
     final today = DateTime.now();
@@ -136,169 +136,47 @@ class _MainPageTodosListState extends State<MainPageTodosList> {
   // ─── Kanban Board (desktop) ───────────────────────────────────────
 
   Widget _buildKanbanBoard(BuildContext context, BoxConstraints constraints) {
-    final columnWidth = (constraints.maxWidth - 3 * 10) / 4;
     return Padding(
       padding: const EdgeInsets.only(bottom: 16),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          for (int i = 0; i < _columns.length; i++) ...[
-            SizedBox(
-              width: columnWidth,
-              child: _buildKanbanColumn(context, _columns[i], columnWidth),
-            ),
-            if (i < _columns.length - 1) const SizedBox(width: 10),
-          ],
-        ],
+      child: KanbanBoard<TodoDto>(
+        columns: _columns
+            .map(
+              (col) => KanbanColumnConfig<TodoDto>(
+                title: col.title,
+                items: col.todos,
+                color: col.color,
+                isDroppable: col.targetStatus != null,
+              ),
+            )
+            .toList(),
+        emptyText: 'No todos',
+        itemBuilder: (context, todo, isDragging) => Opacity(
+          opacity: isDragging ? 0.3 : 1.0,
+          child: _buildTodoTile(context, todo, kanbanMode: true),
+        ),
+        feedbackBuilder: _buildDragFeedback,
+        onItemDropped: (todo, columnIndex) {
+          final col = _columns[columnIndex];
+          if (col.targetStatus == null) return;
+
+          // Skip if already in this column
+          final alreadySameStatus = todo.status == col.targetStatus;
+          final alreadySamePlannedDate = col.targetPlannedDate == null ||
+              (todo.plannedDate != null &&
+                  todo.plannedDate!.year == col.targetPlannedDate!.year &&
+                  todo.plannedDate!.month == col.targetPlannedDate!.month &&
+                  todo.plannedDate!.day == col.targetPlannedDate!.day);
+          if (alreadySameStatus && alreadySamePlannedDate) return;
+
+          _handleTodoStatusChanged(
+            context,
+            todo.id,
+            todo.status,
+            col.targetStatus!,
+            col.targetPlannedDate,
+          );
+        },
       ),
-    );
-  }
-
-  Widget _buildKanbanColumn(
-    BuildContext context,
-    _ColumnData col,
-    double columnWidth,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final isHovered = _hoveredColumnTitle == col.title;
-    final isDroppable = col.targetStatus != null;
-
-    return DragTarget<TodoDto>(
-      onWillAcceptWithDetails: (_) => isDroppable,
-      onAcceptWithDetails: (details) {
-        setState(() => _hoveredColumnTitle = null);
-        final todo = details.data;
-        // Skip if already in this column (same status, same planned date for today column)
-        final alreadySameStatus = todo.status == col.targetStatus;
-        final alreadySamePlannedDate = col.targetPlannedDate == null ||
-            (todo.plannedDate != null &&
-                todo.plannedDate!.year == col.targetPlannedDate!.year &&
-                todo.plannedDate!.month == col.targetPlannedDate!.month &&
-                todo.plannedDate!.day == col.targetPlannedDate!.day);
-        if (alreadySameStatus && alreadySamePlannedDate) return;
-
-        _handleTodoStatusChanged(
-          context,
-          todo.id,
-          todo.status,
-          col.targetStatus!,
-          col.targetPlannedDate,
-        );
-      },
-      onMove: (_) {
-        if (isDroppable && _hoveredColumnTitle != col.title) {
-          setState(() => _hoveredColumnTitle = col.title);
-        }
-      },
-      onLeave: (_) {
-        if (_hoveredColumnTitle == col.title) {
-          setState(() => _hoveredColumnTitle = null);
-        }
-      },
-      builder: (context, candidateData, _) {
-        return AnimatedContainer(
-          duration: const Duration(milliseconds: 150),
-          decoration: BoxDecoration(
-            color: isHovered ? col.color.withOpacity(0.07) : colorScheme.card,
-            border: Border.all(
-              color: isHovered
-                  ? col.color.withOpacity(0.55)
-                  : colorScheme.border,
-              width: isHovered ? 2 : 1,
-            ),
-            borderRadius: BorderRadius.circular(10),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              // Column header
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 10,
-                ),
-                decoration: BoxDecoration(
-                  border: Border(bottom: BorderSide(color: colorScheme.border)),
-                  borderRadius: const BorderRadius.vertical(
-                    top: Radius.circular(10),
-                  ),
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: col.color,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        col.title,
-                        style: theme.typography.small.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 7,
-                        vertical: 2,
-                      ),
-                      decoration: BoxDecoration(
-                        color: colorScheme.muted,
-                        borderRadius: BorderRadius.circular(10),
-                      ),
-                      child: Text(
-                        '${col.todos.length}',
-                        style: theme.typography.xSmall.copyWith(
-                          color: colorScheme.mutedForeground,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              // Cards
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: col.todos.isEmpty
-                    ? Center(
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(vertical: 24),
-                          child: Text(
-                            'No todos',
-                            style: theme.typography.small.copyWith(
-                              color: colorScheme.mutedForeground,
-                            ),
-                          ),
-                        ),
-                      )
-                    : Column(
-                        children: col.todos
-                            .map(
-                              (todo) => Padding(
-                                padding: const EdgeInsets.only(bottom: 6),
-                                child: _buildTodoTile(
-                                  context,
-                                  todo,
-                                  kanbanMode: true,
-                                  dragFeedbackWidth: columnWidth,
-                                ),
-                              ),
-                            )
-                            .toList(),
-                      ),
-              ),
-            ],
-          ),
-        );
-      },
     );
   }
 
@@ -335,11 +213,10 @@ class _MainPageTodosListState extends State<MainPageTodosList> {
     BuildContext context,
     TodoDto todo, {
     bool kanbanMode = false,
-    double? dragFeedbackWidth,
   }) {
     final isUpdating = _updatingTodoId == todo.id || _deletingTodoId == todo.id;
 
-    final card = TodoCard(
+    return TodoCard(
       padding: const EdgeInsets.all(0),
       todo: todo,
       showProject: true,
@@ -362,15 +239,6 @@ class _MainPageTodosListState extends State<MainPageTodosList> {
           _handleTodoDelete(context, todo.id);
         }
       },
-    );
-
-    if (!kanbanMode) return card;
-
-    return Draggable<TodoDto>(
-      data: todo,
-      feedback: _buildDragFeedback(context, todo, dragFeedbackWidth ?? 220),
-      childWhenDragging: Opacity(opacity: 0.3, child: card),
-      child: card,
     );
   }
 

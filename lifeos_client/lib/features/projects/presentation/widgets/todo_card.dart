@@ -34,8 +34,7 @@ class TodoCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ColorScheme colorScheme = Theme.of(context).colorScheme;
-    return Tappable(
-      lowerBound: 0.98,
+    return GestureDetector(
       onTap: onTap,
       child: Container(
         padding: padding,
