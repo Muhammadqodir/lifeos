@@ -149,14 +149,8 @@ class TodoDetailsPage extends StatelessWidget {
                 title: 'Activity',
                 dividerIndent: AppSpacing.md,
                 children: [
-                  DetailRow(
-                    label: 'Created',
-                    value: _dateTime(todo.createdAt),
-                  ),
-                  DetailRow(
-                    label: 'Updated',
-                    value: _dateTime(todo.updatedAt),
-                  ),
+                  DetailRow(label: 'Created', value: _dateTime(todo.createdAt)),
+                  DetailRow(label: 'Updated', value: _dateTime(todo.updatedAt)),
                 ],
               ),
             ],

@@ -1,6 +1,5 @@
 import 'package:flutter/services.dart' show TextInputAction;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/widgets/color_selector.dart';
 import 'package:lifeos_client/core/widgets/multi_selectable_group.dart';
 import 'package:lifeos_client/core/widgets/selectable_group.dart';
@@ -93,219 +92,213 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
           final isSubmitting = state is CreateHabitLoading;
 
           return Scaffold(
-            headers: [
-              AppHeader(
-                title: 'New habit',
-                actions: [
-                  HeaderAction(
-                    icon: HugeIcons.strokeRoundedCheckmarkCircle02,
-                    tooltip: 'Create',
-                    onTap: isSubmitting ? null : _submitForm,
-                  ),
-                ],
-              ),
-            ],
+            headers: [AppHeader(title: 'New habit')],
             child: SingleChildScrollView(
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              padding: const EdgeInsets.all(16.0),
-              child: ContentWidth(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title
-                  const Text(
-                    'Title',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _titleController,
-                    placeholder: const Text('Enter habit title'),
-                    enabled: !isSubmitting,
-                    textInputAction: TextInputAction.next,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Description
-                  const Text(
-                    'Description',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  TextField(
-                    controller: _descriptionController,
-                    placeholder: const Text('Enter description (optional)'),
-                    enabled: !isSubmitting,
-                    maxLines: 3,
-                    textInputAction: TextInputAction.newline,
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Color
-                  const Text(
-                    'Color',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  ColorSelector(
-                    initialColor: _selectedColor,
-                    onChanged: (color) {
-                      setState(() {
-                        _selectedColor = color;
-                      });
-                    },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Frequency
-                  const Text(
-                    'Frequency',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  SelectableGroup<String>(
-                    initialValue: _selectedFrequency,
-                    options: const [
-                      SelectableGroupOption(
-                        value: 'daily',
-                        widget: Text('Daily'),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.page,
+                vertical: AppSpacing.lg,
+              ),
+              child: ContentWidth(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Title
+                    AppFormField(
+                      label: 'Title',
+                      child: TextField(
+                        controller: _titleController,
+                        placeholder: const Text('Morning run'),
+                        enabled: !isSubmitting,
+                        textInputAction: TextInputAction.next,
                       ),
-                      SelectableGroupOption(
-                        value: 'weekly',
-                        widget: Text('Weekly'),
+                    ),
+
+                    // Description
+                    AppFormField(
+                      label: 'Description',
+                      child: TextField(
+                        controller: _descriptionController,
+                        placeholder: const Text(
+                          'Why this habit matters to you',
+                        ),
+                        enabled: !isSubmitting,
+                        maxLines: 3,
+                        textInputAction: TextInputAction.newline,
                       ),
-                    ],
-                    onChanged: isSubmitting
-                        ? (_) {}
-                        : (value) {
+                    ),
+
+                    // Color
+                    AppFormField(
+                      label: 'Colour',
+                      child: ColorSelector(
+                        initialColor: _selectedColor,
+                        onChanged: (color) {
+                          setState(() {
+                            _selectedColor = color;
+                          });
+                        },
+                      ),
+                    ),
+
+                    // Frequency
+                    AppFormField(
+                      label: 'Frequency',
+                      child: SelectableGroup<String>(
+                        initialValue: _selectedFrequency,
+                        options: const [
+                          SelectableGroupOption(
+                            value: 'daily',
+                            widget: Text('Daily'),
+                          ),
+                          SelectableGroupOption(
+                            value: 'weekly',
+                            widget: Text('Weekly'),
+                          ),
+                        ],
+                        onChanged: isSubmitting
+                            ? (_) {}
+                            : (value) {
+                                setState(() {
+                                  _selectedFrequency = value;
+                                  _selectedDays = [];
+                                });
+                              },
+                      ),
+                    ),
+
+                    // Days selection for weekly
+                    if (_selectedFrequency == 'weekly') ...[
+                      AppFormField(
+                        label: 'Days',
+                        child: MultiSelectableGroup<int>(
+                          initialValues: _selectedDays,
+                          options: const [
+                            MultiSelectableGroupOption(
+                              value: 0,
+                              widget: Text('Mon'),
+                            ),
+                            MultiSelectableGroupOption(
+                              value: 1,
+                              widget: Text('Tue'),
+                            ),
+                            MultiSelectableGroupOption(
+                              value: 2,
+                              widget: Text('Wed'),
+                            ),
+                            MultiSelectableGroupOption(
+                              value: 3,
+                              widget: Text('Thu'),
+                            ),
+                            MultiSelectableGroupOption(
+                              value: 4,
+                              widget: Text('Fri'),
+                            ),
+                            MultiSelectableGroupOption(
+                              value: 5,
+                              widget: Text('Sat'),
+                            ),
+                            MultiSelectableGroupOption(
+                              value: 6,
+                              widget: Text('Sun'),
+                            ),
+                          ],
+                          onChanged: (values) {
                             setState(() {
-                              _selectedFrequency = value;
-                              _selectedDays = [];
+                              _selectedDays = values;
                             });
                           },
-                  ),
-                  const SizedBox(height: 16),
+                        ),
+                      ),
+                    ],
 
-                  // Days selection for weekly
-                  if (_selectedFrequency == 'weekly') ...[
-                    const Text(
-                      'Days',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
+                    // Reminder Time
+                    AppFormField(
+                      label: 'Reminder time',
+                      optional: true,
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: TimeSelect(
+                          onTimeChanged: (value) {
+                            setState(() {
+                              _selectedTime = value;
+                            });
+                          },
+                        ),
                       ),
                     ),
-                    const SizedBox(height: 8),
-                    MultiSelectableGroup<int>(
-                      initialValues: _selectedDays,
-                      options: const [
-                        MultiSelectableGroupOption(
-                          value: 0,
-                          widget: Text('Mon'),
-                        ),
-                        MultiSelectableGroupOption(
-                          value: 1,
-                          widget: Text('Tue'),
-                        ),
-                        MultiSelectableGroupOption(
-                          value: 2,
-                          widget: Text('Wed'),
-                        ),
-                        MultiSelectableGroupOption(
-                          value: 3,
-                          widget: Text('Thu'),
-                        ),
-                        MultiSelectableGroupOption(
-                          value: 4,
-                          widget: Text('Fri'),
-                        ),
-                        MultiSelectableGroupOption(
-                          value: 5,
-                          widget: Text('Sat'),
-                        ),
-                        MultiSelectableGroupOption(
-                          value: 6,
-                          widget: Text('Sun'),
-                        ),
-                      ],
-                      onChanged: (values) {
-                        setState(() {
-                          _selectedDays = values;
-                        });
-                      },
+
+                    // Goal Duration
+                    AppFormField(
+                      label: 'Goal',
+                      child: SelectableGroup<int?>(
+                        initialValue: null,
+                        options: const [
+                          SelectableGroupOption(
+                            value: null,
+                            widget: Text('No limit'),
+                          ),
+                          SelectableGroupOption(
+                            value: 21,
+                            widget: Text('21 days'),
+                          ),
+                          SelectableGroupOption(
+                            value: 30,
+                            widget: Text('30 days'),
+                          ),
+                          SelectableGroupOption(
+                            value: 60,
+                            widget: Text('60 days'),
+                          ),
+                          SelectableGroupOption(
+                            value: 90,
+                            widget: Text('90 days'),
+                          ),
+                        ],
+                        onChanged: isSubmitting
+                            ? (_) {}
+                            : (value) {
+                                setState(() {
+                                  _goalDuration = value;
+                                });
+                              },
+                      ),
                     ),
-                    const SizedBox(height: 16),
+
+                    // Tags
+                    AppFormField(
+                      label: 'Tags',
+                      optional: true,
+                      child: ChipInput<String>(
+                        controller: _tagsController,
+                        enabled: !isSubmitting,
+                        onChipsChanged: (tags) {
+                          setState(() {
+                            _selectedTags = tags;
+                          });
+                        },
+                        onChipSubmitted: (value) {
+                          return '#$value';
+                        },
+                        chipBuilder: (context, chip) {
+                          return Text(chip);
+                        },
+                        placeholder: const Text('Add a tag'),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    FormSubmitButton(
+                      label: 'Create habit',
+                      loadingLabel: 'Creating…',
+                      loading: isSubmitting,
+                      onPressed: _submitForm,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
                   ],
-
-                  // Reminder Time
-                  const Text(
-                    'Reminder Time (Optional)',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  SizedBox(
-                    width: double.infinity,
-                    child: TimeSelect(
-                      onTimeChanged: (value) {
-                        setState(() {
-                          _selectedTime = value;
-                        });
-                      },
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Goal Duration
-                  const Text(
-                    'Goal Duration',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  SelectableGroup<int?>(
-                    initialValue: null,
-                    options: const [
-                      SelectableGroupOption(value: null, widget: Text('Unlm.')),
-                      SelectableGroupOption(value: 21, widget: Text('21 d.')),
-                      SelectableGroupOption(value: 30, widget: Text('30 d.')),
-                      SelectableGroupOption(value: 60, widget: Text('60 d.')),
-                      SelectableGroupOption(value: 90, widget: Text('90 d.')),
-                    ],
-                    onChanged: isSubmitting
-                        ? (_) {}
-                        : (value) {
-                            setState(() {
-                              _goalDuration = value;
-                            });
-                          },
-                  ),
-                  const SizedBox(height: 16),
-
-                  // Tags
-                  const Text(
-                    'Tags (Optional)',
-                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-                  ),
-                  const SizedBox(height: 8),
-                  ChipInput<String>(
-                    controller: _tagsController,
-                    enabled: !isSubmitting,
-                    onChipsChanged: (tags) {
-                      setState(() {
-                        _selectedTags = tags;
-                      });
-                    },
-                    onChipSubmitted: (value) {
-                      return '#$value';
-                    },
-                    chipBuilder: (context, chip) {
-                      return Text(chip);
-                    },
-                    placeholder: const Text('Add a tag...'),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              )),
+                ),
+              ),
             ),
           );
         },

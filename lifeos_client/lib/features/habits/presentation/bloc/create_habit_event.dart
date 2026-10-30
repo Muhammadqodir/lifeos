@@ -34,17 +34,17 @@ class CreateHabitSubmitted extends CreateHabitEvent {
 
   @override
   List<Object?> get props => [
-        title,
-        description,
-        color,
-        icon,
-        status,
-        frequency,
-        frequencyDays,
-        reminderTime,
-        goalDuration,
-        tags,
-      ];
+    title,
+    description,
+    color,
+    icon,
+    status,
+    frequency,
+    frequencyDays,
+    reminderTime,
+    goalDuration,
+    tags,
+  ];
 }
 
 class UpdateHabitSubmitted extends CreateHabitEvent {
@@ -76,16 +76,16 @@ class UpdateHabitSubmitted extends CreateHabitEvent {
 
   @override
   List<Object?> get props => [
-        habitId,
-        title,
-        description,
-        color,
-        icon,
-        status,
-        frequency,
-        frequencyDays,
-        reminderTime,
-        goalDuration,
-        tags,
-      ];
+    habitId,
+    title,
+    description,
+    color,
+    icon,
+    status,
+    frequency,
+    frequencyDays,
+    reminderTime,
+    goalDuration,
+    tags,
+  ];
 }

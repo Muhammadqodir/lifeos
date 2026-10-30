@@ -12,11 +12,7 @@ class HabitsListRequested extends HabitsListEvent {
   final String? frequency;
   final String? search;
 
-  const HabitsListRequested({
-    this.status,
-    this.frequency,
-    this.search,
-  });
+  const HabitsListRequested({this.status, this.frequency, this.search});
 
   @override
   List<Object?> get props => [status, frequency, search];

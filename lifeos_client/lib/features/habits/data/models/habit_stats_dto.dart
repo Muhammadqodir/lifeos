@@ -43,11 +43,11 @@ class HabitStatsDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        currentStreak,
-        longestStreak,
-        completionRate,
-        isCompletedToday,
-        totalEntries,
-        entriesByDate,
-      ];
+    currentStreak,
+    longestStreak,
+    completionRate,
+    isCompletedToday,
+    totalEntries,
+    entriesByDate,
+  ];
 }

@@ -71,7 +71,11 @@ class _HabitStatView extends StatelessWidget {
           AppToast.success(context, 'Habit archived');
           Navigator.of(context).pop(true);
         } else if (state is HabitStatsError) {
-          AppToast.error(context, 'Something went wrong', message: state.message);
+          AppToast.error(
+            context,
+            'Something went wrong',
+            message: state.message,
+          );
         }
       },
       child: Scaffold(
@@ -99,8 +103,10 @@ class _HabitStatView extends StatelessWidget {
             child: BlocBuilder<HabitStatsBloc, HabitStatsState>(
               builder: (context, state) {
                 final stats = state is HabitStatsLoaded ? state.stats : null;
-                final current = stats?.currentStreak ?? habit.currentStreak ?? 0;
-                final longest = stats?.longestStreak ?? habit.longestStreak ?? 0;
+                final current =
+                    stats?.currentStreak ?? habit.currentStreak ?? 0;
+                final longest =
+                    stats?.longestStreak ?? habit.longestStreak ?? 0;
                 final rate =
                     stats?.completionRate ?? habit.completionRate ?? 0.0;
 

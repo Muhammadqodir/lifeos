@@ -9,7 +9,7 @@ class HabitStatsBloc extends Bloc<HabitStatsEvent, HabitStatsState> {
   final HabitsRepository habitsRepository;
 
   HabitStatsBloc({required this.habitsRepository})
-      : super(HabitStatsInitial()) {
+    : super(HabitStatsInitial()) {
     on<LoadHabitStats>(_onLoadHabitStats);
     on<RefreshHabitStats>(_onRefreshHabitStats);
     on<ArchiveHabit>(_onArchiveHabit);

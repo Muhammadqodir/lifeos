@@ -42,10 +42,7 @@ abstract class HabitsRepository {
   Future<void> deleteHabit(int habitId);
 
   // Habit stats
-  Future<HabitStatsDto> getHabitStats({
-    required int habitId,
-    int days = 30,
-  });
+  Future<HabitStatsDto> getHabitStats({required int habitId, int days = 30});
 
   Future<List<HabitDto>> getHabitsWithTodayStatus();
 

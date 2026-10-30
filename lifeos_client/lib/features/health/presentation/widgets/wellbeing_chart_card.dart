@@ -18,7 +18,6 @@ class WellbeingChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -34,14 +33,18 @@ class WellbeingChartCard extends StatelessWidget {
                   strokeWidth: 2,
                   color: AppColors.cyanColor,
                 ),
-                Text(' ${wellbeingSummary.avgEnergy.toStringAsFixed(1)} energy  '),
+                Text(
+                  ' ${wellbeingSummary.avgEnergy.toStringAsFixed(1)} energy  ',
+                ),
                 HugeIcon(
                   icon: HugeIcons.strokeRoundedAlert02,
                   size: 12,
                   strokeWidth: 2,
                   color: AppColors.roseColor,
                 ),
-                Text(' ${wellbeingSummary.avgStress.toStringAsFixed(1)} stress'),
+                Text(
+                  ' ${wellbeingSummary.avgStress.toStringAsFixed(1)} stress',
+                ),
               ],
             ),
             trailing: onAddEntry == null

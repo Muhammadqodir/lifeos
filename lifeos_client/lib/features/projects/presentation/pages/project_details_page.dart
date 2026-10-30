@@ -265,9 +265,8 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                   child: isLoadingMore
                       ? const CircularProgressIndicator(size: 20)
                       : OutlineButton(
-                          onPressed: () => _todosBloc.add(
-                            LoadMoreTodos(status: tab.status),
-                          ),
+                          onPressed: () =>
+                              _todosBloc.add(LoadMoreTodos(status: tab.status)),
                           child: const Text('Show more'),
                         ),
                 ),

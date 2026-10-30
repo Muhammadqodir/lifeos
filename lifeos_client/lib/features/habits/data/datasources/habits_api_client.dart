@@ -54,10 +54,7 @@ class HabitsApiClient {
     try {
       final response = await dio.get(
         '$baseUrl/habits/$habitId',
-        queryParameters: {
-          'with_stats': '1',
-          'with_today': '1',
-        },
+        queryParameters: {'with_stats': '1', 'with_today': '1'},
       );
 
       if (response.statusCode == 200) {
@@ -99,10 +96,7 @@ class HabitsApiClient {
         if (tags != null) 'tags': tags,
       };
 
-      final response = await dio.post(
-        '$baseUrl/habits',
-        data: requestData,
-      );
+      final response = await dio.post('$baseUrl/habits', data: requestData);
 
       if (response.statusCode == 200 || response.statusCode == 201) {
         return HabitDto.fromJson(response.data['data']);
@@ -203,10 +197,7 @@ class HabitsApiClient {
     try {
       final response = await dio.get(
         '$baseUrl/habits/today',
-        queryParameters: {
-          'with_stats': '1',
-          'with_today': '1',
-        },
+        queryParameters: {'with_stats': '1', 'with_today': '1'},
       );
 
       if (response.statusCode == 200) {
@@ -314,10 +305,7 @@ class HabitsApiClient {
     try {
       final response = await dio.get(
         '$baseUrl/habit-entries/calendar',
-        queryParameters: {
-          'from': from,
-          'to': to,
-        },
+        queryParameters: {'from': from, 'to': to},
       );
 
       if (response.statusCode == 200) {

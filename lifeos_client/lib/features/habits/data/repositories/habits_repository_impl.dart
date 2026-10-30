@@ -93,10 +93,7 @@ class HabitsRepositoryImpl implements HabitsRepository {
     required int habitId,
     int days = 30,
   }) async {
-    return await apiClient.getHabitStats(
-      habitId: habitId,
-      days: days,
-    );
+    return await apiClient.getHabitStats(habitId: habitId, days: days);
   }
 
   @override

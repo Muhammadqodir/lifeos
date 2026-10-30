@@ -66,7 +66,6 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
     final outerContext = context;
 
     return BlocListener<AddProjectBloc, AddProjectState>(
@@ -89,147 +88,80 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
             final isSubmitting = state is AddProjectSubmitting;
 
             return SingleChildScrollView(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppSpacing.page,
+                vertical: AppSpacing.lg,
+              ),
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              child: ContentWidth(child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Project Title Field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Project Title', style: theme.typography.small),
-                      const SizedBox(height: 8),
-                      Row(
+              child: ContentWidth(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    AppFormField(
+                      label: 'Name',
+                      hint: 'Tap the image button to add an icon.',
+                      child: Row(
                         children: [
                           IconSelector(
                             initialIcon: null,
-                            onChanged: (image) {
-                              setState(() {
-                                _selectedIconImage = image;
-                              });
-                            },
+                            onChanged: (image) =>
+                                setState(() => _selectedIconImage = image),
                           ),
-                          SizedBox(width: 12),
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: TextField(
                               initialValue: _projectTitle,
-                              placeholder: const Text(
-                                'e.g., Mobile App Development',
-                              ),
-                              onSubmitted: (_) =>
-                                  FocusScope.of(context).unfocus(),
-                              onChanged: (value) {
-                                setState(() {
-                                  _projectTitle = value;
-                                });
-                              },
+                              placeholder: const Text('Mobile app'),
+                              onChanged: (value) =>
+                                  setState(() => _projectTitle = value),
                             ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Project Description Field
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'Description (Optional)',
-                        style: theme.typography.small,
-                      ),
-                      const SizedBox(height: 8),
-                      TextField(
+                    ),
+                    AppFormField(
+                      label: 'Description',
+                      optional: true,
+                      child: TextField(
                         initialValue: _projectDescription,
-                        placeholder: const Text('Describe your project...'),
+                        placeholder: const Text('What this project is about'),
                         minLines: 3,
                         maxLines: 5,
-                        onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                        onChanged: (value) {
-                          setState(() {
-                            _projectDescription = value;
-                          });
-                        },
+                        onChanged: (value) =>
+                            setState(() => _projectDescription = value),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-
-                  // Color Selection
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Project Color', style: theme.typography.small),
-                      const SizedBox(height: 8),
-                      ColorSelector(
-                        initialColor: _selectedColor,
-                        onChanged: (value) {
-                          setState(() {
-                            _selectedColor = value;
-                          });
-                        },
-                      ),
-                    ],
-                  ),
-
-                  const SizedBox(height: 12),
-
-                  // Tags Section
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text('Tags (Optional)', style: theme.typography.small),
-                      const SizedBox(height: 8),
-                      ChipInput<String>(
-                        controller: _tagsController,
-                        onChipsChanged: (value) {
-                          setState(() {
-                            _tags = value;
-                          });
-                        },
-                        onChipSubmitted: (value) {
-                          return '#$value';
-                        },
-                        chipBuilder: (context, chip) {
-                          return Text(chip);
-                        },
-                        placeholder: const Text('Add a tag...'),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 32),
-
-                  // Submit Button
-                  SizedBox(
-                    width: double.infinity,
-                    child: PrimaryButton(
-                      onPressed: !isSubmitting
-                          ? () => _handleFormSubmit(outerContext)
-                          : null,
-                      child: isSubmitting
-                          ? const Row(
-                              mainAxisAlignment: MainAxisAlignment.center,
-                              children: [
-                                SizedBox(
-                                  height: 16,
-                                  width: 16,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                  ),
-                                ),
-                                SizedBox(width: 12),
-                                Text('Creating...'),
-                              ],
-                            )
-                          : const Text('Create Project'),
                     ),
-                  ),
-                ],
-              )),
+                    AppFormField(
+                      label: 'Colour',
+                      child: ColorSelector(
+                        initialColor: _selectedColor,
+                        onChanged: (value) =>
+                            setState(() => _selectedColor = value),
+                      ),
+                    ),
+                    AppFormField(
+                      label: 'Tags',
+                      optional: true,
+                      child: ChipInput<String>(
+                        controller: _tagsController,
+                        onChipsChanged: (value) => setState(() => _tags = value),
+                        onChipSubmitted: (value) => '#$value',
+                        chipBuilder: (context, chip) => Text(chip),
+                        placeholder: const Text('Add a tag'),
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.sm),
+                    FormSubmitButton(
+                      label: 'Create project',
+                      loadingLabel: 'Creating…',
+                      loading: isSubmitting,
+                      onPressed: () => _handleFormSubmit(outerContext),
+                    ),
+                  ],
+                ),
+              ),
             );
           },
         ),

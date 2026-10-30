@@ -17,7 +17,6 @@ class SleepChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-
     return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

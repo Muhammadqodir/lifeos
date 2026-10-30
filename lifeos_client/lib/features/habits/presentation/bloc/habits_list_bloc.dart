@@ -6,7 +6,8 @@ import 'package:lifeos_client/features/habits/presentation/bloc/habits_list_stat
 class HabitsListBloc extends Bloc<HabitsListEvent, HabitsListState> {
   final HabitsRepository habitsRepository;
 
-  HabitsListBloc({required this.habitsRepository}) : super(HabitsListInitial()) {
+  HabitsListBloc({required this.habitsRepository})
+    : super(HabitsListInitial()) {
     on<HabitsListRequested>(_onHabitsListRequested);
     on<HabitsListRefreshed>(_onHabitsListRefreshed);
   }

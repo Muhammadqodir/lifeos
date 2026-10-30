@@ -1,6 +1,5 @@
 import 'package:flutter/services.dart' show TextInputAction;
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/core/widgets/date_select.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habits_list_bloc.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habits_list_event.dart';
@@ -45,8 +44,6 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-
     return BlocConsumer<LogEntryBloc, LogEntryState>(
       listener: (context, state) {
         if (state is LogEntrySuccess) {
@@ -67,75 +64,35 @@ class _LogEntrySheetState extends State<LogEntrySheet> {
       builder: (context, state) {
         final isSubmitting = state is LogEntryLoading;
 
-        return Container(
-          padding: const EdgeInsets.all(16),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Log Habit Entry',
-                    style: theme.typography.large.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  IconButton.primary(
-                    icon: const HugeIcon(
-                      icon: HugeIcons.strokeRoundedCancel01,
-                      size: 20,
-                    ),
-                    onPressed: () => Navigator.of(context).pop(),
-                  ),
-                ],
+        return FormSheet(
+          title: 'Check in',
+          description: 'Log this habit for a day, with an optional note.',
+          submit: FormSubmitButton(
+            label: 'Log entry',
+            loadingLabel: 'Saving…',
+            loading: isSubmitting,
+            onPressed: () => _submitEntry(context),
+          ),
+          children: [
+            AppFormField(
+              label: 'Date',
+              hint: 'Leave empty for today.',
+              child: DateSelect(
+                onDateChanged: (date) => setState(() => _selectedDate = date),
               ),
-              const SizedBox(height: 16),
-
-              // Date selector
-              const Text(
-                'Date',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              DateSelect(
-                onDateChanged: (date) {
-                  setState(() {
-                    _selectedDate = date;
-                  });
-                },
-              ),
-              const SizedBox(height: 16),
-
-              // Note (optional)
-              const Text(
-                'Note (Optional)',
-                style: TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
-              ),
-              const SizedBox(height: 8),
-              TextField(
+            ),
+            AppFormField(
+              label: 'Note',
+              optional: true,
+              child: TextField(
                 controller: _noteController,
-                placeholder: const Text('Add a note about this entry...'),
+                placeholder: const Text('How did it go?'),
                 enabled: !isSubmitting,
                 maxLines: 3,
                 textInputAction: TextInputAction.done,
               ),
-              const SizedBox(height: 24),
-
-              // Submit button
-              SizedBox(
-                width: double.infinity,
-                child: PrimaryButton(
-                  onPressed: isSubmitting ? null : () => _submitEntry(context),
-                  child: isSubmitting
-                      ? const CircularProgressIndicator()
-                      : const Text('Log Entry'),
-                ),
-              ),
-            ],
-          ),
+            ),
+          ],
         );
       },
     );

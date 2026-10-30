@@ -29,216 +29,108 @@ class _AddExerciseDialogState extends State<AddExerciseDialog> {
     super.dispose();
   }
 
+  Future<void> _pickImage() async {
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 1024,
+      maxHeight: 1024,
+      imageQuality: 85,
+    );
+    if (image != null) setState(() => selectedImage = image);
+  }
+
+  void _submit() {
+    final name = nameController.text.trim();
+    final muscleGroup = muscleGroupController.text.trim();
+    if (name.isEmpty) {
+      AppToast.error(context, 'Check the form', message: 'Enter an exercise name.');
+      return;
+    }
+    context.read<ExerciseBloc>().add(
+      CreateExercise(
+        name: name,
+        type: selectedType,
+        muscleGroup: muscleGroup.isEmpty ? null : muscleGroup,
+        imagePath: selectedImage?.path,
+      ),
+    );
+    Navigator.pop(context);
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return SingleChildScrollView(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 18),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Title
-            Text(
-              'Add Custom Exercise',
-              style: theme.typography.large.copyWith(
-                fontWeight: FontWeight.w600,
-                color: colorScheme.foreground,
-              ),
-            ),
-            const SizedBox(height: 24),
-
-            // Exercise Name
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Exercise Name *',
-                  style: theme.typography.small.copyWith(
-                    color: colorScheme.foreground,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: nameController,
-                  placeholder: const Text('e.g., Cable Fly'),
-                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Type Selection
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Type *',
-                  style: theme.typography.small.copyWith(
-                    color: colorScheme.foreground,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                SelectableGroup<String>(
-                  initialValue: selectedType,
-                  options: ['strength', 'distance', 'time']
-                      .map(
-                        (type) => SelectableGroupOption(
-                          value: type,
-                          widget: Text(type.toUpperCase()),
-                        ),
-                      )
-                      .toList(),
-                  onChanged: (value) {
-                    setState(() => selectedType = value);
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Muscle Group Selection
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Muscle Group (optional)',
-                  style: theme.typography.small.copyWith(
-                    color: colorScheme.foreground,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                TextField(
-                  controller: muscleGroupController,
-                  placeholder: const Text('e.g., Chest, Back'),
-                  onSubmitted: (_) => FocusScope.of(context).unfocus(),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-
-            // Image Upload
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'Exercise Image (optional)',
-                  style: theme.typography.small.copyWith(
-                    color: colorScheme.foreground,
-                  ),
-                ),
-                const SizedBox(height: 8),
-                if (selectedImage != null)
-                  Container(
-                    height: 150,
-                    width: double.infinity,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: colorScheme.border),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: Stack(
-                      children: [
-                        ClipRRect(
-                          borderRadius: BorderRadius.circular(8),
-                          child: Image.file(
-                            File(selectedImage!.path),
-                            width: double.infinity,
-                            height: 150,
-                            fit: BoxFit.cover,
-                          ),
-                        ),
-                        Positioned(
-                          top: 8,
-                          right: 8,
-                          child: GestureDetector(
-                            onTap: () {
-                              setState(() => selectedImage = null);
-                            },
-                            child: Container(
-                              padding: const EdgeInsets.all(4),
-                              decoration: BoxDecoration(
-                                color: colorScheme.destructive,
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: const HugeIcon(
-                                icon: HugeIcons.strokeRoundedDelete02,
-                                size: 16,
-                                color: Colors.white,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  )
-                else
-                  OutlineButton(
-                    onPressed: () async {
-                      final ImagePicker picker = ImagePicker();
-                      final XFile? image = await picker.pickImage(
-                        source: ImageSource.gallery,
-                        maxWidth: 1024,
-                        maxHeight: 1024,
-                        imageQuality: 85,
-                      );
-                      if (image != null) {
-                        setState(() => selectedImage = image);
-                      }
-                    },
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        const HugeIcon(
-                          icon: HugeIcons.strokeRoundedImage01,
-                          size: 20,
-                        ),
-                        const SizedBox(width: 8),
-                        const Text('Choose Image'),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 24),
-
-            // Action Buttons
-            SizedBox(
-              width: double.infinity,
-              child: PrimaryButton(
-                onPressed: () {
-                  final name = nameController.text.trim();
-                  final muscleGroup = muscleGroupController.text.trim().isEmpty
-                      ? null
-                      : muscleGroupController.text.trim();
-
-                  if (name.isEmpty) {
-                    AppToast.error(
-                      context,
-                      'Check the form',
-                      message: 'Enter an exercise name.',
-                    );
-                    return;
-                  }
-
-                  context.read<ExerciseBloc>().add(
-                    CreateExercise(
-                      name: name,
-                      type: selectedType,
-                      muscleGroup: muscleGroup,
-                      imagePath: selectedImage?.path,
-                    ),
-                  );
-                  Navigator.pop(context);
-                },
-                child: const Text('Create'),
-              ),
-            ),
-          ],
+    return FormSheet(
+      title: 'New exercise',
+      description: 'Add a custom exercise to use in workouts.',
+      submit: FormSubmitButton(label: 'Create exercise', onPressed: _submit),
+      children: [
+        AppFormField(
+          label: 'Name',
+          child: TextField(
+            controller: nameController,
+            placeholder: const Text('Cable fly'),
+          ),
         ),
-      ),
+        AppFormField(
+          label: 'Type',
+          child: SelectableGroup<String>(
+            initialValue: selectedType,
+            options: const [
+              SelectableGroupOption(value: 'strength', widget: Text('Strength')),
+              SelectableGroupOption(value: 'distance', widget: Text('Distance')),
+              SelectableGroupOption(value: 'time', widget: Text('Time')),
+            ],
+            onChanged: (value) => setState(() => selectedType = value),
+          ),
+        ),
+        AppFormField(
+          label: 'Muscle group',
+          optional: true,
+          child: TextField(
+            controller: muscleGroupController,
+            placeholder: const Text('Chest'),
+          ),
+        ),
+        AppFormField(
+          label: 'Image',
+          optional: true,
+          child: selectedImage == null
+              ? OutlineButton(
+                  onPressed: _pickImage,
+                  leading: const HugeIcon(
+                    icon: HugeIcons.strokeRoundedImage01,
+                    size: AppIconSize.sm,
+                  ),
+                  child: const Text('Choose image'),
+                )
+              : Stack(
+                  children: [
+                    ClipRRect(
+                      borderRadius: theme.controlRadius,
+                      child: Image.file(
+                        File(selectedImage!.path),
+                        width: double.infinity,
+                        height: 150,
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                    Positioned(
+                      top: AppSpacing.sm,
+                      right: AppSpacing.sm,
+                      child: IconButton.secondary(
+                        size: ButtonSize.small,
+                        icon: const HugeIcon(
+                          icon: HugeIcons.strokeRoundedDelete02,
+                          size: AppIconSize.sm,
+                        ),
+                        onPressed: () => setState(() => selectedImage = null),
+                      ),
+                    ),
+                  ],
+                ),
+        ),
+      ],
     );
   }
 }

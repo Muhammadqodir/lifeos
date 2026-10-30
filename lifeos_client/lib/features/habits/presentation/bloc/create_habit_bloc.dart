@@ -6,7 +6,8 @@ import 'package:lifeos_client/features/habits/presentation/bloc/create_habit_sta
 class CreateHabitBloc extends Bloc<CreateHabitEvent, CreateHabitState> {
   final HabitsRepository habitsRepository;
 
-  CreateHabitBloc({required this.habitsRepository}) : super(CreateHabitInitial()) {
+  CreateHabitBloc({required this.habitsRepository})
+    : super(CreateHabitInitial()) {
     on<CreateHabitSubmitted>(_onCreateHabitSubmitted);
     on<UpdateHabitSubmitted>(_onUpdateHabitSubmitted);
   }

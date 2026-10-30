@@ -97,7 +97,9 @@ class _ExerciseSelectionSheetState extends State<ExerciseSelectionSheet> {
                             state.message,
                             textAlign: TextAlign.center,
                             style: Theme.of(context).typography.small.copyWith(
-                              color: Theme.of(context).colorScheme.mutedForeground,
+                              color: Theme.of(
+                                context,
+                              ).colorScheme.mutedForeground,
                             ),
                           ),
                           const SizedBox(height: 16),

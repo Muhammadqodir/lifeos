@@ -52,13 +52,13 @@ class HabitEntryDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        habitId,
-        habit,
-        date,
-        completedAt,
-        note,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    habitId,
+    habit,
+    date,
+    completedAt,
+    note,
+    createdAt,
+    updatedAt,
+  ];
 }
