@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart' show ThemeMode;
 
 /// Base class for all theme events
 abstract class ThemeEvent extends Equatable {
@@ -8,17 +9,12 @@ abstract class ThemeEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-/// Event to toggle between light and dark theme
-class ThemeToggled extends ThemeEvent {
-  const ThemeToggled();
-}
-
-/// Event to set a specific theme mode
+/// Event to set the appearance: system, light or dark
 class ThemeChanged extends ThemeEvent {
-  final bool isDark;
+  final ThemeMode mode;
 
-  const ThemeChanged(this.isDark);
+  const ThemeChanged(this.mode);
 
   @override
-  List<Object?> get props => [isDark];
+  List<Object?> get props => [mode];
 }

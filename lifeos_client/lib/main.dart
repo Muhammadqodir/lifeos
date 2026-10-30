@@ -38,7 +38,7 @@ class MyApp extends StatelessWidget {
             title: 'LifeOS',
             theme: CustomTheme.lightTheme(),
             darkTheme: CustomTheme.darkTheme(),
-            themeMode: themeState.isDark ? ThemeMode.dark : ThemeMode.light,
+            themeMode: themeState.mode,
             debugShowCheckedModeBanner: false,
             home: BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {

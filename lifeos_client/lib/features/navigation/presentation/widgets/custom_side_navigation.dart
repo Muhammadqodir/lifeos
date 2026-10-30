@@ -4,7 +4,6 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import '../../../../core/theme/presentation/bloc/theme_bloc.dart';
 import '../../../../core/theme/presentation/bloc/theme_event.dart';
-import '../../../../core/theme/presentation/bloc/theme_state.dart';
 import '../../../../core/ui/ui.dart';
 import '../../../auth/presentation/bloc/auth_bloc.dart';
 import '../../../auth/presentation/bloc/auth_event.dart';
@@ -210,18 +209,19 @@ class _ThemeToggle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ThemeBloc, ThemeState>(
-      builder: (context, state) {
-        return Center(
-          child: HeaderAction(
-            icon: state.isDark
-                ? HugeIcons.strokeRoundedSun01
-                : HugeIcons.strokeRoundedMoon02,
-            tooltip: state.isDark ? 'Light appearance' : 'Dark appearance',
-            onTap: () => context.read<ThemeBloc>().add(const ThemeToggled()),
-          ),
-        );
-      },
+    // Rebuilds when the theme (and so the brightness) changes. Toggling
+    // from "System" picks the opposite of what is currently shown.
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Center(
+      child: HeaderAction(
+        icon: isDark
+            ? HugeIcons.strokeRoundedSun01
+            : HugeIcons.strokeRoundedMoon02,
+        tooltip: isDark ? 'Light appearance' : 'Dark appearance',
+        onTap: () => context.read<ThemeBloc>().add(
+          ThemeChanged(isDark ? ThemeMode.light : ThemeMode.dark),
+        ),
+      ),
     );
   }
 }

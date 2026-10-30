@@ -70,20 +70,9 @@ class OtherPage extends StatelessWidget {
                 children: [
                   BlocBuilder<ThemeBloc, ThemeState>(
                     builder: (context, state) => AppListTile(
-                      leading: LeadingTile.icon(
-                        state.isDark
-                            ? HugeIcons.strokeRoundedMoon02
-                            : HugeIcons.strokeRoundedSun01,
-                      ),
-                      title: 'Dark appearance',
-                      subtitle: state.isDark ? 'On' : 'Off',
-                      onTap: () =>
-                          context.read<ThemeBloc>().add(const ThemeToggled()),
-                      trailing: Switch(
-                        value: state.isDark,
-                        onChanged: (value) =>
-                            context.read<ThemeBloc>().add(ThemeChanged(value)),
-                      ),
+                      leading: LeadingTile.icon(_appearanceIcon(state.mode)),
+                      title: 'Appearance',
+                      trailing: _AppearanceSelect(mode: state.mode),
                     ),
                   ),
                   AppListTile(
@@ -141,6 +130,54 @@ class OtherPage extends StatelessWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+List<List<dynamic>> _appearanceIcon(ThemeMode mode) => switch (mode) {
+  ThemeMode.system => HugeIcons.strokeRoundedComputerPhoneSync,
+  ThemeMode.light => HugeIcons.strokeRoundedSun01,
+  ThemeMode.dark => HugeIcons.strokeRoundedMoon02,
+};
+
+String _appearanceLabel(ThemeMode mode) => switch (mode) {
+  ThemeMode.system => 'System',
+  ThemeMode.light => 'Light',
+  ThemeMode.dark => 'Dark',
+};
+
+class _AppearanceSelect extends StatelessWidget {
+  const _AppearanceSelect({required this.mode});
+
+  final ThemeMode mode;
+
+  @override
+  Widget build(BuildContext context) {
+    // The popup matches the trigger's width, so give it room for "System".
+    return SizedBox(
+      width: 120,
+      child: Select<ThemeMode>(
+        value: mode,
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.md,
+          vertical: AppSpacing.xs,
+        ),
+        itemBuilder: (context, item) => Text(_appearanceLabel(item)),
+        onChanged: (value) {
+          if (value != null) context.read<ThemeBloc>().add(ThemeChanged(value));
+        },
+        popup: SelectPopup(
+          items: SelectItemList(
+            children: [
+              for (final option in ThemeMode.values)
+                SelectItemButton<ThemeMode>(
+                  value: option,
+                  child: Text(_appearanceLabel(option)),
+                ),
+            ],
+          ),
+        ).call,
       ),
     );
   }
