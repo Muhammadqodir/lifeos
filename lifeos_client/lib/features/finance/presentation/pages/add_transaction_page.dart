@@ -1,8 +1,6 @@
 //TODO: increase loading speed, cache wallets and categories
 
-import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/finance/data/models/wallet_dto.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -147,7 +145,7 @@ class _AddTransactionPageContent extends StatelessWidget {
             physics: AlwaysScrollableScrollPhysics(
               parent: BouncingScrollPhysics(),
             ),
-            child: Column(
+            child: ContentWidth(child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 // Transaction Type Selector
@@ -281,7 +279,7 @@ class _AddTransactionPageContent extends StatelessWidget {
 
                 const SizedBox(height: 24), // Space for bottom button
               ],
-            ),
+            )),
           ),
         ),
       ],

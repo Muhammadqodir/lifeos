@@ -1,3 +1,5 @@
+import 'dart:math' as math;
+
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 import '../app_theme_x.dart';
@@ -20,12 +22,17 @@ class ContentWidth extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: BoxConstraints(maxWidth: maxWidth),
-        child: child,
-      ),
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // A tight width keeps stretch layouts full-width up to the cap.
+        final width = constraints.hasBoundedWidth
+            ? math.min(constraints.maxWidth, maxWidth)
+            : maxWidth;
+        return Align(
+          alignment: Alignment.topCenter,
+          child: SizedBox(width: width, child: child),
+        );
+      },
     );
   }
 }

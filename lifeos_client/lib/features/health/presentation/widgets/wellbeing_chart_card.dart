@@ -1,5 +1,6 @@
 import 'package:lifeos_client/core/theme/app_colors.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../data/models/wellbeing_summary_dto.dart';
@@ -17,76 +18,40 @@ class WellbeingChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    return Card(
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Wellbeing (Last 7 Days)',
-                      style: theme.typography.small.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedEnergy,
-                          size: 14,
-                          strokeWidth: 2,
-                          color: AppColors.cyanColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Energy: ${wellbeingSummary.avgEnergy.toStringAsFixed(1)}',
-                          style: theme.typography.xSmall.copyWith(
-                            color: colorScheme.mutedForeground,
-                          ),
-                        ),
-                        const SizedBox(width: 16),
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedAlert02,
-                          size: 14,
-                          strokeWidth: 2,
-                          color: AppColors.roseColor,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(
-                          'Stress: ${wellbeingSummary.avgStress.toStringAsFixed(1)}',
-                          style: theme.typography.xSmall.copyWith(
-                            color: colorScheme.mutedForeground,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+          CardHeader(
+            title: 'Wellbeing',
+            subtitleWidget: Row(
+              children: [
+                const Text('Last 7 days · '),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedEnergy,
+                  size: 12,
+                  strokeWidth: 2,
+                  color: AppColors.cyanColor,
                 ),
-              ),
-              if (onAddEntry != null)
-                IconButton.primary(
-                  size: ButtonSize.normal,
-                  onPressed: onAddEntry,
-                  icon: HugeIcon(
+                Text(' ${wellbeingSummary.avgEnergy.toStringAsFixed(1)} energy  '),
+                HugeIcon(
+                  icon: HugeIcons.strokeRoundedAlert02,
+                  size: 12,
+                  strokeWidth: 2,
+                  color: AppColors.roseColor,
+                ),
+                Text(' ${wellbeingSummary.avgStress.toStringAsFixed(1)} stress'),
+              ],
+            ),
+            trailing: onAddEntry == null
+                ? null
+                : HeaderAction(
                     icon: HugeIcons.strokeRoundedAdd01,
-                    size: 16,
-                    strokeWidth: 3,
-                    color: colorScheme.primaryForeground,
+                    tooltip: 'Log wellbeing',
+                    onTap: onAddEntry,
                   ),
-                ),
-            ],
           ),
-          const SizedBox(height: 20),
           SizedBox(height: 150, child: _buildLineChart(context)),
         ],
       ),

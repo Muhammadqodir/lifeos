@@ -58,7 +58,7 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        child: Column(
+        child: ContentWidth(child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             // Workout Summary Card
@@ -486,7 +486,7 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
               );
             }),
           ],
-        ),
+        )),
       ),
     );
   }

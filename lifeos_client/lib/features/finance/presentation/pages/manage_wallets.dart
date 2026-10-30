@@ -1,9 +1,7 @@
 import 'package:lifeos_client/core/extension/extensions.dart';
 import 'package:lifeos_client/core/theme/app_colors.dart';
-import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/finance/data/datasources/constants.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -175,7 +173,7 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              child: Column(
+              child: ContentWidth(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   ...wallets.map((wallet) {
@@ -286,7 +284,7 @@ class _ManageWalletsPageContentState extends State<_ManageWalletsPageContent> {
                     );
                   }),
                 ],
-              ),
+              )),
             );
           },
         ),

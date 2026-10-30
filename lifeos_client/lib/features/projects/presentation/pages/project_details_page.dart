@@ -1,26 +1,22 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
-import 'package:lifeos_client/core/config/app_config.dart';
-import 'package:lifeos_client/core/widgets/error_state.dart';
-import 'package:lifeos_client/core/widgets/loading_state.dart';
-import 'package:lifeos_client/core/widgets/selectable_group.dart';
-import 'package:lifeos_client/utils/dialogs.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
+
+import '../../../../core/ui/ui.dart';
+import '../../../../core/widgets/selectable_group.dart';
 import '../../../../injection.dart';
-import '../../../../utils/toast.dart';
-import '../../../../core/widgets/empty_state.dart';
-import '../../../projects/data/models/project_dto.dart';
-import '../../../projects/presentation/bloc/manage_todos_bloc.dart';
-import '../../../projects/presentation/bloc/manage_todos_event.dart';
-import '../../../projects/presentation/bloc/manage_todos_state.dart';
-import '../../../projects/data/models/todo_dto.dart';
+import '../../data/models/project_dto.dart';
+import '../../data/models/todo_dto.dart';
+import '../bloc/manage_todos_bloc.dart';
+import '../bloc/manage_todos_event.dart';
+import '../bloc/manage_todos_state.dart';
+import '../widgets/plan_date_dialog.dart';
 import '../widgets/todo_card.dart';
 import 'create_todo_page.dart';
 import 'todo_details_page.dart';
-import 'package:lifeos_client/core/ui/ui.dart';
 
+/// A project's todos, one page per status.
 class ProjectDetailsPage extends StatefulWidget {
   final ProjectDto project;
 
@@ -30,17 +26,53 @@ class ProjectDetailsPage extends StatefulWidget {
   State<ProjectDetailsPage> createState() => _ProjectDetailsPageState();
 }
 
+class _StatusTab {
+  const _StatusTab(this.status, this.label, this.icon, this.emptyText);
+  final String status;
+  final String label;
+  final List<List<dynamic>> icon;
+  final String emptyText;
+}
+
 class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
+  static const _tabs = [
+    _StatusTab(
+      'inbox',
+      'Inbox',
+      HugeIcons.strokeRoundedInboxDownload,
+      'Capture ideas here, then plan them.',
+    ),
+    _StatusTab(
+      'planned',
+      'Planned',
+      HugeIcons.strokeRoundedCalendar03,
+      'Todos with a date show up here.',
+    ),
+    _StatusTab(
+      'in_progress',
+      'In progress',
+      HugeIcons.strokeRoundedLoading03,
+      'Start a todo to track it here.',
+    ),
+    _StatusTab(
+      'blocked',
+      'Blocked',
+      HugeIcons.strokeRoundedAlertCircle,
+      'Nothing is blocked.',
+    ),
+    _StatusTab(
+      'done',
+      'Done',
+      HugeIcons.strokeRoundedCheckmarkCircle02,
+      'Completed todos land here.',
+    ),
+  ];
+
   late final ManageTodosBloc _todosBloc;
   late final PageController _pageController;
   int _selectedTabIndex = 0;
-  final List<String> _statuses = [
-    'inbox',
-    'planned',
-    'in_progress',
-    'blocked',
-    'done',
-  ];
+
+  List<String> get _statuses => _tabs.map((t) => t.status).toList();
 
   @override
   void initState() {
@@ -57,9 +89,11 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
   }
 
   void _loadCurrentTab() {
-    final status = _statuses[_selectedTabIndex];
     _todosBloc.add(
-      LoadTodosByStatus(projectId: widget.project.id, status: status),
+      LoadTodosByStatus(
+        projectId: widget.project.id,
+        status: _statuses[_selectedTabIndex],
+      ),
     );
   }
 
@@ -77,270 +111,225 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
       child: BlocListener<ManageTodosBloc, ManageTodosState>(
         listener: (context, state) {
           if (state is ManageTodosError) {
-            _showErrorToast(state.message);
+            AppToast.error(
+              context,
+              "Couldn't update todos",
+              message: state.message,
+            );
           } else if (state is TodoStatusUpdated) {
-            // Refresh all data after successful status update
             _loadAllData();
           }
         },
-        child: Scaffold(
-          headers: [
-            AppHeader(
-              showBorder: false,
-              title: widget.project.title,
-              actions: [
-                HeaderAction(
-                  icon: HugeIcons.strokeRoundedAdd01,
-                  tooltip: 'Add Todo',
-                  onTap: () {
-                    _navigateToCreateTodo(context);
-                  },
-                ),
-              ],
-            ),
-          ],
-          child: BlocBuilder<ManageTodosBloc, ManageTodosState>(
-            builder: (context, state) {
-              if (state is ManageTodosLoading || state is ManageTodosInitial) {
-                return const LoadingState(message: 'Loading todos...');
-              }
-
-              // Handle all WithData states
-              if (state is ManageTodosWithData) {
-                final todosByStatus = state.todosByStatus;
-                final hasMoreByStatus = state.hasMoreByStatus;
-                final isLoadingMoreByStatus = state.isLoadingMoreByStatus;
-                final countsByStatus = state.countsByStatus;
-
-                return Column(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      decoration: BoxDecoration(
-                        border: Border(
-                          bottom: BorderSide(
-                            color: Theme.of(context).colorScheme.border,
-                            width: 1,
-                          ),
-                        ),
-                      ),
-                      child: SelectableGroup<int>(
-                        scrollable: true,
-                        value: _selectedTabIndex,
-                        options: [
-                          SelectableGroupOption(
-                            value: 0,
-                            widget: _buildTabOption(
-                              HugeIcons.strokeRoundedInboxDownload,
-                              'Inbox',
-                              countsByStatus['inbox'] ?? 0,
-                            ),
-                          ),
-                          SelectableGroupOption(
-                            value: 1,
-                            widget: _buildTabOption(
-                              HugeIcons.strokeRoundedCalendar03,
-                              'Planned',
-                              countsByStatus['planned'] ?? 0,
-                            ),
-                          ),
-                          SelectableGroupOption(
-                            value: 2,
-                            widget: _buildTabOption(
-                              HugeIcons.strokeRoundedLoading03,
-                              'In Progress',
-                              countsByStatus['in_progress'] ?? 0,
-                            ),
-                          ),
-                          SelectableGroupOption(
-                            value: 3,
-                            widget: _buildTabOption(
-                              HugeIcons.strokeRoundedAlertCircle,
-                              'Blocked',
-                              countsByStatus['blocked'] ?? 0,
-                            ),
-                          ),
-                          SelectableGroupOption(
-                            value: 4,
-                            widget: _buildTabOption(
-                              HugeIcons.strokeRoundedCheckmarkCircle02,
-                              'Done',
-                              countsByStatus['done'] ?? 0,
-                            ),
-                          ),
-                        ],
-                        onChanged: (v) {
-                          _pageController.animateToPage(
-                            v,
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        },
-                      ),
-                    ),
-                    Expanded(
-                      child: PageView(
-                        controller: _pageController,
-                        onPageChanged: (index) {
-                          setState(() {
-                            _selectedTabIndex = index;
-                          });
-                          _loadCurrentTab();
-                        },
-                        children: _statuses.map((status) {
-                          final todos = todosByStatus[status] ?? [];
-                          final hasMore = hasMoreByStatus[status] ?? false;
-                          final isLoadingMore =
-                              isLoadingMoreByStatus[status] ?? false;
-                          return _buildTodoList(
-                            todos,
-                            status,
-                            hasMore,
-                            isLoadingMore,
-                            state,
-                          );
-                        }).toList(),
-                      ),
+        child: BlocBuilder<ManageTodosBloc, ManageTodosState>(
+          builder: (context, state) {
+            final counts = state is ManageTodosWithData
+                ? state.countsByStatus
+                : const <String, int>{};
+            return Scaffold(
+              headers: [
+                AppHeader(
+                  title: widget.project.title,
+                  subtitle: widget.project.description,
+                  onRefresh: _loadAllData,
+                  actions: [
+                    HeaderAction(
+                      icon: HugeIcons.strokeRoundedAdd01,
+                      tooltip: 'New todo',
+                      label: 'New todo',
+                      primary: true,
+                      onTap: () => _navigateToCreateTodo(context),
                     ),
                   ],
-                );
-              }
-
-              return const SizedBox();
-            },
-          ),
+                  bottom: Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.md),
+                    child: SelectableGroup<int>(
+                      scrollable: true,
+                      value: _selectedTabIndex,
+                      options: [
+                        for (var i = 0; i < _tabs.length; i++)
+                          SelectableGroupOption(
+                            value: i,
+                            widget: _tabLabel(
+                              _tabs[i],
+                              counts[_tabs[i].status] ?? 0,
+                              selected: i == _selectedTabIndex,
+                            ),
+                          ),
+                      ],
+                      onChanged: (index) => _pageController.animateToPage(
+                        index,
+                        duration: AppDurations.slow,
+                        curve: Curves.easeOutCubic,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+              child: _buildBody(context, state),
+            );
+          },
         ),
       ),
     );
   }
 
+  Widget _buildBody(BuildContext context, ManageTodosState state) {
+    if (state is ManageTodosLoading || state is ManageTodosInitial) {
+      return const LoadingState(message: 'Loading todos…');
+    }
+    if (state is! ManageTodosWithData) return const SizedBox.shrink();
+
+    final updatingTodoId = state is TodoStatusUpdating ? state.todoId : null;
+
+    return PageView(
+      controller: _pageController,
+      onPageChanged: (index) {
+        setState(() => _selectedTabIndex = index);
+        _loadCurrentTab();
+      },
+      children: [
+        for (final tab in _tabs)
+          _buildTodoList(
+            context,
+            tab,
+            state.todosByStatus[tab.status] ?? const [],
+            hasMore: state.hasMoreByStatus[tab.status] ?? false,
+            isLoadingMore: state.isLoadingMoreByStatus[tab.status] ?? false,
+            updatingTodoId: updatingTodoId,
+          ),
+      ],
+    );
+  }
+
   Widget _buildTodoList(
-    List<TodoDto> todos,
-    String status,
-    bool hasMore,
-    bool isLoadingMore,
-    ManageTodosState state,
-  ) {
+    BuildContext context,
+    _StatusTab tab,
+    List<TodoDto> todos, {
+    required bool hasMore,
+    required bool isLoadingMore,
+    required int? updatingTodoId,
+  }) {
     if (todos.isEmpty) {
       return EmptyState(
-        icon: const HugeIcon(icon: HugeIcons.strokeRoundedTask01),
-        title: 'No ${status.replaceAll('_', ' ')} todos',
-        description: 'Start by creating a new todo',
+        icon: HugeIcon(icon: tab.icon),
+        title: 'No ${tab.label.toLowerCase()} todos',
+        description: tab.emptyText,
+        action: tab.status == 'inbox'
+            ? OutlineButton(
+                onPressed: () => _navigateToCreateTodo(context),
+                child: const Text('New todo'),
+              )
+            : null,
       );
     }
 
-    // Check if any todo is being updated
-    int? updatingTodoId;
-    if (state is TodoStatusUpdating) {
-      updatingTodoId = state.todoId;
-    }
-
-    return ListView.builder(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      itemCount: todos.length + (hasMore ? 1 : 0),
-      itemBuilder: (context, index) {
-        if (index == todos.length) {
-          // Load more indicator
-          if (isLoadingMore) {
-            return const Padding(
-              padding: EdgeInsets.all(16.0),
-              child: Center(child: CircularProgressIndicator()),
-            );
-          } else {
-            return Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Center(
-                child: PrimaryButton(
-                  onPressed: () {
-                    _todosBloc.add(LoadMoreTodos(status: status));
-                  },
-                  child: const Text('Load More'),
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.page,
+        vertical: AppSpacing.lg,
+      ),
+      child: ContentWidth(
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            AppListSection(
+              margin: EdgeInsets.zero,
+              children: [
+                for (final todo in todos)
+                  TodoCard(
+                    todo: todo,
+                    isUpdating: updatingTodoId == todo.id,
+                    onTap: () => Navigator.of(context).push(
+                      CupertinoPageRoute(
+                        builder: (_) => TodoDetailsPage(todo: todo),
+                      ),
+                    ),
+                    onStatusChanged: ({required status, plannedDate}) =>
+                        _changeStatus(context, todo, status, plannedDate),
+                    onDelete: () => _confirmDelete(context, todo),
+                  ),
+              ],
+            ),
+            if (hasMore)
+              Padding(
+                padding: const EdgeInsets.only(top: AppSpacing.lg),
+                child: Center(
+                  child: isLoadingMore
+                      ? const CircularProgressIndicator(size: 20)
+                      : OutlineButton(
+                          onPressed: () => _todosBloc.add(
+                            LoadMoreTodos(status: tab.status),
+                          ),
+                          child: const Text('Show more'),
+                        ),
                 ),
               ),
-            );
-          }
-        }
+          ],
+        ),
+      ),
+    );
+  }
 
-        final todo = todos[index];
-        return TodoCard(
-          todo: todo,
-          isUpdating: updatingTodoId == todo.id,
-          onTap: () {
-            Navigator.of(context).push(
-              CupertinoPageRoute(
-                builder: (context) => TodoDetailsPage(todo: todo),
-              ),
-            );
-          },
-          onStatusChanged: ({required String status, DateTime? plannedDate}) {
-            _todosBloc.add(
-              UpdateTodoStatus(
-                todoId: todo.id,
-                status: status,
-                oldStatus: todo.status,
-              ),
-            );
-          },
-          onDelete: () {
-            _confirmDelete(context, todo);
-          },
-        );
-      },
+  Widget _tabLabel(_StatusTab tab, int count, {required bool selected}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        HugeIcon(icon: tab.icon, size: AppIconSize.sm),
+        const SizedBox(width: AppSpacing.xs + 2),
+        Text(tab.label),
+        if (count > 0) ...[
+          const SizedBox(width: AppSpacing.xs + 2),
+          Text(
+            '$count',
+            style: const TextStyle(
+              fontWeight: FontWeight.w600,
+              fontFeatures: [FontFeature.tabularFigures()],
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Future<void> _changeStatus(
+    BuildContext context,
+    TodoDto todo,
+    String status,
+    DateTime? plannedDate,
+  ) async {
+    var date = plannedDate;
+    if (status == 'planned' && date == null) {
+      date = await pickPlannedDate(context);
+      if (date == null) return;
+    }
+    _todosBloc.add(
+      UpdateTodoStatus(
+        todoId: todo.id,
+        status: status,
+        oldStatus: todo.status,
+        plannedDate: date,
+      ),
     );
   }
 
   Future<void> _navigateToCreateTodo(BuildContext context) async {
     final result = await Navigator.of(context).push<bool>(
       CupertinoPageRoute(
-        builder: (context) => CreateTodoPage(projectId: widget.project.id),
+        builder: (_) => CreateTodoPage(projectId: widget.project.id),
       ),
     );
-
-    if (result == true) {
-      _todosBloc.add(const RefreshTodos());
-    }
+    if (result == true) _todosBloc.add(const RefreshTodos());
   }
 
   Future<void> _confirmDelete(BuildContext context, TodoDto todo) async {
-    final confirmed = await Dialogs.showConfirmDialog(
-      context: context,
-      title: "Delete Todo",
-      message: 'Are you sure you want to delete "${todo.title}"?',
+    final confirmed = await AppDialogs.confirmDelete(
+      context,
+      itemName: 'todo',
+      message: '"${todo.title}" will be removed.',
     );
-
-    if (confirmed == true) {
-      _todosBloc.add(DeleteTodo(todo.id));
-    }
-  }
-
-  void _showErrorToast(String message) {
-    AppToast.error(context, 'Something went wrong', message: message);
-  }
-
-  Widget _buildTabOption(List<List<dynamic>> icon, String label, int count) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        HugeIcon(icon: icon, size: 16),
-        SizedBox(width: 6),
-        Text(label),
-        if (count > 0) ...[
-          SizedBox(width: 6),
-          Container(
-            padding: EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-            decoration: BoxDecoration(
-              color: Theme.of(
-                context,
-              ).colorScheme.mutedForeground.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Text(
-              '$count',
-              style: TextStyle(fontSize: 11, fontWeight: FontWeight.w600),
-            ),
-          ),
-        ],
-      ],
-    );
+    if (confirmed) _todosBloc.add(DeleteTodo(todo.id));
   }
 }

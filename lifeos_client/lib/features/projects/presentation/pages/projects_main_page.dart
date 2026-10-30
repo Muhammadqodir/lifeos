@@ -151,6 +151,7 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
             else
               _grid(
                 childCount: projects.length,
+                cellExtent: _cardExtent(projects),
                 builder: (context, index) {
                   final project = projects[index];
                   return ProjectCard(
@@ -168,9 +169,20 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
   }
 
   /// One column on iPhone, a responsive grid on iPad and Mac.
+  /// Grid cell height that fits the tallest card variant actually present,
+  /// so rows don't carry empty space.
+  double _cardExtent(List<ProjectDto> projects) {
+    final hasDescription = projects.any(
+      (p) => p.description != null && p.description!.isNotEmpty,
+    );
+    final hasTags = projects.any((p) => p.tags.isNotEmpty);
+    return 96 + (hasDescription ? 40 : 0) + (hasTags ? 34 : 0);
+  }
+
   Widget _grid({
     required int childCount,
     required NullableIndexedWidgetBuilder builder,
+    double cellExtent = 140,
   }) {
     return SliverContentWidth(
       maxWidth: AppLayout.maxWideContentWidth,
@@ -186,9 +198,9 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
             );
           }
           return SliverGrid(
-            gridDelegate: const SliverGridDelegateWithMaxCrossAxisExtent(
+            gridDelegate: SliverGridDelegateWithMaxCrossAxisExtent(
               maxCrossAxisExtent: 420,
-              mainAxisExtent: 188,
+              mainAxisExtent: cellExtent,
               crossAxisSpacing: AppSpacing.md,
               mainAxisSpacing: AppSpacing.md,
             ),

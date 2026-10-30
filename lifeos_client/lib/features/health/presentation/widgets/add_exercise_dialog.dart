@@ -4,7 +4,6 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:lifeos_client/utils/modal.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../bloc/exercise_bloc.dart';
 import '../bloc/exercise_event.dart';

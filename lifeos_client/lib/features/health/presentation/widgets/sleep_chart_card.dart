@@ -1,4 +1,5 @@
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:lifeos_client/core/ui/ui.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../data/models/sleep_summary_dto.dart';
@@ -16,51 +17,23 @@ class SleepChartCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
 
-    return Card(
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Sleep Duration (Last 7 Days)',
-                      style: theme.typography.small.copyWith(
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Avg: ${sleepSummary.avgDurationHours.toStringAsFixed(1)} hrs',
-                      style: theme.typography.xSmall.copyWith(
-                        color: colorScheme.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              if (onAddEntry != null)
-                IconButton.primary(
-                  size: ButtonSize.normal,
-                  onPressed: onAddEntry,
-                  icon: HugeIcon(
+          CardHeader(
+            title: 'Sleep',
+            subtitle:
+                'Last 7 days · avg ${sleepSummary.avgDurationHours.toStringAsFixed(1)} h',
+            trailing: onAddEntry == null
+                ? null
+                : HeaderAction(
                     icon: HugeIcons.strokeRoundedAdd01,
-                    size: 16,
-                    strokeWidth: 3,
-                    color: colorScheme.primaryForeground,
+                    tooltip: 'Log sleep',
+                    onTap: onAddEntry,
                   ),
-                ),
-            ],
           ),
-          const SizedBox(height: 20),
           SizedBox(height: 150, child: _buildLineChart(context)),
         ],
       ),

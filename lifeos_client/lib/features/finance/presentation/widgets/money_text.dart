@@ -42,7 +42,7 @@ class MoneyText extends StatelessWidget {
         ),
       ),
       MoneyTextSize.small => (
-        theme.typography.xSmall.copyWith(
+        theme.typography.base.copyWith(
           fontWeight: FontWeight.w600,
           color: color ?? colorScheme.foreground,
         ),
@@ -73,7 +73,15 @@ class MoneyText extends StatelessWidget {
       ),
     };
 
+    // Tabular figures keep amounts aligned in lists.
+    final tabular = amountStyle.copyWith(
+      fontFeatures: const [FontFeature.tabularFigures()],
+    );
+
     return Row(
+      mainAxisSize: alignment == MainAxisAlignment.start
+          ? MainAxisSize.min
+          : MainAxisSize.max,
       crossAxisAlignment: CrossAxisAlignment.baseline,
       mainAxisAlignment: alignment,
       textBaseline: TextBaseline.alphabetic,
@@ -85,7 +93,7 @@ class MoneyText extends StatelessWidget {
                         ? amount.toMoneyFormatShort()
                         : amount.toMoneyFormat()))
               : '••••',
-          style: amountStyle,
+          style: tabular,
         ),
         const SizedBox(width: 4),
         Text(currencyCode, style: currencyStyle),

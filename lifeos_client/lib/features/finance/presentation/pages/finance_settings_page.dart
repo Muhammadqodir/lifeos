@@ -1,13 +1,11 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:lifeos_client/core/widgets/category_icon.dart';
-import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/finance/presentation/widgets/add_category.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/modal.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
-import '../../../../utils/toast.dart';
 import '../bloc/finance_settings_bloc.dart';
 import '../bloc/finance_settings_event.dart';
 import '../bloc/finance_settings_state.dart';
@@ -109,7 +107,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                 physics: const AlwaysScrollableScrollPhysics(
                   parent: BouncingScrollPhysics(),
                 ),
-                child: Column(
+                child: ContentWidth(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
                     _buildDefaultCurrencySection(context, loadedState),
@@ -117,7 +115,7 @@ class _FinanceSettingsPageContent extends StatelessWidget {
                     _buildCategoriesSection(context, loadedState),
                     const SizedBox(height: 24),
                   ],
-                ),
+                )),
               );
             }
 

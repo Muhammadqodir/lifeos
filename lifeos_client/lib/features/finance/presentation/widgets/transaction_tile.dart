@@ -1,13 +1,16 @@
-import 'package:lifeos_client/core/theme/app_colors.dart';
-import 'package:lifeos_client/core/widgets/category_icon.dart';
-import 'package:lifeos_client/core/widgets/tappable.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:hugeicons/hugeicons.dart';
+import 'package:provider/provider.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../../../../core/ui/ui.dart';
+import '../../../../core/utils/color_utils.dart';
+import '../../../../core/utils/date_labels.dart';
 import '../../data/models/transaction_dto.dart';
+import '../providers/amount_visibility_provider.dart';
+import 'money_text.dart';
 
+/// A transaction row: category, time and wallet, signed amount.
+/// Transfers and exchanges show both legs.
 class TransactionTile extends StatelessWidget {
   final TransactionDto transaction;
   final VoidCallback? onTap;
@@ -20,212 +23,90 @@ class TransactionTile extends StatelessWidget {
     this.onDelete,
   });
 
+  bool get _isMovement =>
+      transaction.type == TransactionType.transfer ||
+      transaction.type == TransactionType.exchange;
+
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final semantic = context.semantic;
+    final entries = transaction.entries;
+    final entry = entries.isNotEmpty ? entries.first : null;
+    final amount = entry?.amount ?? 0;
+    final visible =
+        context.watch<AmountVisibilityProvider?>()?.isVisible ?? true;
 
-    // Get first entry for amount display
-    final TransactionEntryDto? entry = transaction.entries.isNotEmpty
-        ? transaction.entries.first
-        : null;
+    final Widget leading;
+    if (_isMovement) {
+      leading = LeadingTile.icon(
+        transaction.type == TransactionType.transfer
+            ? HugeIcons.strokeRoundedArrowDataTransferHorizontal
+            : HugeIcons.strokeRoundedMoneyExchange02,
+        color: semantic.info,
+      );
+    } else if (transaction.category != null) {
+      leading = LeadingTile.emoji(
+        transaction.category!.icon,
+        color: parseHexColor(transaction.category!.color),
+      );
+    } else {
+      leading = LeadingTile.icon(
+        transaction.type == TransactionType.income
+            ? HugeIcons.strokeRoundedArrowDownLeft01
+            : HugeIcons.strokeRoundedArrowUpRight01,
+        color: semantic.amount(amount),
+      );
+    }
 
-    final double amount = entry?.amount ?? 0;
-    final currencyCode = entry?.currency.code ?? '';
-    final isPositive = amount >= 0;
+    final walletNames = entries.map((e) => e.wallet.name).toSet().join(' → ');
+    final subtitle = [
+      DateLabels.time(transaction.occurredAt),
+      if (walletNames.isNotEmpty) walletNames,
+      if (transaction.category != null &&
+          (transaction.description?.isNotEmpty ?? false))
+        transaction.description!,
+    ].join(' · ');
 
-    return Slidable(
-      key: ValueKey(transaction.id),
-      endActionPane: ActionPane(
-        extentRatio: 0.2,
-        motion: const ScrollMotion(),
+    return AppListTile(
+      leading: leading,
+      title:
+          transaction.category?.title ??
+          (transaction.description?.isNotEmpty ?? false
+              ? transaction.description!
+              : _typeLabel(transaction.type)),
+      subtitle: subtitle,
+      onTap: onTap,
+      showActionsButton: false,
+      actions: [
+        if (onDelete != null)
+          AppAction(
+            label: 'Delete transaction',
+            icon: HugeIcons.strokeRoundedDelete02,
+            destructive: true,
+            onSelected: onDelete!,
+          ),
+      ],
+      trailing: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          CustomSlidableAction(
-            onPressed: (context) async {
-              if (onDelete != null) {
-                onDelete!();
-              }
-            },
-            backgroundColor: AppColors.redColor,
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                HugeIcon(
-                  icon: HugeIcons.strokeRoundedDelete02,
-                  color: Colors.white,
-                  size: 24,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'Delete',
-                  style: theme.typography.xSmall.copyWith(color: Colors.white),
-                ),
-              ],
+          for (final e in _isMovement ? entries.take(2) : entries.take(1))
+            MoneyText(
+              amount: e.amount,
+              currencyCode: e.currency.code,
+              size: MoneyTextSize.small,
+              isVisible: visible,
+              color: semantic.amount(e.amount),
             ),
-          ),
         ],
-      ),
-      child: Tappable(
-        lowerBound: 0.98,
-        onTap: () {
-          if (onTap != null) {
-            onTap!();
-          }
-        },
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-          child: Row(
-            children: [
-              if (transaction.type == TransactionType.transfer ||
-                  transaction.type == TransactionType.exchange)
-                CategoryIcon(
-                  icon: _getTypeIcon(transaction.type),
-                  color: '#858585',
-                )
-              else
-                // Category icon
-                CategoryIcon(
-                  icon: transaction.category?.icon ?? '⭕️',
-                  color: transaction.category?.color ?? '#000000',
-                ),
-              const SizedBox(width: 12),
-              // Transaction details
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      transaction.category?.title ??
-                          transaction.description ??
-                          _getTypeLabel(transaction.type),
-                      style: theme.typography.small.copyWith(
-                        fontWeight: FontWeight.w500,
-                        color: colorScheme.foreground,
-                      ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _formatDate(transaction.occurredAt),
-                      style: theme.typography.xSmall.copyWith(
-                        color: colorScheme.mutedForeground,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(width: 12),
-              // Amount
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  MoneyText(
-                    amount: amount,
-                    currencyCode: currencyCode,
-                    size: MoneyTextSize.small,
-                    color: isPositive
-                        ? Colors.green.shade600
-                        : Colors.red.shade600,
-                  ),
-                  if ((transaction.type == TransactionType.exchange || transaction.type == TransactionType.transfer) &&
-                      transaction.entries.length >= 2) ...[
-                    const SizedBox(height: 2),
-                    MoneyText(
-                      amount: transaction.entries[1].amount,
-                      currencyCode: transaction.entries[1].currency.code,
-                      size: MoneyTextSize.small,
-                      color: transaction.entries[1].amount > 0
-                          ? Colors.green.shade600
-                          : Colors.red.shade600,
-                    ),
-                  ],
-                ],
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
 
-  String _formatDate(DateTime date) {
-    final now = DateTime.now();
-    final today = DateTime(now.year, now.month, now.day);
-    final yesterday = today.subtract(const Duration(days: 1));
-    final transactionDate = DateTime(date.year, date.month, date.day);
-
-    if (transactionDate == today) {
-      return 'Today, ${_formatTime(date)}';
-    } else if (transactionDate == yesterday) {
-      return 'Yesterday, ${_formatTime(date)}';
-    } else if (now.difference(date).inDays < 7) {
-      return '${_getWeekday(date.weekday)}, ${_formatTime(date)}';
-    } else {
-      return '${_getMonth(date.month)} ${date.day}, ${_formatTime(date)}';
-    }
-  }
-
-  String _formatTime(DateTime date) {
-    final hour = date.hour.toString().padLeft(2, '0');
-    final minute = date.minute.toString().padLeft(2, '0');
-    return '$hour:$minute';
-  }
-
-  String _getWeekday(int weekday) {
-    const weekdays = [
-      'Monday',
-      'Tuesday',
-      'Wednesday',
-      'Thursday',
-      'Friday',
-      'Saturday',
-      'Sunday',
-    ];
-    return weekdays[weekday - 1];
-  }
-
-  String _getMonth(int month) {
-    const months = [
-      'Jan',
-      'Feb',
-      'Mar',
-      'Apr',
-      'May',
-      'Jun',
-      'Jul',
-      'Aug',
-      'Sep',
-      'Oct',
-      'Nov',
-      'Dec',
-    ];
-    return months[month - 1];
-  }
-
-  String _getTypeIcon(TransactionType type) {
-    switch (type) {
-      case TransactionType.income:
-        return '💰';
-      case TransactionType.expense:
-        return '💸';
-      case TransactionType.transfer:
-        return '🔁';
-      case TransactionType.exchange:
-        return '💱';
-    }
-  }
-
-  String _getTypeLabel(TransactionType type) {
-    switch (type) {
-      case TransactionType.income:
-        return 'Income';
-      case TransactionType.expense:
-        return 'Expense';
-      case TransactionType.transfer:
-        return 'Transfer';
-      case TransactionType.exchange:
-        return 'Exchange';
-    }
-  }
+  String _typeLabel(TransactionType type) => switch (type) {
+    TransactionType.income => 'Income',
+    TransactionType.expense => 'Expense',
+    TransactionType.transfer => 'Transfer',
+    TransactionType.exchange => 'Exchange',
+  };
 }

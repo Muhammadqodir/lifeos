@@ -4,7 +4,6 @@ import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:lifeos_client/features/health/data/models/exercise_dto.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/add_exercise_dialog.dart';
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_card.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../bloc/exercise_bloc.dart';
 import '../bloc/exercise_event.dart';

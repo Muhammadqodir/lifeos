@@ -35,19 +35,24 @@ class SectionHeader extends StatelessWidget {
         height: 32,
         child: Row(
           children: [
-            Flexible(
-              child: Text(
-                title,
-                style: context.text.sectionTitle,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+            Expanded(
+              child: Row(
+                children: [
+                  Flexible(
+                    child: Text(
+                      title,
+                      style: context.text.sectionTitle,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  if (count != null) ...[
+                    const SizedBox(width: AppSpacing.sm),
+                    AppBadge.count(count!),
+                  ],
+                ],
               ),
             ),
-            if (count != null) ...[
-              const SizedBox(width: AppSpacing.sm),
-              AppBadge.count(count!),
-            ],
-            const Spacer(),
             if (trailing != null) trailing!,
             if (actionLabel != null && onAction != null)
               GhostButton(

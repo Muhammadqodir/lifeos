@@ -1,9 +1,6 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:lifeos_client/core/widgets/empty_state.dart';
-import 'package:lifeos_client/core/widgets/error_state.dart';
-import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/create_habit_bloc.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habits_list_bloc.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habits_list_event.dart';
@@ -41,11 +38,16 @@ class _HabitsMainPageState extends State<HabitsMainPage> {
         return Scaffold(
           headers: [
             AppHeader(
-              title: "Habits",
+              title: 'Habits',
+              onRefresh: () => context.read<HabitsListBloc>().add(
+                const HabitsListRefreshed(),
+              ),
               actions: [
                 HeaderAction(
                   icon: HugeIcons.strokeRoundedAdd01,
-                  tooltip: 'Create Habit',
+                  tooltip: 'New habit',
+                  label: 'New habit',
+                  primary: true,
                   onTap: () {
                     Navigator.of(context).push(
                       CupertinoPageRoute(
@@ -77,7 +79,7 @@ class _HabitsMainPageState extends State<HabitsMainPage> {
 
   Widget _buildBody(BuildContext context, HabitsListState state) {
     if (state is HabitsListLoading || state is HabitsListInitial) {
-      return const LoadingState(message: "Loading habits...");
+      return const LoadingState(message: 'Loading habits…');
     }
 
     if (state is HabitsListFailure) {
@@ -91,8 +93,8 @@ class _HabitsMainPageState extends State<HabitsMainPage> {
 
     if (state is HabitsListEmpty) {
       return EmptyState(
-        title: 'No Habits Yet',
-        description: 'Create your first habit to start tracking',
+        title: 'Build your first habit',
+        description: 'Small daily actions add up. Pick one to track.',
         icon: const HugeIcon(
           icon: HugeIcons.strokeRoundedCheckmarkCircle01,
           size: 24,
@@ -110,46 +112,55 @@ class _HabitsMainPageState extends State<HabitsMainPage> {
               ),
             );
           },
-          child: const Text('Create Habit'),
+          child: const Text('Create habit'),
         ),
       );
     }
 
     final HabitsListSuccess successState = state as HabitsListSuccess;
-    return CustomScrollView(
-      slivers: [
-        SliverPadding(
-          padding: const EdgeInsets.all(12),
-          sliver: SliverList(
-            delegate: SliverChildBuilderDelegate((context, index) {
-              final habit = successState.habits[index];
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: HabitCard(
-                  habit: habit,
-                  onCheckIn: () {
-                    final habitsListBloc = context.read<HabitsListBloc>();
-                    BottomSheetModal.openSheet(
-                      context: context,
-                      builder: (context) => MultiBlocProvider(
-                        providers: [
-                          BlocProvider<LogEntryBloc>(
-                            create: (context) => getIt<LogEntryBloc>(),
-                          ),
-                          BlocProvider<HabitsListBloc>.value(
-                            value: habitsListBloc,
-                          ),
-                        ],
-                        child: LogEntrySheet(habitId: habit.id),
-                      ),
-                    );
-                  },
-                ),
-              );
-            }, childCount: successState.habits.length),
+    final habits = successState.habits;
+    final doneToday = habits.where((h) => h.isCompletedToday ?? false).length;
+    return SingleChildScrollView(
+      physics: const AlwaysScrollableScrollPhysics(
+        parent: BouncingScrollPhysics(),
+      ),
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.page,
+        vertical: AppSpacing.lg,
+      ),
+      child: ContentWidth(
+        child: AppListSection(
+          title: 'Active habits',
+          count: habits.length,
+          headerTrailing: Text(
+            '$doneToday done today',
+            style: context.text.caption,
           ),
+          children: [
+            for (final habit in habits)
+              HabitCard(
+                habit: habit,
+                onCheckIn: () {
+                  final habitsListBloc = context.read<HabitsListBloc>();
+                  BottomSheetModal.openSheet(
+                    context: context,
+                    builder: (context) => MultiBlocProvider(
+                      providers: [
+                        BlocProvider<LogEntryBloc>(
+                          create: (context) => getIt<LogEntryBloc>(),
+                        ),
+                        BlocProvider<HabitsListBloc>.value(
+                          value: habitsListBloc,
+                        ),
+                      ],
+                      child: LogEntrySheet(habitId: habit.id),
+                    ),
+                  );
+                },
+              ),
+          ],
         ),
-      ],
+      ),
     );
   }
 }

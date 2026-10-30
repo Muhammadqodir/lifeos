@@ -8,7 +8,6 @@ import 'package:lifeos_client/core/widgets/time_select.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/create_habit_bloc.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/create_habit_event.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/create_habit_state.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/core/ui/ui.dart';
 
@@ -111,7 +110,7 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
                 parent: BouncingScrollPhysics(),
               ),
               padding: const EdgeInsets.all(16.0),
-              child: Column(
+              child: ContentWidth(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   // Title
@@ -306,7 +305,7 @@ class _CreateHabitPageState extends State<CreateHabitPage> {
                   ),
                   const SizedBox(height: 24),
                 ],
-              ),
+              )),
             ),
           );
         },

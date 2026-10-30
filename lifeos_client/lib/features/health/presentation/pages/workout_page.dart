@@ -1,4 +1,5 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:lifeos_client/features/health/data/models/exercise_dto.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/exercise_bloc.dart';
@@ -11,7 +12,6 @@ import 'package:lifeos_client/features/health/presentation/widgets/exercise_sele
 import 'package:lifeos_client/features/health/presentation/widgets/exercise_sets.dart';
 import 'package:lifeos_client/utils/dialogs.dart';
 import 'package:lifeos_client/utils/modal.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/core/ui/ui.dart';
 
@@ -90,11 +90,14 @@ class _WorkoutPageState extends State<WorkoutPage> {
     // Capture the WorkoutBloc before navigation
     final workoutBloc = context.read<WorkoutBloc>();
 
-    // Navigate to camera page
+    // The camera plugin has no macOS support: on desktop, offer a file
+    // picker instead of the live camera page.
     // ignore: use_build_context_synchronously
-    final String? photoPath = await Navigator.of(context).push<String>(
-      MaterialPageRoute(builder: (context) => const WorkoutCameraPage()),
-    );
+    final String? photoPath = isDesktopPlatform
+        ? await _pickProgressPhoto(context)
+        : await Navigator.of(context).push<String>(
+            MaterialPageRoute(builder: (context) => const WorkoutCameraPage()),
+          );
 
     // Navigate to completion page if camera returned a result (photo or skip)
     // Only skip if user pressed back button (photoPath == null)
@@ -113,6 +116,25 @@ class _WorkoutPageState extends State<WorkoutPage> {
         ),
       );
     }
+  }
+
+  /// Desktop replacement for the camera step. Returns a file path, '' to
+  /// skip the photo, or null if the user backed out.
+  Future<String?> _pickProgressPhoto(BuildContext context) async {
+    final choose = await AppDialogs.confirm(
+      context,
+      title: 'Add a progress photo?',
+      message: 'Choose a photo from your files, or skip this step.',
+      confirmLabel: 'Choose photo',
+      cancelLabel: 'Skip',
+    );
+    if (!choose) return '';
+    final image = await ImagePicker().pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 2048,
+      imageQuality: 85,
+    );
+    return image?.path ?? '';
   }
 
   @override

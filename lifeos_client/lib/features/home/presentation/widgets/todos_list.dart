@@ -9,6 +9,7 @@ import '../../../projects/presentation/bloc/manage_todos_bloc.dart';
 import '../../../projects/presentation/bloc/manage_todos_event.dart';
 import '../../../projects/presentation/bloc/manage_todos_state.dart';
 import '../../../projects/presentation/pages/todo_details_page.dart';
+import '../../../projects/presentation/widgets/plan_date_dialog.dart';
 import '../../../projects/presentation/widgets/todo_card.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_state.dart';
@@ -288,35 +289,3 @@ class _MainPageTodosListState extends State<MainPageTodosList> {
 
 bool _isSameDay(DateTime a, DateTime b) =>
     a.year == b.year && a.month == b.month && a.day == b.day;
-
-/// Asks for a planned date. Returns null when cancelled.
-Future<DateTime?> pickPlannedDate(BuildContext context) {
-  final now = DateTime.now();
-  DateTime selected = DateTime(now.year, now.month, now.day);
-  return showDialog<DateTime>(
-    context: context,
-    builder: (dialogContext) {
-      return AlertDialog(
-        title: const Text('Plan for'),
-        content: DatePickerDialog(
-          initialValue: SingleCalendarValue(selected),
-          initialViewType: CalendarViewType.date,
-          selectionMode: CalendarSelectionMode.single,
-          onChanged: (value) {
-            if (value != null) selected = value.toSingle().date;
-          },
-        ),
-        actions: [
-          OutlineButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
-          ),
-          PrimaryButton(
-            onPressed: () => Navigator.of(dialogContext).pop(selected),
-            child: const Text('Plan'),
-          ),
-        ],
-      );
-    },
-  );
-}

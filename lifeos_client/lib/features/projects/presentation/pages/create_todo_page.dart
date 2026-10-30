@@ -7,7 +7,6 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../core/widgets/selectable_group.dart';
 import '../../../../injection.dart';
-import '../../../../utils/toast.dart';
 import '../bloc/create_todo_bloc.dart';
 import '../bloc/create_todo_event.dart';
 import '../bloc/create_todo_state.dart';
@@ -90,16 +89,13 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                   parent: BouncingScrollPhysics(),
                 ),
                 padding: const EdgeInsets.all(16.0),
-                child: Column(
+                child: ContentWidth(child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     // Title
                     Text(
                       'Title',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: context.text.label,
                     ),
                     const SizedBox(height: 8),
                     TextField(
@@ -115,10 +111,7 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                     // Comment
                     Text(
                       'Description',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: context.text.label,
                     ),
                     const SizedBox(height: 8),
                     TextField(
@@ -136,10 +129,7 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                     // Priority
                     Text(
                       'Priority',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: context.text.label,
                     ),
                     const SizedBox(height: 8),
                     SelectableGroup<String>(
@@ -167,10 +157,7 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                     // Urgency
                     Text(
                       'Urgency',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: context.text.label,
                     ),
                     const SizedBox(height: 8),
                     SelectableGroup<String>(
@@ -198,10 +185,7 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                     // Energy
                     Text(
                       'Energy',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: context.text.label,
                     ),
                     const SizedBox(height: 8),
                     SelectableGroup<String>(
@@ -229,10 +213,7 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                     // Planned Date
                     Text(
                       'Planned Date & time',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: context.text.label,
                     ),
                     const SizedBox(height: 8),
                     Row(
@@ -270,10 +251,7 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                     // Tags
                     Text(
                       'Tags (Optional)',
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                      ),
+                      style: context.text.label,
                     ),
                     const SizedBox(height: 8),
                     ChipInput<String>(
@@ -323,7 +301,7 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                       ),
                     ),
                   ],
-                ),
+                )),
               ),
             );
           },

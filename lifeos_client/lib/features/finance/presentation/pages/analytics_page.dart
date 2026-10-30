@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lifeos_client/core/widgets/loading_state.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
@@ -222,7 +221,7 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
 
           if (state is AnalyticsSuccess) {
             return SingleChildScrollView(
-              child: Padding(
+              child: ContentWidth(child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -263,7 +262,7 @@ class _AnalyticsPageContentState extends State<_AnalyticsPageContent> {
                     ],
                   ],
                 ),
-              ),
+              )),
             );
           }
 

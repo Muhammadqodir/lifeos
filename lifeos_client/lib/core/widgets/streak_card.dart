@@ -1,3 +1,4 @@
+import 'package:lifeos_client/core/ui/ui.dart';
 import 'package:lifeos_client/core/widgets/tappable.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -50,55 +51,22 @@ class StreakCard extends StatelessWidget {
     // Fill missing days to ensure 7 days are shown
     final filledDataPoints = _fillMissingDays(dataPoints);
 
-    return Card(
+    return AppCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Header with title and streak count
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                title,
-                style: theme.typography.small.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 12,
-                  vertical: 6,
-                ),
-                decoration: BoxDecoration(
-                  color: colorScheme.muted,
-                  borderRadius: BorderRadius.circular(6),
-                ),
-                child: Row(
-                  children: [
-                    HugeIcon(
-                      icon: HugeIcons.strokeRoundedFire02,
-                      size: 16,
-                      strokeWidth: 2,
-                      color: currentStreak > 0
-                          ? colorScheme.primary
-                          : colorScheme.mutedForeground,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      '$currentStreak $streakLabel${currentStreak != 1 ? 's' : ''}',
-                      style: theme.typography.small.copyWith(
-                        color: currentStreak > 0
-                            ? colorScheme.primary
-                            : colorScheme.mutedForeground,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          CardHeader(
+            title: title,
+            subtitle: 'Last 7 days',
+            padding: const EdgeInsets.only(bottom: AppSpacing.md),
+            trailing: AppBadge(
+              label: '$currentStreak $streakLabel${currentStreak != 1 ? 's' : ''}',
+              icon: HugeIcons.strokeRoundedFire02,
+              color: currentStreak > 0
+                  ? context.semantic.warning
+                  : colorScheme.mutedForeground,
+            ),
           ),
-          const SizedBox(height: 16),
           // Week day labels
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -137,7 +105,7 @@ class StreakCard extends StatelessWidget {
                         color: dataPoint.hasActivity
                             ? colorScheme.primary
                             : colorScheme.muted,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: theme.controlRadius,
                       ),
                       child: dataPoint.hasActivity
                           ? Center(

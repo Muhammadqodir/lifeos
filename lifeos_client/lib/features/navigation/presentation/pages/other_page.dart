@@ -1,154 +1,147 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
-import 'package:lifeos_client/core/theme/presentation/bloc/theme_bloc.dart';
-import 'package:lifeos_client/core/theme/presentation/bloc/theme_event.dart';
-import 'package:lifeos_client/core/theme/presentation/bloc/theme_state.dart';
-import 'package:lifeos_client/core/widgets/action_list_item.dart';
-import 'package:lifeos_client/features/auth/presentation/bloc/auth_bloc.dart';
-import 'package:lifeos_client/features/auth/presentation/bloc/auth_event.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/habits_list_bloc.dart';
-import 'package:lifeos_client/features/habits/presentation/pages/habits_main_page.dart';
-import 'package:lifeos_client/features/security/presentation/pages/security_settings_page.dart';
-import 'package:lifeos_client/injection.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:hugeicons/hugeicons.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lifeos_client/core/ui/ui.dart';
+import 'package:hugeicons/hugeicons.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
-class OtherPage extends StatefulWidget {
+import '../../../../core/theme/presentation/bloc/theme_bloc.dart';
+import '../../../../core/theme/presentation/bloc/theme_event.dart';
+import '../../../../core/theme/presentation/bloc/theme_state.dart';
+import '../../../../core/ui/ui.dart';
+import '../../../../injection.dart';
+import '../../../auth/presentation/bloc/auth_bloc.dart';
+import '../../../auth/presentation/bloc/auth_state.dart';
+import '../../../habits/presentation/bloc/habits_list_bloc.dart';
+import '../../../habits/presentation/pages/habits_main_page.dart';
+import '../../../security/presentation/pages/security_settings_page.dart';
+import '../widgets/custom_side_navigation.dart' show UserAvatar, confirmLogout;
+
+/// "More" tab: secondary features, settings and account.
+class OtherPage extends StatelessWidget {
   const OtherPage({super.key});
 
   @override
-  State<OtherPage> createState() => _OtherPageState();
-}
-
-class _OtherPageState extends State<OtherPage> {
-  @override
-  void initState() {
-    super.initState();
-  }
-
-  @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        AppHeader(
-          title: "Other",
-          actions: [
-            HeaderAction(
-              icon: HugeIcons.strokeRoundedLogout01,
-              tooltip: 'Logout',
-              onTap: () {
-                context.read<AuthBloc>().add(AuthLogoutRequested());
-              },
-            ),
-            BlocBuilder<ThemeBloc, ThemeState>(
-              builder: (context, themeState) {
-                return HeaderAction(
-                  icon: themeState.isDark
-                      ? HugeIcons.strokeRoundedSun01
-                      : HugeIcons.strokeRoundedMoon,
-                  tooltip: 'Change Theme',
-                  onTap: () {
-                    context.read<ThemeBloc>().add(ThemeToggled());
-                  },
-                );
-              },
-            ),
-          ],
+    final semantic = context.semantic;
+
+    return Scaffold(
+      headers: const [AppHeader(title: 'More')],
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.page,
+          vertical: AppSpacing.lg,
         ),
-        Expanded(
-          child: SingleChildScrollView(
-            physics: AlwaysScrollableScrollPhysics(
-              parent: BouncingScrollPhysics(),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: Text(
-                    'Features',
-                    style: Theme.of(
-                      context,
-                    ).typography.normal.copyWith(fontWeight: FontWeight.w600),
-                  ),
-                ),
-                ActionListItem(
-                  title: "Habits",
-                  description: "Track your daily habits and routines",
-                  onTap: () {
-                    Navigator.of(context).push(
+        child: ContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppListSection(
+                title: 'Features',
+                children: [
+                  AppListTile(
+                    leading: LeadingTile.icon(
+                      HugeIcons.strokeRoundedCheckmarkCircle01,
+                      color: semantic.success,
+                    ),
+                    title: 'Habits',
+                    subtitle: 'Track daily habits and streaks',
+                    showChevron: true,
+                    onTap: () => Navigator.of(context).push(
                       CupertinoPageRoute(
-                        builder: (context) {
-                          return BlocProvider<HabitsListBloc>(
-                            create: (context) => getIt<HabitsListBloc>(),
-                            child: const HabitsMainPage(),
-                          );
-                        },
+                        builder: (_) => BlocProvider<HabitsListBloc>(
+                          create: (_) => getIt<HabitsListBloc>(),
+                          child: const HabitsMainPage(),
+                        ),
                       ),
-                    );
-                  },
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedCheckmarkCircle01,
-                    size: 18,
-                    strokeWidth: 2,
-                    color: Theme.of(context).colorScheme.background,
+                    ),
                   ),
-                ),
-                ActionListItem(
-                  title: "Daily journal",
-                  description:
-                      "Write daily journal entries to reflect on your day",
-                  onTap: () {},
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedNotebook,
-                    size: 18,
-                    strokeWidth: 2,
-                    color: Theme.of(context).colorScheme.background,
+                  AppListTile(
+                    leading: LeadingTile.icon(
+                      HugeIcons.strokeRoundedNotebook,
+                      color: semantic.info,
+                    ),
+                    title: 'Daily journal',
+                    subtitle: 'Reflect on your day',
+                    trailing: const AppBadge.neutral(label: 'Soon'),
                   ),
-                ),
-                Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  child: Text(
-                    'Settings',
-                    style: Theme.of(
-                      context,
-                    ).typography.normal.copyWith(fontWeight: FontWeight.w600),
+                ],
+              ),
+              AppListSection(
+                title: 'Settings',
+                children: [
+                  BlocBuilder<ThemeBloc, ThemeState>(
+                    builder: (context, state) => AppListTile(
+                      leading: LeadingTile.icon(
+                        state.isDark
+                            ? HugeIcons.strokeRoundedMoon02
+                            : HugeIcons.strokeRoundedSun01,
+                      ),
+                      title: 'Dark appearance',
+                      subtitle: state.isDark ? 'On' : 'Off',
+                      onTap: () =>
+                          context.read<ThemeBloc>().add(const ThemeToggled()),
+                      trailing: Switch(
+                        value: state.isDark,
+                        onChanged: (value) =>
+                            context.read<ThemeBloc>().add(ThemeChanged(value)),
+                      ),
+                    ),
                   ),
-                ),
-                ActionListItem(
-                  title: "Notifications",
-                  description: "Manage your notification preferences",
-                  onTap: () {},
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedNotification01,
-                    size: 18,
-                    strokeWidth: 2,
-                    color: Theme.of(context).colorScheme.background,
-                  ),
-                ),
-                ActionListItem(
-                  title: "Passcode",
-                  description: "Manage your passcode settings",
-                  onTap: () {
-                    Navigator.of(context).push(
+                  AppListTile(
+                    leading: LeadingTile.icon(
+                      HugeIcons.strokeRoundedLockPassword,
+                    ),
+                    title: 'Passcode and Face ID',
+                    subtitle: 'Lock the app when you leave it',
+                    showChevron: true,
+                    onTap: () => Navigator.of(context).push(
                       CupertinoPageRoute(
-                        builder: (context) => const SecuritySettingsPage(),
+                        builder: (_) => const SecuritySettingsPage(),
                       ),
-                    );
-                  },
-                  icon: HugeIcon(
-                    icon: HugeIcons.strokeRoundedLock,
-                    size: 18,
-                    strokeWidth: 2,
-                    color: Theme.of(context).colorScheme.background,
+                    ),
                   ),
-                ),
-              ],
-            ),
+                  AppListTile(
+                    leading: LeadingTile.icon(
+                      HugeIcons.strokeRoundedNotification01,
+                    ),
+                    title: 'Notifications',
+                    subtitle: 'Reminders for habits and todos',
+                    trailing: const AppBadge.neutral(label: 'Soon'),
+                  ),
+                ],
+              ),
+              BlocBuilder<AuthBloc, AuthState>(
+                builder: (context, state) {
+                  final user = state is AuthAuthenticated ? state.user : null;
+                  final name = user == null
+                      ? 'Signed in'
+                      : '${user.firstName} ${user.lastName}'.trim();
+                  return AppListSection(
+                    title: 'Account',
+                    children: [
+                      AppListTile(
+                        leading: UserAvatar(
+                          name: name,
+                          size: AppLayout.leadingSize,
+                        ),
+                        title: name,
+                        subtitle: user?.email,
+                      ),
+                      AppListTile(
+                        leading: LeadingTile.icon(
+                          HugeIcons.strokeRoundedLogout01,
+                          color: context.colors.destructive,
+                        ),
+                        title: 'Log out',
+                        onTap: () => confirmLogout(context),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

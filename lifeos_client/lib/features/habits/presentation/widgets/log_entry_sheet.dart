@@ -7,7 +7,6 @@ import 'package:lifeos_client/features/habits/presentation/bloc/habits_list_even
 import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_bloc.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_event.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/log_entry_state.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/core/ui/ui.dart';
 

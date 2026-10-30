@@ -1,10 +1,12 @@
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:lifeos_client/features/finance/presentation/widgets/money_text.dart';
 import 'package:provider/provider.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../../../../core/ui/ui.dart';
 import '../providers/amount_visibility_provider.dart';
+import 'money_text.dart';
 
+/// Total balance across wallets with a privacy toggle.
 class TotalCard extends StatelessWidget {
   final double amount;
   final String currencyCode;
@@ -19,60 +21,35 @@ class TotalCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.all(12),
-      child: Column(
+    final visibility = context.watch<AmountVisibilityProvider>();
+    return AppCard(
+      child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            'Total:',
-            style: theme.typography.normal.copyWith(
-              fontWeight: FontWeight.w600,
-              color: colorScheme.foreground,
-            ),
-          ),
-          const SizedBox(height: 8),
-          if (isLoading)
-            Container(
-              width: 200,
-              height: 32,
-              decoration: BoxDecoration(
-                color: colorScheme.muted,
-                borderRadius: BorderRadius.circular(4),
-              ),
-            )
-          else
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
-              textBaseline: TextBaseline.alphabetic,
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Expanded(
-                  child: MoneyText(
-                    amount: amount,
-                    isApproximate: true,
-                    isShort: false,
-                    currencyCode: currencyCode,
-                    isVisible: context
-                        .watch<AmountVisibilityProvider>()
-                        .isVisible,
-                    size: MoneyTextSize.xLarge,
-                  ),
-                ),
-                IconButton.primary(
-                  icon: HugeIcon(
-                    icon: context.watch<AmountVisibilityProvider>().isVisible
-                        ? HugeIcons.strokeRoundedView
-                        : HugeIcons.strokeRoundedViewOff,
-                  ),
-                  onPressed: () {
-                    context.read<AmountVisibilityProvider>().toggle();
-                  },
+                Text('Total balance', style: context.text.itemSubtitle),
+                const SizedBox(height: AppSpacing.xs),
+                MoneyText(
+                  amount: amount,
+                  isApproximate: true,
+                  isShort: false,
+                  currencyCode: currencyCode,
+                  isVisible: visibility.isVisible,
+                  size: MoneyTextSize.xLarge,
                 ),
               ],
             ),
+          ),
+          HeaderAction(
+            icon: visibility.isVisible
+                ? HugeIcons.strokeRoundedViewOff
+                : HugeIcons.strokeRoundedView,
+            tooltip: visibility.isVisible ? 'Hide amounts' : 'Show amounts',
+            onTap: visibility.toggle,
+          ),
         ],
       ),
     );

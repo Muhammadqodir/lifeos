@@ -1,7 +1,6 @@
 import 'package:intl/intl.dart';
 import 'package:lifeos_client/core/widgets/badge.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:hugeicons/hugeicons.dart';
 import '../../data/models/todo_dto.dart';
 import 'package:lifeos_client/core/ui/ui.dart';
 
@@ -55,7 +54,7 @@ class TodoDetailsPage extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        child: Column(
+        child: ContentWidth(child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             Card(
@@ -176,7 +175,7 @@ class TodoDetailsPage extends StatelessWidget {
               ),
             ),
           ],
-        ),
+        )),
       ),
     );
   }

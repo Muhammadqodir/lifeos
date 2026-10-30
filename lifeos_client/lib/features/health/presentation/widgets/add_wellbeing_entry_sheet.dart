@@ -1,5 +1,4 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../bloc/wellbeing_entry_bloc.dart';
 import '../bloc/wellbeing_entry_event.dart';

@@ -75,7 +75,7 @@ class _HabitStatPageState extends State<HabitStatPage> {
             parent: BouncingScrollPhysics(),
           ),
           padding: const EdgeInsets.all(16),
-          child: Column(
+          child: ContentWidth(child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Habit Info Card
@@ -293,7 +293,7 @@ class _HabitStatPageState extends State<HabitStatPage> {
                 ),
               ],
             ],
-          ),
+          )),
         ),
       ),
     );

@@ -7,7 +7,6 @@ import '../bloc/security_bloc.dart';
 import '../bloc/security_event.dart';
 import '../bloc/security_state.dart';
 import 'set_passcode_page.dart';
-import '../../../../utils/toast.dart';
 import 'package:lifeos_client/core/ui/ui.dart';
 
 class SecuritySettingsPage extends StatefulWidget {
@@ -107,7 +106,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                     physics: const AlwaysScrollableScrollPhysics(
                       parent: BouncingScrollPhysics(),
                     ),
-                    child: Column(
+                    child: ContentWidth(child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Padding(
@@ -233,7 +232,7 @@ class _SecuritySettingsPageState extends State<SecuritySettingsPage> {
                           ),
                         ],
                       ],
-                    ),
+                    )),
                   );
                 },
               ),

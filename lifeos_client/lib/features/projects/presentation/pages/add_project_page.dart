@@ -2,9 +2,7 @@ import 'package:lifeos_client/core/widgets/color_selector.dart';
 import 'package:lifeos_client/core/widgets/icon_selector.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:hugeicons/hugeicons.dart';
 import '../../../../injection.dart';
-import '../../../../utils/toast.dart';
 import '../bloc/add_project_bloc.dart';
 import '../bloc/add_project_event.dart';
 import '../bloc/add_project_state.dart';
@@ -95,7 +93,7 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              child: Column(
+              child: ContentWidth(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Project Title Field
@@ -231,7 +229,7 @@ class _AddProjectPageContentState extends State<_AddProjectPageContent> {
                     ),
                   ),
                 ],
-              ),
+              )),
             );
           },
         ),

@@ -31,14 +31,16 @@ class WorkoutStreakCard extends StatelessWidget {
         .toList();
 
     return StreakCard(
-      title: 'Workout Streak',
+      title: 'Workouts',
+      streakLabel: 'day',
       currentStreak: workoutSummary.currentStreak,
       dataPoints: dataPoints,
       child: SizedBox(
         width: double.infinity,
         child: PrimaryButton(
           onPressed: () {
-            Navigator.of(context).push(
+            // Workouts are immersive: present above the tab bar / sidebar.
+            Navigator.of(context, rootNavigator: true).push(
               CupertinoPageRoute(
                 builder: (context) {
                   return MultiBlocProvider(
@@ -73,7 +75,7 @@ class WorkoutStreakCard extends StatelessWidget {
                   ),
                   const SizedBox(width: 8),
                   Text(
-                    hasActiveWorkout ? 'Continue Workout' : 'Start Workout',
+                    hasActiveWorkout ? 'Continue workout' : 'Start workout',
                     style: theme.typography.small.copyWith(
                       color: colorScheme.primaryForeground,
                       fontWeight: FontWeight.w600,

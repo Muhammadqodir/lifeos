@@ -1,5 +1,4 @@
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../bloc/auth_bloc.dart';

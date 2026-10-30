@@ -1,6 +1,5 @@
 import 'package:lifeos_client/core/widgets/selectable_group.dart';
 import 'package:lifeos_client/features/finance/data/datasources/constants.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
@@ -140,7 +139,7 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
               physics: AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
               ),
-              child: Column(
+              child: ContentWidth(child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   // Wallet Name Field
@@ -381,7 +380,7 @@ class _AddWalletPageContentState extends State<_AddWalletPageContent> {
                     ),
                   ),
                 ],
-              ),
+              )),
             );
           },
         ),

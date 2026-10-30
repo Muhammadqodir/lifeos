@@ -6,7 +6,6 @@ import 'package:lifeos_client/features/health/data/models/workout_session_dto.da
 import 'package:lifeos_client/features/health/presentation/bloc/workout_bloc.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/workout_event.dart';
 import 'package:lifeos_client/features/health/presentation/bloc/workout_state.dart';
-import 'package:lifeos_client/utils/toast.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/core/ui/ui.dart';
 
@@ -128,7 +127,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
                   physics: const AlwaysScrollableScrollPhysics(
                     parent: BouncingScrollPhysics(),
                   ),
-                  child: Column(
+                  child: ContentWidth(child: Column(
                     crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
                       // Photo Preview
@@ -304,7 +303,7 @@ class _WorkoutCompletionPageState extends State<WorkoutCompletionPage> {
 
                       TextField(controller: _notesController, maxLines: 4),
                     ],
-                  ),
+                  )),
                 ),
               ),
 
