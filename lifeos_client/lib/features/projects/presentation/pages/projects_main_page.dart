@@ -9,11 +9,15 @@ import '../bloc/manage_projects_bloc.dart';
 import '../bloc/manage_projects_event.dart';
 import '../bloc/manage_projects_state.dart';
 import '../widgets/project_card.dart';
+import '../widgets/project_leading.dart';
 import '../widgets/projects_stats_card.dart';
 import 'add_project_page.dart';
 import 'project_details_page.dart';
 
 /// Projects tab. The [ManageProjectsBloc] is provided by the app shell.
+///
+/// On wide windows (iPad landscape, Mac) the selected project's todos open
+/// beside a compact list instead of on a pushed page.
 class ProjectsMainPage extends StatefulWidget {
   const ProjectsMainPage({super.key});
 
@@ -27,10 +31,21 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
 
   ManageProjectsBloc get _bloc => context.read<ManageProjectsBloc>();
 
+  /// Project shown in the detail pane of the split view.
+  int? _selectedId;
+
   void _refresh() => _bloc.add(const ManageProjectsRefresh());
 
   @override
   Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) => SplitView.fits(constraints)
+          ? _buildSplit(context)
+          : _buildPage(context),
+    );
+  }
+
+  Widget _deleteListener({required Widget child}) {
     return BlocListener<ManageProjectsBloc, ManageProjectsState>(
       listener: (context, state) {
         if (state is ManageProjectsDeleteSuccess) {
@@ -43,22 +58,134 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
           );
         }
       },
-      child: Scaffold(
-        headers: [
-          AppHeader(
-            title: 'Projects',
-            onRefresh: _refresh,
-            actions: [
-              HeaderAction(
-                icon: HugeIcons.strokeRoundedAdd01,
-                tooltip: 'New project',
-                label: 'New project',
-                primary: true,
-                onTap: () => _navigateToAddProject(context),
+      child: child,
+    );
+  }
+
+  AppHeader _header(BuildContext context) => AppHeader(
+    title: 'Projects',
+    onRefresh: _refresh,
+    actions: [
+      HeaderAction(
+        icon: HugeIcons.strokeRoundedAdd01,
+        tooltip: 'New project',
+        label: 'New project',
+        primary: true,
+        onTap: () => _navigateToAddProject(context),
+      ),
+    ],
+  );
+
+  Widget _buildSplit(BuildContext context) {
+    return _deleteListener(
+      child: BlocBuilder<ManageProjectsBloc, ManageProjectsState>(
+        builder: (context, state) {
+          final projects = state is ManageProjectsWithData
+              ? state.projects
+              : const <ProjectDto>[];
+          final selected =
+              projects.where((p) => p.id == _selectedId).firstOrNull ??
+              projects.firstOrNull;
+
+          final Widget detail;
+          if (selected != null) {
+            detail = ProjectDetailsPage(
+              key: ValueKey(selected.id),
+              project: selected,
+              onTodosChanged: _refresh,
+            );
+          } else if (state is ManageProjectsError) {
+            detail = const SizedBox.shrink();
+          } else {
+            detail = Scaffold(
+              child: EmptyState(
+                title: 'No project selected',
+                description: 'Choose a project to see its todos.',
+                icon: const HugeIcon(icon: HugeIcons.strokeRoundedFolder01),
               ),
-            ],
-          ),
-        ],
+            );
+          }
+
+          return SplitView(
+            list: Scaffold(
+              headers: [_header(context)],
+              child: _buildCompactList(context, state, projects, selected),
+            ),
+            detail: detail,
+          );
+        },
+      ),
+    );
+  }
+
+  Widget _buildCompactList(
+    BuildContext context,
+    ManageProjectsState state,
+    List<ProjectDto> projects,
+    ProjectDto? selected,
+  ) {
+    if (state is ManageProjectsError) {
+      return ErrorState(
+        title: "Couldn't load projects",
+        message: state.message,
+        onRetry: () => _bloc.add(const ManageProjectsLoad()),
+      );
+    }
+    if (state is ManageProjectsLoading || state is ManageProjectsInitial) {
+      return const LoadingState(message: 'Loading projects…');
+    }
+    if (projects.isEmpty) {
+      return EmptyState(
+        title: 'Start your first project',
+        description:
+            'Projects group related todos so you can see progress at a glance.',
+        icon: const HugeIcon(icon: HugeIcons.strokeRoundedFolder01),
+        action: PrimaryButton(
+          onPressed: () => _navigateToAddProject(context),
+          child: const Text('Create project'),
+        ),
+      );
+    }
+    return ListView(
+      padding: const EdgeInsets.all(AppSpacing.md),
+      children: [
+        AppListSection(
+          title: 'Your projects',
+          count: projects.length,
+          margin: EdgeInsets.zero,
+          children: [
+            for (final project in projects)
+              AppListTile(
+                leading: ProjectLeading(project: project),
+                title: project.title,
+                subtitle: _openTodosLabel(project.pendingTodosCount),
+                selected: project.id == selected?.id,
+                onTap: () => setState(() => _selectedId = project.id),
+                actions: [
+                  AppAction(
+                    label: 'Delete project',
+                    icon: HugeIcons.strokeRoundedDelete02,
+                    destructive: true,
+                    onSelected: () => _confirmDelete(context, project),
+                  ),
+                ],
+              ),
+          ],
+        ),
+      ],
+    );
+  }
+
+  static String _openTodosLabel(int count) => switch (count) {
+    0 => 'No open todos',
+    1 => '1 open todo',
+    _ => '$count open todos',
+  };
+
+  Widget _buildPage(BuildContext context) {
+    return _deleteListener(
+      child: Scaffold(
+        headers: [_header(context)],
         child: RefreshTrigger(
           key: _refreshTriggerKey,
           onRefresh: () async {

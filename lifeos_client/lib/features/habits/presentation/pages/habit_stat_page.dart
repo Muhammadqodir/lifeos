@@ -15,7 +15,11 @@ import '../bloc/habit_stats_state.dart';
 class HabitStatPage extends StatelessWidget {
   final HabitDto habit;
 
-  const HabitStatPage({super.key, required this.habit});
+  /// Replaces the default "pop with true" after archiving, for when the
+  /// page is shown beside the list (split view) rather than pushed.
+  final VoidCallback? onArchived;
+
+  const HabitStatPage({super.key, required this.habit, this.onArchived});
 
   @override
   Widget build(BuildContext context) {
@@ -23,15 +27,16 @@ class HabitStatPage extends StatelessWidget {
       create: (_) =>
           HabitStatsBloc(habitsRepository: getIt())
             ..add(LoadHabitStats(habit.id)),
-      child: _HabitStatView(habit: habit),
+      child: _HabitStatView(habit: habit, onArchived: onArchived),
     );
   }
 }
 
 class _HabitStatView extends StatelessWidget {
-  const _HabitStatView({required this.habit});
+  const _HabitStatView({required this.habit, this.onArchived});
 
   final HabitDto habit;
+  final VoidCallback? onArchived;
 
   static const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
@@ -69,7 +74,11 @@ class _HabitStatView extends StatelessWidget {
       listener: (context, state) {
         if (state is HabitArchived) {
           AppToast.success(context, 'Habit archived');
-          Navigator.of(context).pop(true);
+          if (onArchived != null) {
+            onArchived!();
+          } else {
+            Navigator.of(context).pop(true);
+          }
         } else if (state is HabitStatsError) {
           AppToast.error(
             context,

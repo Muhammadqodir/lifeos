@@ -11,13 +11,20 @@ class PageCommandRegistry {
   final List<_PageCommandsState> _entries = [];
 
   /// Commands of the top page in [tabIndex], or null when it has none.
+  ///
+  /// A split view shows two headers on one page; the most recently built
+  /// one (the detail pane) wins, and the list fills in what it lacks.
   PageCommandSet? activeFor(int tabIndex) {
+    VoidCallback? onNew;
+    VoidCallback? onRefresh;
     for (final entry in _entries.reversed) {
       if (!entry.mounted || entry.tabIndex != tabIndex) continue;
       if (ModalRoute.isCurrentOf(entry.context) == false) continue;
-      return entry.widget.commands;
+      onNew ??= entry.widget.commands.onNew;
+      onRefresh ??= entry.widget.commands.onRefresh;
     }
-    return null;
+    final commands = PageCommandSet(onNew: onNew, onRefresh: onRefresh);
+    return commands.isEmpty ? null : commands;
   }
 }
 

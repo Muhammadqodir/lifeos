@@ -74,6 +74,44 @@ void main() {
     expect(registry.activeFor(2), isNull);
   });
 
+  testWidgets('split view panes fill in each other\'s commands', (
+    tester,
+  ) async {
+    final registry = PageCommandRegistry();
+    final calls = <String>[];
+
+    await tester.pumpWidget(
+      ShadcnApp(
+        home: PageCommandScope(
+          registry: registry,
+          tabIndex: 0,
+          child: Row(
+            children: [
+              PageCommands(
+                commands: PageCommandSet(
+                  onNew: () => calls.add('new habit'),
+                  onRefresh: () => calls.add('refresh list'),
+                ),
+                child: const SizedBox(width: 10),
+              ),
+              PageCommands(
+                commands: PageCommandSet(
+                  onRefresh: () => calls.add('refresh detail'),
+                ),
+                child: const SizedBox(width: 10),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+
+    final commands = registry.activeFor(0)!;
+    commands.onNew!();
+    commands.onRefresh!();
+    expect(calls, ['new habit', 'refresh detail']);
+  });
+
   testWidgets('AppHeader registers refresh and its primary action', (
     tester,
   ) async {

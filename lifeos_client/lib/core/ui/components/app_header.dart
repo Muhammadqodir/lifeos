@@ -4,6 +4,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import '../app_theme_x.dart';
 import '../breakpoints.dart';
 import '../page_commands.dart';
+import 'split_view.dart';
 import '../tokens.dart';
 
 /// Page header used by every screen.
@@ -44,7 +45,9 @@ class AppHeader extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final canPop = Navigator.maybeOf(context)?.canPop() ?? false;
+    final canPop =
+        (Navigator.maybeOf(context)?.canPop() ?? false) &&
+        !SplitView.isDetailPane(context);
 
     final leadingWidgets =
         leading ??

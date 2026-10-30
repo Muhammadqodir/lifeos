@@ -17,12 +17,18 @@ class HabitCard extends StatelessWidget {
   /// Called when the habit was changed on its detail page (e.g. archived).
   final VoidCallback? onChanged;
 
+  /// Replaces pushing the stats page (used by the split view).
+  final VoidCallback? onOpen;
+  final bool selected;
+
   const HabitCard({
     super.key,
     required this.habit,
     required this.onCheckIn,
     this.isUpdating = false,
     this.onChanged,
+    this.onOpen,
+    this.selected = false,
   });
 
   @override
@@ -39,17 +45,20 @@ class HabitCard extends StatelessWidget {
         _frequencyLabel(),
       ].join(' · '),
       loading: isUpdating,
+      selected: selected,
       trailing: HabitCheckButton(
         color: habitColor,
         done: isCompleted,
         onTap: isCompleted ? null : onCheckIn,
       ),
-      onTap: () async {
-        final changed = await Navigator.of(context).push<bool>(
-          CupertinoPageRoute(builder: (_) => HabitStatPage(habit: habit)),
-        );
-        if (changed == true) onChanged?.call();
-      },
+      onTap:
+          onOpen ??
+          () async {
+            final changed = await Navigator.of(context).push<bool>(
+              CupertinoPageRoute(builder: (_) => HabitStatPage(habit: habit)),
+            );
+            if (changed == true) onChanged?.call();
+          },
     );
   }
 

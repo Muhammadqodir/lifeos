@@ -20,6 +20,7 @@ export 'components/card_header.dart';
 export 'components/detail_row.dart';
 export 'components/leading_tile.dart';
 export 'components/section_header.dart';
+export 'components/split_view.dart';
 export 'components/stat_tile.dart';
 export '../widgets/empty_state.dart';
 export '../widgets/error_state.dart';

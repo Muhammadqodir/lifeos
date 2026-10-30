@@ -51,6 +51,13 @@ abstract final class AppLayout {
 
   /// Leading tile of list rows (icons, avatars, category emoji).
   static const double leadingSize = 36;
+
+  /// Content width from which list pages show the selected item beside
+  /// the list (iPad landscape, Mac) instead of pushing it.
+  static const double splitViewMinWidth = 880;
+
+  /// Width of the list pane in a split view.
+  static const double splitListWidth = 340;
 }
 
 /// Corner radii derived from the shadcn theme radius so changing

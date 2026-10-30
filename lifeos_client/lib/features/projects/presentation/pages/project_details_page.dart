@@ -20,7 +20,15 @@ import 'todo_details_page.dart';
 class ProjectDetailsPage extends StatefulWidget {
   final ProjectDto project;
 
-  const ProjectDetailsPage({super.key, required this.project});
+  /// Called after todos are added, moved or deleted, so a list shown
+  /// beside this page (split view) can update its counts.
+  final VoidCallback? onTodosChanged;
+
+  const ProjectDetailsPage({
+    super.key,
+    required this.project,
+    this.onTodosChanged,
+  });
 
   @override
   State<ProjectDetailsPage> createState() => _ProjectDetailsPageState();
@@ -118,6 +126,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
             );
           } else if (state is TodoStatusUpdated) {
             _loadAllData();
+            widget.onTodosChanged?.call();
           }
         },
         child: BlocBuilder<ManageTodosBloc, ManageTodosState>(
@@ -325,7 +334,10 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
         builder: (_) => CreateTodoPage(projectId: widget.project.id),
       ),
     );
-    if (result == true) _todosBloc.add(const RefreshTodos());
+    if (result == true) {
+      _todosBloc.add(const RefreshTodos());
+      widget.onTodosChanged?.call();
+    }
   }
 
   Future<void> _confirmDelete(BuildContext context, TodoDto todo) async {
@@ -334,6 +346,9 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
       itemName: 'todo',
       message: '"${todo.title}" will be removed.',
     );
-    if (confirmed) _todosBloc.add(DeleteTodo(todo.id));
+    if (confirmed) {
+      _todosBloc.add(DeleteTodo(todo.id));
+      widget.onTodosChanged?.call();
+    }
   }
 }
