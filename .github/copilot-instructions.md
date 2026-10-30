@@ -133,11 +133,17 @@ Import `package:lifeos_client/core/ui/ui.dart`. Do not hand-roll these:
 | Empty / loading / error | `EmptyState`, `LoadingState`, `ErrorState` |
 | Readable width on iPad/Mac | `ContentWidth` / `SliverContentWidth` |
 | Custom tappables | `AppPressable` (hover, focus, press, haptics) |
+| List + detail on iPad landscape / Mac | `SplitView` when `SplitView.fits(constraints)`; otherwise push the detail page |
+| Secrets (auth token, passcode) | `SecureStore` (Keychain), never `SharedPreferences` |
 
 Layout: `WindowClass` (`compact` < 600 ≤ `medium` < 1024 ≤ `expanded`). The shell in
 `navigation/presentation/pages/main_page.dart` gives each tab its own Navigator, so
 `Navigator.of(context).push` stays inside the tab; use `rootNavigator: true` only for
 immersive full-screen flows (workouts).
+
+Keyboard (iPad/Mac): ⌘1–5 tabs, ⌘[ / Esc back, ⌘N runs the page's primary `HeaderAction`,
+⌘R runs `AppHeader.onRefresh`. Pages get these for free by using `AppHeader`. On macOS
+the same commands appear in the menu bar (`macos/Runner/MainFlutterWindow.swift`).
 
 Copy: sentence case, verb-first buttons ("Create project"), no "successfully", no "Please".
 
