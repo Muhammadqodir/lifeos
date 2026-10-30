@@ -63,10 +63,7 @@ class WalletController extends Controller
      */
     public function show(Wallet $wallet): WalletResource
     {
-        // Ensure user owns this wallet
-        if ($wallet->user_id !== auth()->id()) {
-            abort(404);
-        }
+        $this->authorize('view', $wallet);
 
         $wallet->load('currency');
 
@@ -78,10 +75,7 @@ class WalletController extends Controller
      */
     public function update(UpdateWalletRequest $request, Wallet $wallet): WalletResource
     {
-        // Ensure user owns this wallet
-        if ($wallet->user_id !== auth()->id()) {
-            abort(404);
-        }
+        $this->authorize('update', $wallet);
 
         $wallet->update($request->validated());
         $wallet->load('currency');
@@ -94,10 +88,7 @@ class WalletController extends Controller
      */
     public function destroy(Wallet $wallet): JsonResponse
     {
-        // Ensure user owns this wallet
-        if ($wallet->user_id !== auth()->id()) {
-            abort(404);
-        }
+        $this->authorize('delete', $wallet);
 
         $wallet->update(['is_active' => false]);
 
@@ -109,10 +100,7 @@ class WalletController extends Controller
      */
     public function balance(Wallet $wallet): JsonResponse
     {
-        // Ensure user owns this wallet
-        if ($wallet->user_id !== auth()->id()) {
-            abort(404);
-        }
+        $this->authorize('view', $wallet);
 
         $balance = $wallet->transactionEntries()->sum('amount');
 

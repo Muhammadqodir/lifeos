@@ -88,10 +88,7 @@ class TransactionController extends Controller
      */
     public function show(Transaction $transaction): TransactionResource
     {
-        // Ensure user owns this transaction
-        if ($transaction->user_id !== auth()->id()) {
-            abort(404);
-        }
+        $this->authorize('view', $transaction);
 
         $transaction->load(['entries.wallet', 'entries.currency', 'category']);
 
@@ -103,10 +100,7 @@ class TransactionController extends Controller
      */
     public function update(UpdateTransactionRequest $request, Transaction $transaction): TransactionResource
     {
-        // Ensure user owns this transaction
-        if ($transaction->user_id !== auth()->id()) {
-            abort(404);
-        }
+        $this->authorize('update', $transaction);
 
         $transaction = $this->transactionService->updateTransaction(
             $transaction,
@@ -121,10 +115,7 @@ class TransactionController extends Controller
      */
     public function destroy(Transaction $transaction): JsonResponse
     {
-        // Ensure user owns this transaction
-        if ($transaction->user_id !== auth()->id()) {
-            abort(404);
-        }
+        $this->authorize('delete', $transaction);
 
         $transaction->delete();
 

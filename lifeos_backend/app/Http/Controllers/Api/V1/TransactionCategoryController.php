@@ -54,10 +54,7 @@ class TransactionCategoryController extends Controller
      */
     public function update(UpdateCategoryRequest $request, TransactionCategory $transaction_category): TransactionCategoryResource
     {
-        // Only allow updating user's own categories (not system categories)
-        if ($transaction_category->user_id != $request->user()->id) {
-            abort(403, 'Cannot update system categories or categories belonging to other users.');
-        }
+        $this->authorize('update', $transaction_category);
 
         $transaction_category->update($request->validated());
 
@@ -69,10 +66,7 @@ class TransactionCategoryController extends Controller
      */
     public function destroy(Request $request, TransactionCategory $transaction_category): JsonResponse
     {
-        // Only allow deleting user's own categories (not system categories)
-        if ($transaction_category->user_id != $request->user()->id) {
-            abort(403, 'Cannot delete system categories or categories belonging to other users.');
-        }
+        $this->authorize('delete', $transaction_category);
 
         $transaction_category->delete();
 
