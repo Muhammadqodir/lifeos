@@ -25,6 +25,8 @@ class AppBadge extends StatelessWidget {
     : color = null,
       style = AppBadgeStyle.outline;
 
+  // Can't be const: the label is built from [count] at runtime.
+  // ignore: prefer_const_constructors_in_immutables
   AppBadge.count(int count, {super.key})
     : label = '$count',
       color = null,

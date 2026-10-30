@@ -76,7 +76,7 @@ class AddProjectBloc extends Bloc<AddProjectEvent, AddProjectState> {
         iconImage: event.iconImage,
         tags: event.tags ?? [],
       ));
-    } catch (e, s) {
+    } catch (e) {
       emit(AddProjectError(
         message: e.toString(),
         title: event.title,

@@ -15,25 +15,23 @@ class ActivityIndicatorChart extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     ThemeData theme = Theme.of(context);
-    return Container(
-      child: Row(
-        children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.end,
-            children: [SizedBox(height: 14), ..._buildWeekDays(theme)],
-          ),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(
-                parent: BouncingScrollPhysics(),
-              ),
-              scrollDirection: Axis.horizontal,
-              reverse: true,
-              child: Row(children: _buildMonths(theme)),
+    return Row(
+      children: [
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.end,
+          children: [SizedBox(height: 14), ..._buildWeekDays(theme)],
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            physics: const AlwaysScrollableScrollPhysics(
+              parent: BouncingScrollPhysics(),
             ),
+            scrollDirection: Axis.horizontal,
+            reverse: true,
+            child: Row(children: _buildMonths(theme)),
           ),
-        ],
-      ),
+        ),
+      ],
     );
   }
 
@@ -150,7 +148,9 @@ class ActivityIndicatorChart extends StatelessWidget {
           width: 14,
           height: 14,
           decoration: BoxDecoration(
-            color: _isActivityExists(day) ? theme.colorScheme.primary : theme.colorScheme.muted,
+            color: _isActivityExists(day)
+                ? theme.colorScheme.primary
+                : theme.colorScheme.muted,
             borderRadius: BorderRadius.circular(3),
           ),
           // child: Center(

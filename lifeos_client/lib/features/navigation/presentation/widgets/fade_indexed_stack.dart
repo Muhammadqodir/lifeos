@@ -6,16 +6,14 @@ class FadeIndexedStack extends StatefulWidget {
   final Duration duration;
 
   const FadeIndexedStack({
-    Key? key,
+    super.key,
     required this.index,
     required this.children,
-    this.duration = const Duration(
-      milliseconds: 200,
-    ),
-  }) : super(key: key);
+    this.duration = const Duration(milliseconds: 200),
+  });
 
   @override
-  _FadeIndexedStackState createState() => _FadeIndexedStackState();
+  State<FadeIndexedStack> createState() => _FadeIndexedStackState();
 }
 
 class _FadeIndexedStackState extends State<FadeIndexedStack>
@@ -47,10 +45,7 @@ class _FadeIndexedStackState extends State<FadeIndexedStack>
   Widget build(BuildContext context) {
     return FadeTransition(
       opacity: _controller,
-      child: IndexedStack(
-        index: widget.index,
-        children: widget.children,
-      ),
+      child: IndexedStack(index: widget.index, children: widget.children),
     );
   }
 }

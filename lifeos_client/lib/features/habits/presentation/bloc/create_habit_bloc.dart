@@ -32,7 +32,7 @@ class CreateHabitBloc extends Bloc<CreateHabitEvent, CreateHabitState> {
       );
 
       emit(CreateHabitSuccess(habit: habit));
-    } catch (e, stackTrace) {
+    } catch (e) {
       emit(CreateHabitFailure(message: e.toString()));
     }
   }

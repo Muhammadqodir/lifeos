@@ -141,7 +141,7 @@ class FinanceApiClient {
       // Group wallets by currency to minimize API calls
       final walletsByCurrency = <String, List<WalletDto>>{};
       for (final wallet in wallets) {
-        if (wallet.balance != null && wallet.balance! > 0) {
+        if (wallet.balance > 0) {
           walletsByCurrency.putIfAbsent(wallet.currency.code, () => []).add(wallet);
         }
       }
@@ -156,7 +156,7 @@ class FinanceApiClient {
         // Sum balances in this currency
         final sumInCurrency = walletsInCurrency.fold<double>(
           0.0,
-          (sum, wallet) => sum + (wallet.balance ?? 0.0),
+          (sum, wallet) => sum + wallet.balance,
         );
 
         // Convert to base currency
@@ -299,7 +299,7 @@ class FinanceApiClient {
           response: response,
         );
       }
-    } catch (e, s) {
+    } catch (e) {
       throw _handleError(e);
     }
   }
@@ -317,7 +317,7 @@ class FinanceApiClient {
           response: response,
         );
       }
-    } catch (e, s) {
+    } catch (e) {
       throw _handleError(e);
     }
   }
@@ -391,7 +391,7 @@ class FinanceApiClient {
           response: response,
         );
       }
-    } catch (e, s) {
+    } catch (e) {
       throw _handleError(e);
     }
   }

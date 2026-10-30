@@ -265,7 +265,7 @@ class HealthApiClient {
           response: response,
         );
       }
-    } catch (e, stackTrace) {
+    } catch (e) {
       throw _handleError(e);
     }
   }
@@ -387,7 +387,7 @@ class HealthApiClient {
           response: response,
         );
       }
-    } catch (e, s) {
+    } catch (e) {
       throw _handleError(e);
     }
   }
@@ -428,7 +428,7 @@ class HealthApiClient {
           response: response,
         );
       }
-    } catch (e, s) {
+    } catch (e) {
       throw _handleError(e);
     }
   }

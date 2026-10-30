@@ -12,7 +12,11 @@ class ExerciseSets extends StatefulWidget {
   final int exerciseIndex;
   final WorkoutExerciseDto exercise;
 
-  const ExerciseSets({required this.exerciseIndex, required this.exercise});
+  const ExerciseSets({
+    super.key,
+    required this.exerciseIndex,
+    required this.exercise,
+  });
 
   @override
   State<ExerciseSets> createState() => _ExerciseSetsState();

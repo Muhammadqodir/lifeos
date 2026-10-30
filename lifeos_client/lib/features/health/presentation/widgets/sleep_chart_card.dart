@@ -61,7 +61,7 @@ class SleepChartCard extends StatelessWidget {
             drawVerticalLine: false,
             getDrawingHorizontalLine: (value) {
               return FlLine(
-                color: colorScheme.border.withOpacity(0.2),
+                color: colorScheme.border.withValues(alpha: 0.2),
                 strokeWidth: 1,
               );
             },
@@ -105,13 +105,13 @@ class SleepChartCard extends StatelessWidget {
             LineChartBarData(
               spots: emptyPoints,
               isCurved: true,
-              color: colorScheme.primary.withOpacity(0.3),
+              color: colorScheme.primary.withValues(alpha: 0.3),
               barWidth: 3,
               isStrokeCapRound: true,
               dotData: const FlDotData(show: false),
               belowBarData: BarAreaData(
                 show: true,
-                color: colorScheme.primary.withOpacity(0.05),
+                color: colorScheme.primary.withValues(alpha: 0.05),
               ),
             ),
           ],

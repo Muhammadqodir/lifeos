@@ -157,7 +157,7 @@ class CreateTodoBloc extends Bloc<CreateTodoEvent, CreateTodoState> {
       final todo = await _todosRepository.createTodo(dto);
 
       emit(CreateTodoSuccess(todo));
-    } catch (e, stackTrace) {
+    } catch (e) {
       emit(CreateTodoError(e.toString()));
       
       // Return to form state with data preserved
