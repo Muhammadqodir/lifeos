@@ -28,7 +28,7 @@ class _HabitsMainPageState extends State<HabitsMainPage> {
       GlobalKey<RefreshTriggerState>();
 
   /// Habit shown beside the list on wide windows (split view).
-  int? _selectedId;
+  String? _selectedId;
 
   void _refresh() =>
       context.read<HabitsListBloc>().add(const HabitsListRefreshed());

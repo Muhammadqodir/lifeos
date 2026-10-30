@@ -2,8 +2,8 @@ import 'package:equatable/equatable.dart';
 import 'package:lifeos_client/features/habits/data/models/habit_dto.dart';
 
 class HabitEntryDto extends Equatable {
-  final int id;
-  final int habitId;
+  final String id;
+  final String habitId;
   final HabitDto? habit;
   final String date;
   final String completedAt;
@@ -24,8 +24,8 @@ class HabitEntryDto extends Equatable {
 
   factory HabitEntryDto.fromJson(Map<String, dynamic> json) {
     return HabitEntryDto(
-      id: json['id'] as int,
-      habitId: json['habit_id'] as int,
+      id: json['id'] as String,
+      habitId: json['habit_id'] as String,
       habit: json['habit'] != null
           ? HabitDto.fromJson(json['habit'] as Map<String, dynamic>)
           : null,

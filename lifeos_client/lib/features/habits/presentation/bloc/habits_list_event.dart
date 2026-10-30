@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:lifeos_client/features/habits/data/models/habit_dto.dart';
 
 abstract class HabitsListEvent extends Equatable {
   const HabitsListEvent();
@@ -20,4 +21,14 @@ class HabitsListRequested extends HabitsListEvent {
 
 class HabitsListRefreshed extends HabitsListEvent {
   const HabitsListRefreshed();
+}
+
+/// The local store changed (internal).
+class HabitsListChanged extends HabitsListEvent {
+  final List<HabitDto> habits;
+
+  const HabitsListChanged(this.habits);
+
+  @override
+  List<Object?> get props => [habits];
 }

@@ -1,13 +1,19 @@
+import 'package:lifeos_client/core/utils/streams.dart';
 import 'package:lifeos_client/features/habits/data/models/habit_dto.dart';
 import 'package:lifeos_client/features/habits/domain/repositories/habits_repository.dart';
 import 'package:lifeos_client/features/home/domain/repositories/home_repository.dart';
 import 'package:lifeos_client/features/projects/data/models/todo_dto.dart';
 import 'package:lifeos_client/features/projects/domain/repositories/todos_repository.dart';
 
-/// Implementation of the home repository
+/// Home's lists, filtered on the device. No requests: the sync engine keeps
+/// the local store current, so this replaces the five calls Home used to
+/// make (and the "home/today" endpoint it would otherwise need).
 class HomeRepositoryImpl implements HomeRepository {
   final TodosRepository todosRepository;
   final HabitsRepository habitsRepository;
+
+  /// How many inbox / in-progress todos Home lists.
+  static const shortListLimit = 5;
 
   HomeRepositoryImpl({
     required this.todosRepository,
@@ -15,59 +21,46 @@ class HomeRepositoryImpl implements HomeRepository {
   });
 
   @override
-  Future<List<TodoDto>> getTodosForToday() async {
-    final today = DateTime.now();
-    final startOfDay = DateTime(today.year, today.month, today.day);
-    final endOfDay = DateTime(today.year, today.month, today.day, 23, 59, 59);
+  Stream<HomeSnapshot> watchToday() => combineLatest2(
+    todosRepository.watchTodos(),
+    habitsRepository.watchHabits(),
+    _snapshot,
+  );
 
-    return await todosRepository.getTodos(
-      status: 'planned',
-      plannedFrom: startOfDay,
-      plannedTo: endOfDay,
-      orderBy: 'planned_date',
-      orderDirection: 'asc',
-      perPage: 50,
+  static HomeSnapshot _snapshot(List<TodoDto> todos, List<HabitDto> habits) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    DateTime? day(TodoDto t) => t.plannedDate == null
+        ? null
+        : DateTime(
+            t.plannedDate!.year,
+            t.plannedDate!.month,
+            t.plannedDate!.day,
+          );
+    int byPlan(TodoDto a, TodoDto b) {
+      final date = day(a)!.compareTo(day(b)!);
+      return date != 0
+          ? date
+          : (a.plannedTime ?? '').compareTo(b.plannedTime ?? '');
+    }
+
+    final planned = todos.where((t) => t.status == 'planned' && day(t) != null);
+    return HomeSnapshot(
+      todosToday: planned.where((t) => day(t) == today).toList()..sort(byPlan),
+      overdueTodos: planned.where((t) => day(t)!.isBefore(today)).toList()
+        ..sort(byPlan),
+      // Already newest first.
+      inboxTodos: todos
+          .where((t) => t.status == 'inbox')
+          .take(shortListLimit)
+          .toList(),
+      inProgressTodos:
+          (todos.where((t) => t.status == 'in_progress').toList()
+                ..sort((a, b) => b.updatedAt.compareTo(a.updatedAt)))
+              .take(shortListLimit)
+              .toList(),
+      habitsToday: habits,
     );
-  }
-
-  @override
-  Future<List<TodoDto>> getInboxTodos({int limit = 5}) async {
-    return await todosRepository.getTodos(
-      status: 'inbox',
-      orderBy: 'created_at',
-      orderDirection: 'desc',
-      perPage: limit,
-    );
-  }
-
-  @override
-  Future<List<TodoDto>> getInProgressTodos({int limit = 5}) async {
-    return await todosRepository.getTodos(
-      status: 'in_progress',
-      orderBy: 'updated_at',
-      orderDirection: 'desc',
-      perPage: limit,
-    );
-  }
-
-  @override
-  Future<List<TodoDto>> getOverdueTodos({int limit = 50}) async {
-    final today = DateTime.now();
-    final startOfToday = DateTime(today.year, today.month, today.day);
-
-    // Get all todos with status 'planned' that have a planned_date before today
-    // This will fetch ALL overdue todos (from any past date), not just yesterday
-    return await todosRepository.getTodos(
-      status: 'planned',
-      plannedTo: startOfToday.subtract(const Duration(seconds: 1)),
-      orderBy: 'planned_date',
-      orderDirection: 'asc', // Oldest first
-      perPage: limit,
-    );
-  }
-
-  @override
-  Future<List<HabitDto>> getHabitsForToday() async {
-    return await habitsRepository.getHabitsWithTodayStatus();
   }
 }

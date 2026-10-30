@@ -8,7 +8,7 @@ abstract class LogEntryEvent extends Equatable {
 }
 
 class LogEntrySubmitted extends LogEntryEvent {
-  final int habitId;
+  final String habitId;
   final String date;
   final String? completedAt;
   final String? note;
@@ -25,7 +25,7 @@ class LogEntrySubmitted extends LogEntryEvent {
 }
 
 class DeleteEntrySubmitted extends LogEntryEvent {
-  final int entryId;
+  final String entryId;
 
   const DeleteEntrySubmitted({required this.entryId});
 

@@ -12,7 +12,7 @@ import '../bloc/create_todo_state.dart';
 import 'package:lifeos_client/core/ui/ui.dart';
 
 class CreateTodoPage extends StatefulWidget {
-  final int projectId;
+  final String projectId;
 
   const CreateTodoPage({super.key, required this.projectId});
 
@@ -96,7 +96,9 @@ class _CreateTodoPageState extends State<CreateTodoPage> {
                         optional: true,
                         child: TextField(
                           controller: _commentController,
-                          placeholder: const Text('Details, links, acceptance criteria'),
+                          placeholder: const Text(
+                            'Details, links, acceptance criteria',
+                          ),
                           enabled: !isSubmitting,
                           onChanged: (value) {
                             _bloc.add(CommentChanged(value));

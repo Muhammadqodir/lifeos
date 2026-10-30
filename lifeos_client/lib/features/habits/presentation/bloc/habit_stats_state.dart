@@ -16,7 +16,7 @@ class HabitStatsLoading extends HabitStatsState {}
 class HabitStatsLoaded extends HabitStatsState {
   final List<HabitEntryDto> entries;
 
-  /// Server-computed streaks and completion rate; null if that call failed.
+  /// Streaks and completion rate, computed on the device.
   final HabitStatsDto? stats;
 
   const HabitStatsLoaded(this.entries, {this.stats});

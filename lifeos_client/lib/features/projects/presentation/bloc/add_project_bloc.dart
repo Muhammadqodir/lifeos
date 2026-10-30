@@ -1,4 +1,3 @@
-import 'package:dio/dio.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../domain/repositories/projects_repository.dart';
 import 'add_project_event.dart';
@@ -8,7 +7,7 @@ class AddProjectBloc extends Bloc<AddProjectEvent, AddProjectState> {
   final ProjectsRepository projectsRepository;
 
   AddProjectBloc({required this.projectsRepository})
-      : super(const AddProjectInitial()) {
+    : super(const AddProjectInitial()) {
     on<AddProjectSubmitted>(_onSubmitted);
   }
 
@@ -16,75 +15,45 @@ class AddProjectBloc extends Bloc<AddProjectEvent, AddProjectState> {
     AddProjectSubmitted event,
     Emitter<AddProjectState> emit,
   ) async {
-    emit(AddProjectSubmitting(
-      title: event.title,
-      description: event.description ?? '',
-      color: event.color,
-      iconImage: event.iconImage,
-      tags: event.tags ?? [],
-    ));
+    emit(
+      AddProjectSubmitting(
+        title: event.title,
+        description: event.description ?? '',
+        color: event.color,
+        iconImage: event.iconImage,
+        tags: event.tags ?? [],
+      ),
+    );
 
     try {
-      // Use FormData if there's an icon image to upload
-      if (event.iconImage != null) {
-        final Map<String, dynamic> formDataMap = {
-          'title': event.title,
-          'color': event.color,
-        };
-
-        if (event.description != null && event.description!.isNotEmpty) {
-          formDataMap['description'] = event.description;
-        }
-
-        // Add tags individually with array notation for Laravel
-        if (event.tags != null && event.tags!.isNotEmpty) {
-          for (int i = 0; i < event.tags!.length; i++) {
-            formDataMap['tags[$i]'] = event.tags![i];
-          }
-        }
-
-        formDataMap['icon'] = await MultipartFile.fromFile(
-          event.iconImage!.path,
-          filename: event.iconImage!.name,
-        );
-
-        final formData = FormData.fromMap(formDataMap);
-        
-        await projectsRepository.createProjectWithFormData(formData);
-      } else {
-        // Regular JSON request without icon
-        final data = <String, dynamic>{
-          'title': event.title,
-          'color': event.color,
-        };
-
-        if (event.description != null && event.description!.isNotEmpty) {
-          data['description'] = event.description;
-        }
-        
-        if (event.tags != null && event.tags!.isNotEmpty) {
-          data['tags'] = event.tags;
-        }
-
-        await projectsRepository.createProject(data);
-      }
-
-      emit(AddProjectSuccess(
+      await projectsRepository.createProject(
         title: event.title,
-        description: event.description ?? '',
         color: event.color,
-        iconImage: event.iconImage,
-        tags: event.tags ?? [],
-      ));
+        description: event.description,
+        tags: event.tags ?? const [],
+        icon: event.iconImage,
+      );
+
+      emit(
+        AddProjectSuccess(
+          title: event.title,
+          description: event.description ?? '',
+          color: event.color,
+          iconImage: event.iconImage,
+          tags: event.tags ?? [],
+        ),
+      );
     } catch (e) {
-      emit(AddProjectError(
-        message: e.toString(),
-        title: event.title,
-        description: event.description ?? '',
-        color: event.color,
-        iconImage: event.iconImage,
-        tags: event.tags ?? [],
-      ));
+      emit(
+        AddProjectError(
+          message: e.toString(),
+          title: event.title,
+          description: event.description ?? '',
+          color: event.color,
+          iconImage: event.iconImage,
+          tags: event.tags ?? [],
+        ),
+      );
     }
   }
 }

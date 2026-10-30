@@ -4,13 +4,12 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../../../../core/sync/sync_engine.dart';
 import '../../../../core/ui/ui.dart';
 import '../../../../injection.dart';
 import '../../../../utils/modal.dart';
 import '../../../projects/data/models/project_dto.dart';
 import '../../../projects/presentation/bloc/manage_projects_bloc.dart';
-import '../../../projects/presentation/bloc/manage_todos_bloc.dart';
-import '../../../projects/presentation/bloc/manage_todos_state.dart';
 import '../../../projects/presentation/pages/create_todo_page.dart';
 import '../bloc/home_bloc.dart';
 import '../bloc/home_event.dart';
@@ -34,42 +33,32 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocListener<ManageTodosBloc, ManageTodosState>(
-      listener: (context, state) {
-        if (state is TodoStatusUpdated || state is ManageTodosLoaded) {
-          _refresh();
-        }
-      },
-      child: BlocBuilder<HomeBloc, HomeState>(
-        builder: (context, state) {
-          return Scaffold(
-            headers: [
-              AppHeader(
-                title: _greeting(),
-                subtitle: DateFormat('EEEE, d MMMM').format(DateTime.now()),
-                onRefresh: _refresh,
-                actions: [
-                  HeaderAction(
-                    icon: HugeIcons.strokeRoundedAdd01,
-                    tooltip: 'New todo',
-                    label: 'New todo',
-                    primary: true,
-                    onTap: () => _showQuickAdd(context),
-                  ),
-                ],
-              ),
-            ],
-            child: RefreshTrigger(
-              key: _refreshTriggerKey,
-              onRefresh: () async {
-                _refresh();
-                await Future.delayed(const Duration(milliseconds: 500));
-              },
-              child: _buildBody(context, state),
+    return BlocBuilder<HomeBloc, HomeState>(
+      builder: (context, state) {
+        return Scaffold(
+          headers: [
+            AppHeader(
+              title: _greeting(),
+              subtitle: DateFormat('EEEE, d MMMM').format(DateTime.now()),
+              onRefresh: _refresh,
+              actions: [
+                HeaderAction(
+                  icon: HugeIcons.strokeRoundedAdd01,
+                  tooltip: 'New todo',
+                  label: 'New todo',
+                  primary: true,
+                  onTap: () => _showQuickAdd(context),
+                ),
+              ],
             ),
-          );
-        },
-      ),
+          ],
+          child: RefreshTrigger(
+            key: _refreshTriggerKey,
+            onRefresh: () => getIt<SyncEngine>().syncNow(),
+            child: _buildBody(context, state),
+          ),
+        );
+      },
     );
   }
 

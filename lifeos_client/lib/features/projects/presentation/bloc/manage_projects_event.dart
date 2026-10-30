@@ -1,5 +1,7 @@
 import 'package:equatable/equatable.dart';
 
+import '../../data/models/project_dto.dart';
+
 abstract class ManageProjectsEvent extends Equatable {
   const ManageProjectsEvent();
 
@@ -16,7 +18,7 @@ class ManageProjectsRefresh extends ManageProjectsEvent {
 }
 
 class ManageProjectsDelete extends ManageProjectsEvent {
-  final int projectId;
+  final String projectId;
 
   const ManageProjectsDelete({required this.projectId});
 
@@ -31,4 +33,14 @@ class ManageProjectsSearch extends ManageProjectsEvent {
 
   @override
   List<Object?> get props => [query];
+}
+
+/// The local store changed (internal).
+class ManageProjectsChanged extends ManageProjectsEvent {
+  final List<ProjectDto> projects;
+
+  const ManageProjectsChanged(this.projects);
+
+  @override
+  List<Object?> get props => [projects];
 }

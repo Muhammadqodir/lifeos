@@ -1,21 +1,38 @@
+import 'dart:async';
+
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:intl/intl.dart';
-import 'package:lifeos_client/features/habits/data/models/habit_stats_dto.dart';
+import 'package:lifeos_client/core/sync/sync_engine.dart';
 import 'package:lifeos_client/features/habits/domain/repositories/habits_repository.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habit_stats_event.dart';
 import 'package:lifeos_client/features/habits/presentation/bloc/habit_stats_state.dart';
 
+/// One habit's entries and streaks, computed from the local store.
 class HabitStatsBloc extends Bloc<HabitStatsEvent, HabitStatsState> {
   final HabitsRepository habitsRepository;
+  final SyncEngine? sync;
+  StreamSubscription<void>? _subscription;
 
-  HabitStatsBloc({required this.habitsRepository})
+  HabitStatsBloc({required this.habitsRepository, this.sync})
     : super(HabitStatsInitial()) {
-    on<LoadHabitStats>(_onLoadHabitStats);
-    on<RefreshHabitStats>(_onRefreshHabitStats);
-    on<ArchiveHabit>(_onArchiveHabit);
+    on<LoadHabitStats>(_onLoad);
+    on<RefreshHabitStats>((event, emit) => sync?.syncNow());
+    on<HabitActivityChanged>(
+      (event, emit) => emit(
+        HabitStatsLoaded(event.activity.entries, stats: event.activity.stats),
+      ),
+    );
+    on<ArchiveHabit>(_onArchive);
   }
 
-  Future<void> _onArchiveHabit(
+  void _onLoad(LoadHabitStats event, Emitter<HabitStatsState> emit) {
+    emit(HabitStatsLoading());
+    _subscription?.cancel();
+    _subscription = habitsRepository
+        .watchActivity(event.habitId)
+        .listen((a) => add(HabitActivityChanged(a)), onError: addError);
+  }
+
+  Future<void> _onArchive(
     ArchiveHabit event,
     Emitter<HabitStatsState> emit,
   ) async {
@@ -32,44 +49,9 @@ class HabitStatsBloc extends Bloc<HabitStatsEvent, HabitStatsState> {
     }
   }
 
-  Future<void> _onLoadHabitStats(
-    LoadHabitStats event,
-    Emitter<HabitStatsState> emit,
-  ) async {
-    emit(HabitStatsLoading());
-    await _fetchHabitEntries(event.habitId, emit);
-  }
-
-  Future<void> _onRefreshHabitStats(
-    RefreshHabitStats event,
-    Emitter<HabitStatsState> emit,
-  ) async {
-    await _fetchHabitEntries(event.habitId, emit);
-  }
-
-  Future<void> _fetchHabitEntries(
-    int habitId,
-    Emitter<HabitStatsState> emit,
-  ) async {
-    try {
-      final now = DateTime.now();
-      final ninetyDaysAgo = now.subtract(const Duration(days: 90));
-
-      final entriesFuture = habitsRepository.getHabitEntries(
-        habitId: habitId,
-        from: DateFormat('yyyy-MM-dd').format(ninetyDaysAgo),
-        to: DateFormat('yyyy-MM-dd').format(now),
-      );
-      // Stats are optional: the activity chart still renders without them.
-      final statsFuture = habitsRepository
-          .getHabitStats(habitId: habitId)
-          .then<HabitStatsDto?>((s) => s)
-          .catchError((_) => null);
-
-      final entries = await entriesFuture;
-      emit(HabitStatsLoaded(entries, stats: await statsFuture));
-    } catch (e) {
-      emit(HabitStatsError(e.toString()));
-    }
+  @override
+  Future<void> close() async {
+    await _subscription?.cancel();
+    return super.close();
   }
 }

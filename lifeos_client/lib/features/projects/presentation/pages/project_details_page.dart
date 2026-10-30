@@ -20,15 +20,7 @@ import 'todo_details_page.dart';
 class ProjectDetailsPage extends StatefulWidget {
   final ProjectDto project;
 
-  /// Called after todos are added, moved or deleted, so a list shown
-  /// beside this page (split view) can update its counts.
-  final VoidCallback? onTodosChanged;
-
-  const ProjectDetailsPage({
-    super.key,
-    required this.project,
-    this.onTodosChanged,
-  });
+  const ProjectDetailsPage({super.key, required this.project});
 
   @override
   State<ProjectDetailsPage> createState() => _ProjectDetailsPageState();
@@ -96,15 +88,6 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
     );
   }
 
-  void _loadCurrentTab() {
-    _todosBloc.add(
-      LoadTodosByStatus(
-        projectId: widget.project.id,
-        status: _statuses[_selectedTabIndex],
-      ),
-    );
-  }
-
   @override
   void dispose() {
     _pageController.dispose();
@@ -124,9 +107,6 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
               "Couldn't update todos",
               message: state.message,
             );
-          } else if (state is TodoStatusUpdated) {
-            _loadAllData();
-            widget.onTodosChanged?.call();
           }
         },
         child: BlocBuilder<ManageTodosBloc, ManageTodosState>(
@@ -139,7 +119,7 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                 AppHeader(
                   title: widget.project.title,
                   subtitle: widget.project.description,
-                  onRefresh: _loadAllData,
+                  onRefresh: () => _todosBloc.add(const RefreshTodos()),
                   actions: [
                     HeaderAction(
                       icon: HugeIcons.strokeRoundedAdd01,
@@ -188,28 +168,19 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
   }
 
   Widget _buildBody(BuildContext context, ManageTodosState state) {
-    if (state is ManageTodosLoading || state is ManageTodosInitial) {
+    if (state is! ManageTodosWithData) {
       return const LoadingState(message: 'Loading todos…');
     }
-    if (state is! ManageTodosWithData) return const SizedBox.shrink();
-
-    final updatingTodoId = state is TodoStatusUpdating ? state.todoId : null;
 
     return PageView(
       controller: _pageController,
-      onPageChanged: (index) {
-        setState(() => _selectedTabIndex = index);
-        _loadCurrentTab();
-      },
+      onPageChanged: (index) => setState(() => _selectedTabIndex = index),
       children: [
         for (final tab in _tabs)
           _buildTodoList(
             context,
             tab,
             state.todosByStatus[tab.status] ?? const [],
-            hasMore: state.hasMoreByStatus[tab.status] ?? false,
-            isLoadingMore: state.isLoadingMoreByStatus[tab.status] ?? false,
-            updatingTodoId: updatingTodoId,
           ),
       ],
     );
@@ -218,11 +189,8 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
   Widget _buildTodoList(
     BuildContext context,
     _StatusTab tab,
-    List<TodoDto> todos, {
-    required bool hasMore,
-    required bool isLoadingMore,
-    required int? updatingTodoId,
-  }) {
+    List<TodoDto> todos,
+  ) {
     if (todos.isEmpty) {
       return EmptyState(
         icon: HugeIcon(icon: tab.icon),
@@ -255,7 +223,6 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                 for (final todo in todos)
                   TodoCard(
                     todo: todo,
-                    isUpdating: updatingTodoId == todo.id,
                     onTap: () => Navigator.of(context).push(
                       CupertinoPageRoute(
                         builder: (_) => TodoDetailsPage(todo: todo),
@@ -267,19 +234,6 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
                   ),
               ],
             ),
-            if (hasMore)
-              Padding(
-                padding: const EdgeInsets.only(top: AppSpacing.lg),
-                child: Center(
-                  child: isLoadingMore
-                      ? const CircularProgressIndicator(size: 20)
-                      : OutlineButton(
-                          onPressed: () =>
-                              _todosBloc.add(LoadMoreTodos(status: tab.status)),
-                          child: const Text('Show more'),
-                        ),
-                ),
-              ),
           ],
         ),
       ),
@@ -319,25 +273,16 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
       if (date == null) return;
     }
     _todosBloc.add(
-      UpdateTodoStatus(
-        todoId: todo.id,
-        status: status,
-        oldStatus: todo.status,
-        plannedDate: date,
-      ),
+      UpdateTodoStatus(todoId: todo.id, status: status, plannedDate: date),
     );
   }
 
   Future<void> _navigateToCreateTodo(BuildContext context) async {
-    final result = await Navigator.of(context).push<bool>(
+    await Navigator.of(context).push<bool>(
       CupertinoPageRoute(
         builder: (_) => CreateTodoPage(projectId: widget.project.id),
       ),
     );
-    if (result == true) {
-      _todosBloc.add(const RefreshTodos());
-      widget.onTodosChanged?.call();
-    }
   }
 
   Future<void> _confirmDelete(BuildContext context, TodoDto todo) async {
@@ -348,7 +293,6 @@ class _ProjectDetailsPageState extends State<ProjectDetailsPage> {
     );
     if (confirmed) {
       _todosBloc.add(DeleteTodo(todo.id));
-      widget.onTodosChanged?.call();
     }
   }
 }

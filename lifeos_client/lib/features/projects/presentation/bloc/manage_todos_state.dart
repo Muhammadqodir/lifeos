@@ -8,168 +8,45 @@ abstract class ManageTodosState extends Equatable {
   List<Object?> get props => [];
 }
 
-class ManageTodosWithData extends ManageTodosState {
-  final Map<String, List<TodoDto>> todosByStatus;
-  final Map<String, int> currentPageByStatus;
-  final Map<String, bool> hasMoreByStatus;
-  final Map<String, bool> isLoadingMoreByStatus;
-  final Map<String, int> countsByStatus;
-  final int? currentProjectId;
-
-  const ManageTodosWithData({
-    required this.todosByStatus,
-    required this.currentPageByStatus,
-    required this.hasMoreByStatus,
-    this.isLoadingMoreByStatus = const {},
-    this.countsByStatus = const {},
-    this.currentProjectId,
-  });
-
-  @override
-  List<Object?> get props => [
-        todosByStatus,
-        currentPageByStatus,
-        hasMoreByStatus,
-        isLoadingMoreByStatus,
-        countsByStatus,
-        currentProjectId,
-      ];
-
-  ManageTodosWithData copyWith({
-    Map<String, List<TodoDto>>? todosByStatus,
-    Map<String, int>? currentPageByStatus,
-    Map<String, bool>? hasMoreByStatus,
-    Map<String, bool>? isLoadingMoreByStatus,
-    Map<String, int>? countsByStatus,
-    int? currentProjectId,
-  }) {
-    return ManageTodosLoaded(
-      todosByStatus: todosByStatus ?? this.todosByStatus,
-      currentPageByStatus: currentPageByStatus ?? this.currentPageByStatus,
-      hasMoreByStatus: hasMoreByStatus ?? this.hasMoreByStatus,
-      isLoadingMoreByStatus: isLoadingMoreByStatus ?? this.isLoadingMoreByStatus,
-      countsByStatus: countsByStatus ?? this.countsByStatus,
-      currentProjectId: currentProjectId ?? this.currentProjectId,
-    );
-  }
-}
-
 class ManageTodosInitial extends ManageTodosState {
   const ManageTodosInitial();
 }
 
-class ManageTodosLoading extends ManageTodosWithData {
-  const ManageTodosLoading({
-    required super.todosByStatus,
-    required super.currentPageByStatus,
-    required super.hasMoreByStatus,
-    super.isLoadingMoreByStatus = const {},
-    super.countsByStatus = const {},
-    super.currentProjectId,
+/// A project's todos grouped by status, straight from the local store.
+class ManageTodosWithData extends ManageTodosState {
+  final Map<String, List<TodoDto>> todosByStatus;
+  final String? currentProjectId;
+
+  const ManageTodosWithData({
+    required this.todosByStatus,
+    this.currentProjectId,
   });
+
+  Map<String, int> get countsByStatus => {
+    for (final entry in todosByStatus.entries) entry.key: entry.value.length,
+  };
+
+  @override
+  List<Object?> get props => [todosByStatus, currentProjectId];
 }
 
 class ManageTodosLoaded extends ManageTodosWithData {
   const ManageTodosLoaded({
     required super.todosByStatus,
-    required super.currentPageByStatus,
-    required super.hasMoreByStatus,
-    super.isLoadingMoreByStatus = const {},
-    super.countsByStatus = const {},
     super.currentProjectId,
   });
 }
 
+/// A change could not be saved on the device.
 class ManageTodosError extends ManageTodosWithData {
   final String message;
 
   const ManageTodosError({
     required this.message,
     required super.todosByStatus,
-    required super.currentPageByStatus,
-    required super.hasMoreByStatus,
-    super.isLoadingMoreByStatus = const {},
-    super.countsByStatus = const {},
     super.currentProjectId,
   });
 
   @override
-  List<Object?> get props => [
-        message,
-        todosByStatus,
-        currentPageByStatus,
-        hasMoreByStatus,
-        isLoadingMoreByStatus,
-        countsByStatus,
-        currentProjectId,
-      ];
-}
-
-class TodoDeleting extends ManageTodosWithData {
-  final int todoId;
-
-  const TodoDeleting({
-    required this.todoId,
-    required super.todosByStatus,
-    required super.currentPageByStatus,
-    required super.hasMoreByStatus,
-    super.isLoadingMoreByStatus = const {},
-    super.countsByStatus = const {},
-    super.currentProjectId,
-  });
-
-  @override
-  List<Object?> get props => [
-        todoId,
-        ...super.props,
-      ];
-}
-
-class TodoStatusUpdating extends ManageTodosWithData {
-  final int todoId;
-  final String newStatus;
-
-  const TodoStatusUpdating({
-    required this.todoId,
-    required this.newStatus,
-    required super.todosByStatus,
-    required super.currentPageByStatus,
-    required super.hasMoreByStatus,
-    super.isLoadingMoreByStatus = const {},
-    super.countsByStatus = const {},
-    super.currentProjectId,
-  });
-
-  @override
-  List<Object?> get props => [
-        todoId,
-        newStatus,
-        ...super.props,
-      ];
-}
-
-class TodoStatusUpdated extends ManageTodosWithData {
-  final int todoId;
-  final String newStatus;
-  final String oldStatus;
-
-  const TodoStatusUpdated({
-    required this.todoId,
-    required this.newStatus,
-    required this.oldStatus,
-    required super.todosByStatus,
-    required super.currentPageByStatus,
-    required super.hasMoreByStatus,
-    super.isLoadingMoreByStatus = const {},
-    super.countsByStatus = const {},
-    super.currentProjectId,
-  });
-
-  @override
-  List<Object?> get props => [
-        todoId,
-        newStatus,
-        oldStatus,
-        ...super.props,
-      ];
+  List<Object?> get props => [message, ...super.props];
 }

@@ -41,7 +41,6 @@ import 'features/projects/data/repositories/todos_repository_impl.dart';
 import 'features/projects/domain/repositories/todos_repository.dart';
 import 'features/projects/presentation/bloc/manage_todos_bloc.dart';
 import 'features/projects/presentation/bloc/create_todo_bloc.dart';
-import 'features/habits/data/datasources/habits_api_client.dart';
 import 'features/habits/data/repositories/habits_repository_impl.dart';
 import 'features/habits/domain/repositories/habits_repository.dart';
 import 'features/habits/presentation/bloc/habits_list_bloc.dart';
@@ -53,6 +52,9 @@ import 'features/home/presentation/bloc/home_bloc.dart';
 import 'features/security/data/datasources/security_local_storage.dart';
 import 'features/security/data/repositories/security_repository_impl.dart';
 import 'core/storage/secure_store.dart';
+import 'core/sync/local_store.dart';
+import 'core/sync/sync_api.dart';
+import 'core/sync/sync_engine.dart';
 import 'features/security/domain/repositories/security_repository.dart';
 import 'features/security/presentation/bloc/security_bloc.dart';
 
@@ -89,6 +91,12 @@ Future<void> setupDependencies() async {
 
   getIt.registerSingleton<Dio>(dio);
 
+  // Local-first store and sync (docs/local-first.md). Opening the store
+  // before the first frame means screens read local data immediately.
+  final localStore = await LocalStore.open();
+  getIt.registerSingleton<LocalStore>(localStore);
+  getIt.registerSingleton<SyncEngine>(SyncEngine(localStore, SyncApi(dio)));
+
   // Data sources
   getIt.registerLazySingleton<AuthApiClient>(
     () => AuthApiClient(dio: getIt<Dio>(), baseUrl: AppConfig.apiBaseUrl),
@@ -104,10 +112,6 @@ Future<void> setupDependencies() async {
 
   getIt.registerLazySingleton<ProjectsApiClient>(
     () => ProjectsApiClient(dio: getIt<Dio>()),
-  );
-
-  getIt.registerLazySingleton<HabitsApiClient>(
-    () => HabitsApiClient(dio: getIt<Dio>(), baseUrl: AppConfig.apiBaseUrl),
   );
 
   // Local Auth
@@ -126,6 +130,7 @@ Future<void> setupDependencies() async {
     () => AuthRepositoryImpl(
       apiClient: getIt<AuthApiClient>(),
       store: getIt<SecureStore>(),
+      prefs: getIt<SharedPreferences>(),
     ),
   );
 
@@ -149,15 +154,25 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerLazySingleton<ProjectsRepository>(
-    () => ProjectsRepositoryImpl(apiClient: getIt<ProjectsApiClient>()),
+    () => ProjectsRepositoryImpl(
+      store: getIt<LocalStore>(),
+      sync: getIt<SyncEngine>(),
+      apiClient: getIt<ProjectsApiClient>(),
+    ),
   );
 
   getIt.registerLazySingleton<HabitsRepository>(
-    () => HabitsRepositoryImpl(apiClient: getIt<HabitsApiClient>()),
+    () => HabitsRepositoryImpl(
+      store: getIt<LocalStore>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerLazySingleton<TodosRepository>(
-    () => TodosRepositoryImpl(getIt<ProjectsApiClient>()),
+    () => TodosRepositoryImpl(
+      store: getIt<LocalStore>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerLazySingleton<HomeRepository>(
@@ -176,6 +191,7 @@ Future<void> setupDependencies() async {
     () => AuthBloc(
       authRepository: getIt<AuthRepository>(),
       sessionEvents: getIt<SessionEvents>(),
+      sync: getIt<SyncEngine>(),
     ),
   );
 
@@ -226,7 +242,10 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerFactory<ManageProjectsBloc>(
-    () => ManageProjectsBloc(projectsRepository: getIt<ProjectsRepository>()),
+    () => ManageProjectsBloc(
+      projectsRepository: getIt<ProjectsRepository>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerFactory<AddProjectBloc>(
@@ -234,7 +253,7 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerFactory<ManageTodosBloc>(
-    () => ManageTodosBloc(getIt<TodosRepository>()),
+    () => ManageTodosBloc(getIt<TodosRepository>(), sync: getIt<SyncEngine>()),
   );
 
   getIt.registerFactory<CreateTodoBloc>(
@@ -242,7 +261,10 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerFactory<HabitsListBloc>(
-    () => HabitsListBloc(habitsRepository: getIt<HabitsRepository>()),
+    () => HabitsListBloc(
+      habitsRepository: getIt<HabitsRepository>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerFactory<CreateHabitBloc>(
@@ -258,7 +280,10 @@ Future<void> setupDependencies() async {
   );
 
   getIt.registerFactory<HomeBloc>(
-    () => HomeBloc(homeRepository: getIt<HomeRepository>()),
+    () => HomeBloc(
+      homeRepository: getIt<HomeRepository>(),
+      sync: getIt<SyncEngine>(),
+    ),
   );
 
   getIt.registerFactory<SecurityBloc>(

@@ -1,7 +1,7 @@
 import 'package:equatable/equatable.dart';
 
 class CreateTodoDto extends Equatable {
-  final int projectId;
+  final String projectId;
   final String title;
   final String? comment;
   final String priority;
@@ -35,7 +35,10 @@ class CreateTodoDto extends Equatable {
       'energy': energy,
       if (timeSpentMinutes != null) 'time_spent_minutes': timeSpentMinutes,
       if (plannedDate != null)
-        'planned_date': plannedDate!.toIso8601String().split('T')[0],
+        'planned_date':
+            '${plannedDate!.year.toString().padLeft(4, '0')}-'
+            '${plannedDate!.month.toString().padLeft(2, '0')}-'
+            '${plannedDate!.day.toString().padLeft(2, '0')}',
       if (plannedTime != null) 'planned_time': plannedTime,
       if (tags.isNotEmpty) 'tags': tags,
     };
@@ -43,15 +46,15 @@ class CreateTodoDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        projectId,
-        title,
-        comment,
-        priority,
-        urgency,
-        energy,
-        timeSpentMinutes,
-        plannedDate,
-        plannedTime,
-        tags,
-      ];
+    projectId,
+    title,
+    comment,
+    priority,
+    urgency,
+    energy,
+    timeSpentMinutes,
+    plannedDate,
+    plannedTime,
+    tags,
+  ];
 }

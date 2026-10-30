@@ -11,7 +11,6 @@ import '../../../projects/presentation/bloc/manage_todos_state.dart';
 import '../../../projects/presentation/pages/todo_details_page.dart';
 import '../../../projects/presentation/widgets/plan_date_dialog.dart';
 import '../../../projects/presentation/widgets/todo_card.dart';
-import '../bloc/home_bloc.dart';
 import '../bloc/home_state.dart';
 
 class _ColumnData {
@@ -49,9 +48,6 @@ class MainPageTodosList extends StatefulWidget {
 }
 
 class _MainPageTodosListState extends State<MainPageTodosList> {
-  int? _updatingTodoId;
-  int? _deletingTodoId;
-
   List<_ColumnData> _columns(BuildContext context) {
     final semantic = context.semantic;
     final today = DateTime.now();
@@ -86,38 +82,15 @@ class _MainPageTodosListState extends State<MainPageTodosList> {
 
   @override
   Widget build(BuildContext context) {
-    return MultiBlocListener(
-      listeners: [
-        BlocListener<ManageTodosBloc, ManageTodosState>(
-          listener: (context, state) {
-            if (state is TodoStatusUpdating) {
-              setState(() => _updatingTodoId = state.todoId);
-            } else if (state is TodoDeleting) {
-              setState(() => _deletingTodoId = state.todoId);
-            } else if (state is ManageTodosError) {
-              setState(() {
-                _updatingTodoId = null;
-                _deletingTodoId = null;
-              });
-              AppToast.error(
-                context,
-                "Couldn't update todo",
-                message: state.message,
-              );
-            }
-          },
-        ),
-        BlocListener<HomeBloc, HomeState>(
-          listener: (context, state) {
-            if (state is HomeSuccess) {
-              setState(() {
-                _updatingTodoId = null;
-                _deletingTodoId = null;
-              });
-            }
-          },
-        ),
-      ],
+    // Changes are saved on the device at once, so there is no "updating"
+    // state to show; only a local failure is reported.
+    return BlocListener<ManageTodosBloc, ManageTodosState>(
+      listenWhen: (_, state) => state is ManageTodosError,
+      listener: (context, state) => AppToast.error(
+        context,
+        "Couldn't update todo",
+        message: (state as ManageTodosError).message,
+      ),
       child: widget.useBoard
           ? _buildKanbanBoard(context)
           : _buildListView(context),
@@ -225,30 +198,22 @@ class _MainPageTodosListState extends State<MainPageTodosList> {
     bool kanbanMode = false,
     bool showProject = true,
   }) {
-    final isUpdating = _updatingTodoId == todo.id || _deletingTodoId == todo.id;
-
     return TodoCard(
       todo: todo,
       showProject: showProject,
-      isUpdating: isUpdating,
       kanbanMode: kanbanMode,
       onTap: () => Navigator.of(
         context,
       ).push(CupertinoPageRoute(builder: (_) => TodoDetailsPage(todo: todo))),
-      onStatusChanged: ({plannedDate, required status}) {
-        if (!isUpdating) {
+      onStatusChanged: ({plannedDate, required status}) =>
           _handleTodoStatusChanged(
             context,
             todo.id,
             todo.status,
             status,
             plannedDate,
-          );
-        }
-      },
-      onDelete: () {
-        if (!isUpdating) _handleTodoDelete(context, todo);
-      },
+          ),
+      onDelete: () => _handleTodoDelete(context, todo),
     );
   }
 
@@ -265,7 +230,7 @@ class _MainPageTodosListState extends State<MainPageTodosList> {
 
   Future<void> _handleTodoStatusChanged(
     BuildContext context,
-    int todoId,
+    String todoId,
     String oldStatus,
     String newStatus,
     DateTime? plannedDate,
@@ -277,12 +242,7 @@ class _MainPageTodosListState extends State<MainPageTodosList> {
     }
     if (!context.mounted) return;
     context.read<ManageTodosBloc>().add(
-      UpdateTodoStatus(
-        todoId: todoId,
-        status: newStatus,
-        oldStatus: oldStatus,
-        plannedDate: date,
-      ),
+      UpdateTodoStatus(todoId: todoId, status: newStatus, plannedDate: date),
     );
   }
 }

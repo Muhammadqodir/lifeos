@@ -1,187 +1,30 @@
 import 'package:dio/dio.dart';
-import '../../../../core/network/api_exception.dart';
-import '../models/project_dto.dart';
-import '../models/todo_dto.dart';
-import '../models/create_todo_dto.dart';
+import 'package:image_picker/image_picker.dart';
 
+import '../../../../core/network/api_exception.dart';
+
+/// The one project call that doesn't go through sync: files.
+/// Everything else is read and written locally (see ProjectsRepositoryImpl).
 class ProjectsApiClient {
   final Dio dio;
 
   ProjectsApiClient({required this.dio});
 
-  /// Get all projects
-  Future<List<ProjectDto>> getProjects({String? search, int? perPage}) async {
-    final response = await dio.get(
-      '/projects',
-      queryParameters: {
-        if (search != null) 'search': search,
-        if (perPage != null) 'per_page': perPage,
-      },
-    );
-
-    final data = response.data['data'] as List;
-    return data.map((json) => ProjectDto.fromJson(json)).toList();
-  }
-
-  /// Get project by ID
-  Future<ProjectDto> getProject(int id) async {
-    final response = await dio.get('/projects/$id');
-    return ProjectDto.fromJson(response.data['data']);
-  }
-
-  /// Create a new project
-  Future<ProjectDto> createProject(Map<String, dynamic> data) async {
-    final response = await dio.post('/projects', data: data);
-    return ProjectDto.fromJson(response.data['data']);
-  }
-
-  /// Create a new project with FormData (for file uploads)
-  Future<ProjectDto> createProjectWithFormData(FormData formData) async {
-    final response = await dio.post(
-      '/projects',
-      data: formData,
-      options: Options(contentType: 'multipart/form-data'),
-    );
-
-    // Check if response has data
-    if (response.data == null) {
-      throw Exception('Empty response from server');
-    }
-
-    // Handle both direct object and wrapped data response
-    final data = response.data is Map && response.data.containsKey('data')
-        ? response.data['data']
-        : response.data;
-
-    if (data == null) {
-      throw Exception('No data in response');
-    }
-
-    return ProjectDto.fromJson(data as Map<String, dynamic>);
-  }
-
-  /// Update a project
-  Future<ProjectDto> updateProject(int id, Map<String, dynamic> data) async {
-    final response = await dio.put('/projects/$id', data: data);
-    return ProjectDto.fromJson(response.data['data']);
-  }
-
-  /// Delete a project
-  Future<void> deleteProject(int id) async {
-    await dio.delete('/projects/$id');
-  }
-
-  // ==================== TODO METHODS ====================
-
-  /// Get all todos with optional filters
-  Future<List<TodoDto>> getTodos({
-    int? projectId,
-    String? status,
-    String? tag,
-    DateTime? plannedFrom,
-    DateTime? plannedTo,
-    String? search,
-    String orderBy = 'created_at',
-    String orderDirection = 'desc',
-    int page = 1,
-    int perPage = 15,
-  }) async {
-    final queryParams = <String, dynamic>{
-      'page': page,
-      'per_page': perPage,
-      'order_by': orderBy,
-      'order_direction': orderDirection,
-    };
-
-    if (projectId != null) queryParams['project_id'] = projectId;
-    if (status != null) queryParams['status'] = status;
-    if (tag != null) queryParams['tag'] = tag;
-    if (plannedFrom != null) {
-      queryParams['planned_from'] = _apiDate(plannedFrom);
-    }
-    if (plannedTo != null) {
-      queryParams['planned_to'] = _apiDate(plannedTo);
-    }
-    if (search != null && search.isNotEmpty) queryParams['search'] = search;
-
-    final response = await dio.get('/todos', queryParameters: queryParams);
-
-    final data = response.data['data'] as List<dynamic>;
-    return data.map((json) => TodoDto.fromJson(json)).toList();
-  }
-
-  /// Get todo counts by status for a project
-  Future<Map<String, int>> getTodoCountsByStatus(int projectId) async {
-    final response = await dio.get(
-      '/todos/counts-by-status',
-      queryParameters: {'project_id': projectId},
-    );
-
-    final data = response.data['data'] as Map<String, dynamic>;
-    return data.map((key, value) => MapEntry(key, value as int));
-  }
-
-  /// Create a new todo
-  Future<TodoDto> createTodo(CreateTodoDto todo) async {
+  /// `POST /projects/{id}/icon` with the backend's numeric id.
+  Future<void> uploadProjectIcon(int serverId, XFile icon) async {
     try {
-      final response = await dio.post('/todos', data: todo.toJson());
-
-      // Handle both direct object and wrapped data response
-      final data = response.data is Map && response.data.containsKey('data')
-          ? response.data['data']
-          : response.data;
-
-      if (data == null) {
-        throw Exception('No data in response');
-      }
-
-      return TodoDto.fromJson(data as Map<String, dynamic>);
-    } on DioException catch (e) {
+      await dio.post(
+        '/projects/$serverId/icon',
+        data: FormData.fromMap({
+          'icon': MultipartFile.fromBytes(
+            await icon.readAsBytes(),
+            filename: icon.name,
+          ),
+        }),
+        options: Options(contentType: 'multipart/form-data'),
+      );
+    } catch (e) {
       throw ApiException.from(e);
     }
   }
-
-  /// Get a single todo by ID
-  Future<TodoDto> getTodo(int id) async {
-    final response = await dio.get('/todos/$id');
-    return TodoDto.fromJson(response.data['data']);
-  }
-
-  /// Update a todo
-  Future<TodoDto> updateTodo(int id, Map<String, dynamic> data) async {
-    final response = await dio.put('/todos/$id', data: data);
-
-    return TodoDto.fromJson(response.data['data']);
-  }
-
-  /// Update todo status only
-  Future<TodoDto> updateTodoStatus(
-    int id,
-    String status, {
-    DateTime? plannedDate,
-  }) async {
-    final data = {'status': status};
-
-    if (plannedDate != null) {
-      // Format date as YYYY-MM-DD for the backend
-      final formattedDate =
-          '${plannedDate.year}-${plannedDate.month.toString().padLeft(2, '0')}-${plannedDate.day.toString().padLeft(2, '0')}';
-      data['planned_date'] = formattedDate;
-    }
-
-    final response = await dio.patch('/todos/$id/status', data: data);
-
-    return TodoDto.fromJson(response.data['data']);
-  }
-
-  /// Delete a todo
-  Future<void> deleteTodo(int id) async {
-    await dio.delete('/todos/$id');
-  }
-
-  /// `planned_date` is a date column; send the calendar day only.
-  static String _apiDate(DateTime date) =>
-      '${date.year.toString().padLeft(4, '0')}-'
-      '${date.month.toString().padLeft(2, '0')}-'
-      '${date.day.toString().padLeft(2, '0')}';
 }

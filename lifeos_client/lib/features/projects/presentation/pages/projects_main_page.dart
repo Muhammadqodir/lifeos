@@ -3,7 +3,9 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../../../../core/sync/sync_engine.dart';
 import '../../../../core/ui/ui.dart';
+import '../../../../injection.dart';
 import '../../data/models/project_dto.dart';
 import '../bloc/manage_projects_bloc.dart';
 import '../bloc/manage_projects_event.dart';
@@ -32,7 +34,7 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
   ManageProjectsBloc get _bloc => context.read<ManageProjectsBloc>();
 
   /// Project shown in the detail pane of the split view.
-  int? _selectedId;
+  String? _selectedId;
 
   void _refresh() => _bloc.add(const ManageProjectsRefresh());
 
@@ -92,7 +94,6 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
             detail = ProjectDetailsPage(
               key: ValueKey(selected.id),
               project: selected,
-              onTodosChanged: _refresh,
             );
           } else if (state is ManageProjectsError) {
             detail = const SizedBox.shrink();
@@ -188,10 +189,7 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
         headers: [_header(context)],
         child: RefreshTrigger(
           key: _refreshTriggerKey,
-          onRefresh: () async {
-            _refresh();
-            await Future.delayed(const Duration(milliseconds: 500));
-          },
+          onRefresh: () => getIt<SyncEngine>().syncNow(),
           child: _buildBody(context),
         ),
       ),
@@ -364,9 +362,8 @@ class _ProjectsMainPageState extends State<ProjectsMainPage> {
   }
 
   Future<void> _navigateToAddProject(BuildContext context) async {
-    final result = await Navigator.of(
+    await Navigator.of(
       context,
     ).push<bool>(CupertinoPageRoute(builder: (_) => const AddProjectPage()));
-    if (result == true && mounted) _refresh();
   }
 }

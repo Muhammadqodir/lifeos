@@ -43,6 +43,20 @@ class UserDto {
     );
   }
 
+  Map<String, dynamic> toJson() => {
+    'id': id,
+    'first_name': firstName,
+    'last_name': lastName,
+    'father_name': fatherName,
+    'date_of_birth': dateOfBirth,
+    'email': email,
+    'avatar_url': avatarUrl,
+    'is_active': isActive,
+    'last_login_at': lastLoginAt,
+    'created_at': createdAt,
+    'updated_at': updatedAt,
+  };
+
   User toEntity() {
     return User(
       id: id,

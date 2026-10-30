@@ -1,7 +1,10 @@
 import 'package:equatable/equatable.dart';
 
+import 'habit_stats_dto.dart';
+
 class HabitDto extends Equatable {
-  final int id;
+  /// Client-generated uuid (the sync API's id).
+  final String id;
   final String title;
   final String? description;
   final String color;
@@ -41,10 +44,10 @@ class HabitDto extends Equatable {
 
   factory HabitDto.fromJson(Map<String, dynamic> json) {
     return HabitDto(
-      id: json['id'] as int,
+      id: json['id'] as String,
       title: json['title'] as String,
       description: json['description'] as String?,
-      color: json['color'] as String,
+      color: json['color'] as String? ?? '3b82f6',
       icon: json['icon'] as String?,
       status: json['status'] as String?,
       frequency: json['frequency'] as String,
@@ -86,6 +89,27 @@ class HabitDto extends Equatable {
       'updated_at': updatedAt,
     };
   }
+
+  /// This habit with streaks and today's state filled in.
+  HabitDto withStats(HabitStatsDto stats) => HabitDto(
+    id: id,
+    title: title,
+    description: description,
+    color: color,
+    icon: icon,
+    status: status,
+    frequency: frequency,
+    frequencyDays: frequencyDays,
+    reminderTime: reminderTime,
+    goalDuration: goalDuration,
+    tags: tags,
+    currentStreak: stats.currentStreak,
+    longestStreak: stats.longestStreak,
+    completionRate: stats.completionRate,
+    isCompletedToday: stats.isCompletedToday,
+    createdAt: createdAt,
+    updatedAt: updatedAt,
+  );
 
   @override
   List<Object?> get props => [

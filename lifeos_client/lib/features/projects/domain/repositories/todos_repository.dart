@@ -1,33 +1,23 @@
 import 'package:lifeos_client/features/projects/data/models/create_todo_dto.dart';
 import 'package:lifeos_client/features/projects/data/models/todo_dto.dart';
 
+/// Todos, read from and written to the device (local-first). Writes return
+/// as soon as they are stored; sync sends them to the server.
 abstract class TodosRepository {
-  Future<List<TodoDto>> getTodos({
-    int? projectId,
-    String? status,
-    String? tag,
-    DateTime? plannedFrom,
-    DateTime? plannedTo,
-    String? search,
-    String orderBy = 'created_at',
-    String orderDirection = 'desc',
-    int page = 1,
-    int perPage = 15,
-  });
+  /// Todos (with their project), newest first; re-emits on any change.
+  Stream<List<TodoDto>> watchTodos({String? projectId});
+
+  Stream<TodoDto?> watchTodo(String id);
 
   Future<TodoDto> createTodo(CreateTodoDto todo);
 
-  Future<TodoDto> getTodo(int id);
+  Future<void> updateTodo(String id, Map<String, dynamic> changes);
 
-  Future<TodoDto> updateTodo(int id, Map<String, dynamic> data);
-
-  Future<TodoDto> updateTodoStatus(
-    int id,
+  Future<void> updateTodoStatus(
+    String id,
     String status, {
     DateTime? plannedDate,
   });
 
-  Future<void> deleteTodo(int id);
-
-  Future<Map<String, int>> getTodoCountsByStatus(int projectId);
+  Future<void> deleteTodo(String id);
 }

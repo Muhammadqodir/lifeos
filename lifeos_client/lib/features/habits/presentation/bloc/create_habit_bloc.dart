@@ -57,7 +57,11 @@ class CreateHabitBloc extends Bloc<CreateHabitEvent, CreateHabitState> {
         tags: event.tags,
       );
 
-      emit(CreateHabitSuccess(habit: habit));
+      if (habit == null) {
+        emit(const CreateHabitFailure(message: 'This habit no longer exists.'));
+      } else {
+        emit(CreateHabitSuccess(habit: habit));
+      }
     } catch (e) {
       emit(CreateHabitFailure(message: e.toString()));
     }

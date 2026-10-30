@@ -2,15 +2,22 @@ import 'package:lifeos_client/features/habits/data/models/habit_dto.dart';
 import 'package:lifeos_client/features/habits/data/models/habit_entry_dto.dart';
 import 'package:lifeos_client/features/habits/data/models/habit_stats_dto.dart';
 
-abstract class HabitsRepository {
-  // Habits CRUD
-  Future<List<HabitDto>> getHabits({
-    String? status,
-    String? frequency,
-    String? search,
-  });
+/// A habit's entries and the numbers derived from them.
+class HabitActivity {
+  const HabitActivity({required this.entries, required this.stats});
 
-  Future<HabitDto> getHabit(int habitId);
+  /// Newest first.
+  final List<HabitEntryDto> entries;
+  final HabitStatsDto stats;
+}
+
+/// Habits and their entries, read from and written to the device
+/// (local-first). Streaks are computed locally (see HabitStats).
+abstract class HabitsRepository {
+  /// Habits with [status], newest first, with streaks and today's state.
+  Stream<List<HabitDto>> watchHabits({String status = 'active'});
+
+  Stream<HabitActivity> watchActivity(String habitId, {int days = 30});
 
   Future<HabitDto> createHabit({
     required String title,
@@ -25,8 +32,9 @@ abstract class HabitsRepository {
     List<String>? tags,
   });
 
-  Future<HabitDto> updateHabit({
-    required int habitId,
+  /// Changes the fields that are not null.
+  Future<HabitDto?> updateHabit({
+    required String habitId,
     String? title,
     String? description,
     String? color,
@@ -39,31 +47,15 @@ abstract class HabitsRepository {
     List<String>? tags,
   });
 
-  Future<void> deleteHabit(int habitId);
+  Future<void> deleteHabit(String habitId);
 
-  // Habit stats
-  Future<HabitStatsDto> getHabitStats({required int habitId, int days = 30});
-
-  Future<List<HabitDto>> getHabitsWithTodayStatus();
-
-  // Habit entries
-  Future<List<HabitEntryDto>> getHabitEntries({
-    int? habitId,
-    String? from,
-    String? to,
-  });
-
+  /// Marks [habitId] done on [date] (`yyyy-MM-dd`).
   Future<HabitEntryDto> createHabitEntry({
-    required int habitId,
+    required String habitId,
     required String date,
     String? completedAt,
     String? note,
   });
 
-  Future<void> deleteHabitEntry(int entryId);
-
-  Future<Map<String, dynamic>> getCalendarEntries({
-    required String from,
-    required String to,
-  });
+  Future<void> deleteHabitEntry(String entryId);
 }

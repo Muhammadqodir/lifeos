@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart' show CupertinoPageRoute;
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -5,6 +7,7 @@ import 'package:hugeicons/hugeicons.dart';
 import 'package:provider/provider.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../../../../core/sync/sync_engine.dart';
 import '../../../../core/ui/ui.dart';
 import '../../../../injection.dart';
 import '../../../finance/presentation/pages/finance_main_page.dart';
@@ -46,9 +49,14 @@ class MainPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocProvider(
-      create: (_) => NavigationBloc(),
-      child: const _MainShell(),
+    final sync = getIt<SyncEngine>();
+    return SyncStatusScope(
+      status: sync.status,
+      onRetry: sync.syncNow,
+      child: BlocProvider(
+        create: (_) => NavigationBloc(),
+        child: const _MainShell(),
+      ),
     );
   }
 }
@@ -93,17 +101,31 @@ class _MainShellState extends State<_MainShell> {
 
   late final List<Widget> _tabs = _buildTabs();
 
+  /// Changes the server refused. The device already shows the server's
+  /// version again; this tells the user why their edit didn't stick.
+  StreamSubscription<SyncIssue>? _syncIssues;
+
   @override
   void initState() {
     super.initState();
     _menuChannel.setMethodCallHandler(_onMenuCommand);
     HardwareKeyboard.instance.addHandler(_onHardwareKey);
+    _syncIssues = getIt<SyncEngine>().issues.listen((issue) {
+      if (mounted) {
+        AppToast.error(
+          context,
+          "Couldn't save a change",
+          message: issue.message,
+        );
+      }
+    });
   }
 
   @override
   void dispose() {
     _menuChannel.setMethodCallHandler(null);
     HardwareKeyboard.instance.removeHandler(_onHardwareKey);
+    _syncIssues?.cancel();
     super.dispose();
   }
 

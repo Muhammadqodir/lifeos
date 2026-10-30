@@ -39,7 +39,7 @@ class ManageProjectsError extends ManageProjectsState {
 }
 
 class ManageProjectsDeleting extends ManageProjectsWithData {
-  final int projectId;
+  final String projectId;
 
   const ManageProjectsDeleting({
     required this.projectId,

@@ -10,7 +10,7 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:lifeos_client/core/ui/ui.dart';
 
 class LogEntrySheet extends StatefulWidget {
-  final int habitId;
+  final String habitId;
 
   const LogEntrySheet({super.key, required this.habitId});
 

@@ -89,7 +89,7 @@ class TagsChanged extends CreateTodoEvent {
 }
 
 class SubmitTodo extends CreateTodoEvent {
-  final int projectId;
+  final String projectId;
 
   const SubmitTodo(this.projectId);
 

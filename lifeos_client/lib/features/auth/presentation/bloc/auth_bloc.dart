@@ -2,16 +2,23 @@ import 'dart:async';
 
 import 'package:flutter_bloc/flutter_bloc.dart';
 import '../../../../core/network/session_events.dart';
+import '../../../../core/sync/sync_engine.dart';
 import '../../domain/repositories/auth_repository.dart';
 import 'auth_event.dart';
 import 'auth_state.dart';
 
 class AuthBloc extends Bloc<AuthEvent, AuthState> {
   final AuthRepository authRepository;
+
+  /// Started for the signed-in user; cleared on sign-out.
+  final SyncEngine? sync;
   StreamSubscription<void>? _sessionSubscription;
 
-  AuthBloc({required this.authRepository, SessionEvents? sessionEvents})
-    : super(AuthInitial()) {
+  AuthBloc({
+    required this.authRepository,
+    SessionEvents? sessionEvents,
+    this.sync,
+  }) : super(AuthInitial()) {
     on<AuthCheckRequested>(_onAuthCheckRequested);
     on<AuthLoginRequested>(_onAuthLoginRequested);
     on<AuthRegisterRequested>(_onAuthRegisterRequested);
@@ -33,7 +40,9 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) {
     // The interceptor already cleared the token; only react while signed in.
+    // Local data stays, so unsent changes survive signing in again.
     if (state is AuthAuthenticated) {
+      sync?.stop();
       emit(AuthUnauthenticated());
     }
   }
@@ -46,6 +55,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     try {
       final user = await authRepository.getCurrentUser();
       if (user != null) {
+        await sync?.start('${user.id}');
         emit(AuthAuthenticated(user: user));
       } else {
         emit(AuthUnauthenticated());
@@ -63,6 +73,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
     try {
       final result = await authRepository.login(event.email, event.password);
+      await sync?.start('${result.user.id}');
       emit(AuthAuthenticated(user: result.user));
     } catch (e) {
       final errorMessage = e.toString().replaceAll('Exception: ', '');
@@ -87,6 +98,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         passwordConfirmation: event.passwordConfirmation,
       );
       final result = await authRepository.register(params);
+      await sync?.start('${result.user.id}');
       emit(AuthAuthenticated(user: result.user));
     } catch (e) {
       emit(AuthError(message: e.toString().replaceAll('Exception: ', '')));
@@ -98,6 +110,8 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
     Emitter<AuthState> emit,
   ) async {
     emit(AuthLoading());
+    // Push what's left, then remove this account's data from the device.
+    await sync?.signOut();
     try {
       await authRepository.logout();
       emit(AuthUnauthenticated());

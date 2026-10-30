@@ -1,4 +1,5 @@
 import 'package:equatable/equatable.dart';
+import 'package:lifeos_client/features/home/domain/repositories/home_repository.dart';
 
 abstract class HomeEvent extends Equatable {
   const HomeEvent();
@@ -20,4 +21,14 @@ class HomeRefreshed extends HomeEvent {
 /// Event to retry loading data after error
 class HomeRetried extends HomeEvent {
   const HomeRetried();
+}
+
+/// The local store changed (internal).
+class HomeChanged extends HomeEvent {
+  final HomeSnapshot snapshot;
+
+  const HomeChanged(this.snapshot);
+
+  @override
+  List<Object?> get props => [snapshot];
 }

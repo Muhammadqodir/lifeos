@@ -2,8 +2,9 @@ import 'package:equatable/equatable.dart';
 import 'project_dto.dart';
 
 class TodoDto extends Equatable {
-  final int id;
-  final int projectId;
+  /// Client-generated uuid (the sync API's id).
+  final String id;
+  final String projectId;
   final ProjectDto? project;
   final String title;
   final String? comment;
@@ -40,8 +41,8 @@ class TodoDto extends Equatable {
 
   factory TodoDto.fromJson(Map<String, dynamic> json) {
     return TodoDto(
-      id: json['id'] as int,
-      projectId: json['project_id'] as int,
+      id: json['id'] as String,
+      projectId: json['project_id'] as String,
       project: json['project'] != null
           ? ProjectDto.fromJson(json['project'] as Map<String, dynamic>)
           : null,
@@ -59,9 +60,8 @@ class TodoDto extends Equatable {
       completedAt: json['completed_at'] != null
           ? DateTime.parse(json['completed_at'] as String)
           : null,
-      tags: (json['tags'] as List<dynamic>?)
-              ?.map((e) => e as String)
-              .toList() ??
+      tags:
+          (json['tags'] as List<dynamic>?)?.map((e) => e as String).toList() ??
           [],
       createdAt: DateTime.parse(json['created_at'] as String),
       updatedAt: DateTime.parse(json['updated_at'] as String),
@@ -91,21 +91,21 @@ class TodoDto extends Equatable {
 
   @override
   List<Object?> get props => [
-        id,
-        projectId,
-        project,
-        title,
-        comment,
-        status,
-        priority,
-        urgency,
-        energy,
-        timeSpentMinutes,
-        plannedDate,
-        plannedTime,
-        completedAt,
-        tags,
-        createdAt,
-        updatedAt,
-      ];
+    id,
+    projectId,
+    project,
+    title,
+    comment,
+    status,
+    priority,
+    urgency,
+    energy,
+    timeSpentMinutes,
+    plannedDate,
+    plannedTime,
+    completedAt,
+    tags,
+    createdAt,
+    updatedAt,
+  ];
 }

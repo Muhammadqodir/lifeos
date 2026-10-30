@@ -1,31 +1,71 @@
-import 'package:lifeos_client/features/habits/data/datasources/habits_api_client.dart';
+import 'package:lifeos_client/core/sync/ids.dart';
+import 'package:lifeos_client/core/sync/local_store.dart';
+import 'package:lifeos_client/core/sync/sync_engine.dart';
 import 'package:lifeos_client/features/habits/data/models/habit_dto.dart';
 import 'package:lifeos_client/features/habits/data/models/habit_entry_dto.dart';
-import 'package:lifeos_client/features/habits/data/models/habit_stats_dto.dart';
+import 'package:lifeos_client/features/habits/domain/habit_stats.dart';
 import 'package:lifeos_client/features/habits/domain/repositories/habits_repository.dart';
 
 class HabitsRepositoryImpl implements HabitsRepository {
-  final HabitsApiClient apiClient;
+  HabitsRepositoryImpl({required this.store, required this.sync});
 
-  HabitsRepositoryImpl({required this.apiClient});
+  final LocalStore store;
+  final SyncEngine sync;
 
-  @override
-  Future<List<HabitDto>> getHabits({
-    String? status,
-    String? frequency,
-    String? search,
-  }) async {
-    return await apiClient.getHabits(
-      status: status,
-      frequency: frequency,
-      search: search,
-    );
+  static const _watched = {SyncEntities.habits, SyncEntities.habitEntries};
+
+  Future<Map<String, List<Json>>> _entriesByHabit() async {
+    final byHabit = <String, List<Json>>{};
+    for (final entry in await store.all(SyncEntities.habitEntries)) {
+      (byHabit[entry['habit_id'] as String] ??= []).add(entry);
+    }
+    return byHabit;
   }
 
   @override
-  Future<HabitDto> getHabit(int habitId) async {
-    return await apiClient.getHabit(habitId);
-  }
+  Stream<List<HabitDto>> watchHabits({String status = 'active'}) =>
+      store.watch(_watched, () async {
+        final entries = await _entriesByHabit();
+        final habits = [
+          for (final record in await store.all(SyncEntities.habits))
+            if ((record['status'] ?? 'active') == status)
+              () {
+                final habit = HabitDto.fromJson(record);
+                final dates = (entries[habit.id] ?? const []).map(
+                  (e) => e['date'] as String,
+                );
+                return habit.withStats(HabitStats.compute(habit, dates));
+              }(),
+        ]..sort((a, b) => b.createdAt.compareTo(a.createdAt));
+        return habits;
+      });
+
+  @override
+  Stream<HabitActivity> watchActivity(String habitId, {int days = 30}) =>
+      store.watch(_watched, () async {
+        final record = await store.get(SyncEntities.habits, habitId);
+        final entries = [
+          for (final e in (await _entriesByHabit())[habitId] ?? const <Json>[])
+            HabitEntryDto.fromJson(e),
+        ]..sort((a, b) => b.date.compareTo(a.date));
+        final stats = record == null
+            ? HabitStats.compute(_placeholder(habitId), const [])
+            : HabitStats.compute(
+                HabitDto.fromJson(record),
+                entries.map((e) => e.date),
+                days: days,
+              );
+        return HabitActivity(entries: entries, stats: stats);
+      });
+
+  static HabitDto _placeholder(String id) => HabitDto(
+    id: id,
+    title: '',
+    color: '3b82f6',
+    frequency: 'daily',
+    createdAt: DateTime.now().toIso8601String(),
+    updatedAt: DateTime.now().toIso8601String(),
+  );
 
   @override
   Future<HabitDto> createHabit({
@@ -40,23 +80,25 @@ class HabitsRepositoryImpl implements HabitsRepository {
     int? goalDuration,
     List<String>? tags,
   }) async {
-    return await apiClient.createHabit(
-      title: title,
-      description: description,
-      color: color,
-      icon: icon,
-      status: status,
-      frequency: frequency,
-      frequencyDays: frequencyDays,
-      reminderTime: reminderTime,
-      goalDuration: goalDuration,
-      tags: tags,
-    );
+    final record = await sync.create(SyncEntities.habits, {
+      'title': title,
+      'description': description,
+      'color': color ?? '3b82f6',
+      'icon': icon,
+      'status': status ?? 'active',
+      'frequency': frequency,
+      'frequency_days': frequencyDays ?? const <int>[],
+      'reminder_time': reminderTime,
+      'goal_duration': goalDuration,
+      'tags': tags ?? const <String>[],
+    });
+    final habit = HabitDto.fromJson(record);
+    return habit.withStats(HabitStats.compute(habit, const []));
   }
 
   @override
-  Future<HabitDto> updateHabit({
-    required int habitId,
+  Future<HabitDto?> updateHabit({
+    required String habitId,
     String? title,
     String? description,
     String? color,
@@ -68,82 +110,42 @@ class HabitsRepositoryImpl implements HabitsRepository {
     int? goalDuration,
     List<String>? tags,
   }) async {
-    return await apiClient.updateHabit(
-      habitId: habitId,
-      title: title,
-      description: description,
-      color: color,
-      icon: icon,
-      status: status,
-      frequency: frequency,
-      frequencyDays: frequencyDays,
-      reminderTime: reminderTime,
-      goalDuration: goalDuration,
-      tags: tags,
-    );
+    final record = await sync.update(SyncEntities.habits, habitId, {
+      'title': ?title,
+      'description': ?description,
+      'color': ?color,
+      'icon': ?icon,
+      'status': ?status,
+      'frequency': ?frequency,
+      'frequency_days': ?frequencyDays,
+      'reminder_time': ?reminderTime,
+      'goal_duration': ?goalDuration,
+      'tags': ?tags,
+    });
+    return record == null ? null : HabitDto.fromJson(record);
   }
 
   @override
-  Future<void> deleteHabit(int habitId) async {
-    return await apiClient.deleteHabit(habitId);
-  }
-
-  @override
-  Future<HabitStatsDto> getHabitStats({
-    required int habitId,
-    int days = 30,
-  }) async {
-    return await apiClient.getHabitStats(habitId: habitId, days: days);
-  }
-
-  @override
-  Future<List<HabitDto>> getHabitsWithTodayStatus() async {
-    return await apiClient.getHabitsWithTodayStatus();
-  }
-
-  @override
-  Future<List<HabitEntryDto>> getHabitEntries({
-    int? habitId,
-    String? from,
-    String? to,
-  }) async {
-    return await apiClient.getHabitEntries(
-      habitId: habitId,
-      from: from,
-      to: to,
-    );
-  }
+  Future<void> deleteHabit(String habitId) =>
+      sync.delete(SyncEntities.habits, habitId);
 
   @override
   Future<HabitEntryDto> createHabitEntry({
-    required int habitId,
+    required String habitId,
     required String date,
     String? completedAt,
     String? note,
   }) async {
-    try {
-      final result = await apiClient.createHabitEntry(
-        habitId: habitId,
-        date: date,
-        completedAt: completedAt,
-        note: note,
-      );
-      return result;
-    } catch (e) {
-      rethrow;
-    }
+    final record = await sync.create(SyncEntities.habitEntries, {
+      'habit_id': habitId,
+      'date': date,
+      'completed_at': completedAt ?? DateTime.now().toUtc().toIso8601String(),
+      'note': note,
+    }, id: habitEntryId(habitId, date));
+    return HabitEntryDto.fromJson(record);
   }
 
   @override
-  Future<void> deleteHabitEntry(int entryId) async {
-    return await apiClient.deleteHabitEntry(entryId);
-  }
-
-  @override
-  Future<Map<String, dynamic>> getCalendarEntries({
-    required String from,
-    required String to,
-  }) async {
-    return await apiClient.getCalendarEntries(from: from, to: to);
-  }
+  Future<void> deleteHabitEntry(String entryId) =>
+      sync.delete(SyncEntities.habitEntries, entryId);
 }

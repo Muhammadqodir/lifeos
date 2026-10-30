@@ -48,7 +48,7 @@ class CreateHabitSubmitted extends CreateHabitEvent {
 }
 
 class UpdateHabitSubmitted extends CreateHabitEvent {
-  final int habitId;
+  final String habitId;
   final String? title;
   final String? description;
   final String? color;

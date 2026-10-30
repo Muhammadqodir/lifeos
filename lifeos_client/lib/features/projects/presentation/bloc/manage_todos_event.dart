@@ -8,87 +8,24 @@ abstract class ManageTodosEvent extends Equatable {
   List<Object?> get props => [];
 }
 
-class LoadTodos extends ManageTodosEvent {
-  final int? projectId;
-  final String? status;
-  final String? tag;
-  final DateTime? plannedFrom;
-  final DateTime? plannedTo;
-  final String? search;
-  final String orderBy;
-  final String orderDirection;
+/// Follow [projectId]'s todos, grouped into [statuses].
+class LoadAllStatuses extends ManageTodosEvent {
+  final String projectId;
+  final List<String> statuses;
 
-  const LoadTodos({
-    this.projectId,
-    this.status,
-    this.tag,
-    this.plannedFrom,
-    this.plannedTo,
-    this.search,
-    this.orderBy = 'created_at',
-    this.orderDirection = 'desc',
-  });
+  const LoadAllStatuses({required this.projectId, required this.statuses});
 
   @override
-  List<Object?> get props => [
-        projectId,
-        status,
-        tag,
-        plannedFrom,
-        plannedTo,
-        search,
-        orderBy,
-        orderDirection,
-      ];
+  List<Object?> get props => [projectId, statuses];
 }
 
+/// Sync with the server now (the list itself is always current).
 class RefreshTodos extends ManageTodosEvent {
   const RefreshTodos();
 }
 
-class LoadAllStatuses extends ManageTodosEvent {
-  final int projectId;
-  final List<String> statuses;
-  final int perPage;
-
-  const LoadAllStatuses({
-    required this.projectId,
-    required this.statuses,
-    this.perPage = 15,
-  });
-
-  @override
-  List<Object?> get props => [projectId, statuses, perPage];
-}
-
-class LoadTodosByStatus extends ManageTodosEvent {
-  final int projectId;
-  final String status;
-  final int page;
-  final int perPage;
-
-  const LoadTodosByStatus({
-    required this.projectId,
-    required this.status,
-    this.page = 1,
-    this.perPage = 15,
-  });
-
-  @override
-  List<Object?> get props => [projectId, status, page, perPage];
-}
-
-class LoadMoreTodos extends ManageTodosEvent {
-  final String status;
-
-  const LoadMoreTodos({required this.status});
-
-  @override
-  List<Object?> get props => [status];
-}
-
 class DeleteTodo extends ManageTodosEvent {
-  final int todoId;
+  final String todoId;
 
   const DeleteTodo(this.todoId);
 
@@ -97,45 +34,26 @@ class DeleteTodo extends ManageTodosEvent {
 }
 
 class UpdateTodoStatus extends ManageTodosEvent {
-  final int todoId;
+  final String todoId;
   final String status;
-  final String? oldStatus;
   final DateTime? plannedDate;
 
   const UpdateTodoStatus({
     required this.todoId,
     required this.status,
-    this.oldStatus,
     this.plannedDate,
   });
 
   @override
-  List<Object?> get props => [todoId, status, oldStatus, plannedDate];
+  List<Object?> get props => [todoId, status, plannedDate];
 }
 
-class SearchTodos extends ManageTodosEvent {
-  final String query;
+/// The local store changed (internal).
+class TodosChanged extends ManageTodosEvent {
+  final List<TodoDto> todos;
 
-  const SearchTodos(this.query);
-
-  @override
-  List<Object?> get props => [query];
-}
-
-class FilterTodosByStatus extends ManageTodosEvent {
-  final String? status;
-
-  const FilterTodosByStatus(this.status);
+  const TodosChanged(this.todos);
 
   @override
-  List<Object?> get props => [status];
-}
-
-class TodoUpdatedExternally extends ManageTodosEvent {
-  final TodoDto todo;
-
-  const TodoUpdatedExternally(this.todo);
-
-  @override
-  List<Object?> get props => [todo];
+  List<Object?> get props => [todos];
 }

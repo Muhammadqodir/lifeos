@@ -5,6 +5,7 @@ import '../app_theme_x.dart';
 import '../breakpoints.dart';
 import '../page_commands.dart';
 import 'split_view.dart';
+import 'sync_indicator.dart';
 import '../tokens.dart';
 
 /// Page header used by every screen.
@@ -61,6 +62,7 @@ class AppHeader extends StatelessWidget {
         ];
 
     final trailing = <Widget>[
+      const SyncIndicator(),
       ...?actions,
       if (onRefresh != null && isDesktopPlatform)
         HeaderAction(
