@@ -257,4 +257,18 @@ class ProjectTest extends TestCase
 
         $response->assertUnauthorized();
     }
+
+    public function test_user_can_replace_a_project_icon(): void
+    {
+        \Illuminate\Support\Facades\Storage::fake('public');
+        Sanctum::actingAs($this->user);
+        $project = Project::factory()->create(['user_id' => $this->user->id]);
+
+        $this->post("/api/v1/projects/{$project->id}/icon", [
+            'icon' => \Illuminate\Http\UploadedFile::fake()->image('icon.png'),
+        ], ['Accept' => 'application/json'])->assertOk();
+
+        $this->assertNotNull($project->fresh()->icon);
+        \Illuminate\Support\Facades\Storage::disk('public')->assertExists($project->fresh()->icon);
+    }
 }

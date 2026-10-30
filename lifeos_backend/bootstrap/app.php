@@ -14,7 +14,9 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        //
+        // API guests get a 401, never a redirect to a login page (there is
+        // none), whatever Accept header they send.
+        $middleware->redirectGuestsTo(fn (Request $request) => $request->is('api/*') ? null : '/');
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // One error shape for the whole API; see ApiErrorRenderer.

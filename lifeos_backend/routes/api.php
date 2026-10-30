@@ -116,6 +116,7 @@ Route::prefix('v1')->group(function () {
 
         // Projects & Todos routes
         Route::apiResource('projects', ProjectController::class);
+        Route::post('projects/{project}/icon', [ProjectController::class, 'updateIcon']);
         Route::get('todos/counts-by-status', [TodoController::class, 'getCountsByStatus']);
         Route::apiResource('todos', TodoController::class);
         Route::patch('todos/{todo}/status', [TodoController::class, 'updateStatus']);

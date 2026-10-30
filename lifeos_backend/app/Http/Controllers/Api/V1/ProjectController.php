@@ -11,6 +11,7 @@ use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\Resources\Json\AnonymousResourceCollection;
 
 class ProjectController extends Controller
@@ -112,6 +113,27 @@ class ProjectController extends Controller
         $project->update($request->validated());
 
         return $this->ok(new ProjectResource($project->fresh()));
+    }
+
+    /**
+     * Replace the project's icon (multipart `icon`). The local-first client
+     * creates projects through sync and uploads the icon afterwards.
+     */
+    public function updateIcon(Request $request, Project $project): ProjectResource
+    {
+        $this->authorize('update', $project);
+
+        $request->validate([
+            'icon' => 'required|image|mimes:jpeg,jpg,png,gif,webp|max:2048',
+        ]);
+
+        $previous = $project->icon;
+        $project->update(['icon' => $request->file('icon')->store('project-icons', 'public')]);
+        if ($previous) {
+            Storage::disk('public')->delete($previous);
+        }
+
+        return new ProjectResource($project);
     }
 
     /**

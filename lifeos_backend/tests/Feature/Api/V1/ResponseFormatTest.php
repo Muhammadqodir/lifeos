@@ -22,6 +22,13 @@ class ResponseFormatTest extends TestCase
             ->assertExactJson(['message' => 'Unauthenticated.', 'code' => 'unauthenticated']);
     }
 
+    public function test_requests_without_a_json_accept_header_still_get_json(): void
+    {
+        $this->get('/api/v1/projects')
+            ->assertStatus(401)
+            ->assertJsonPath('code', 'unauthenticated');
+    }
+
     public function test_validation_errors_carry_field_messages(): void
     {
         Sanctum::actingAs(User::factory()->create());
