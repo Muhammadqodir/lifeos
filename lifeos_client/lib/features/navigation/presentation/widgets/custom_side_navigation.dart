@@ -82,7 +82,14 @@ class _Brand extends StatelessWidget {
   Widget build(BuildContext context) {
     final logo = ClipRRect(
       borderRadius: context.theme.controlRadius,
-      child: Image.asset('assets/logo.png', width: 28, height: 28),
+      child: Image.asset(
+        'assets/logo.png',
+        width: 28,
+        height: 28,
+        // Monochrome mark: follow the theme so it works in dark mode.
+        color: context.colors.foreground,
+        colorBlendMode: BlendMode.srcIn,
+      ),
     );
     if (collapsed) return Center(child: logo);
     return Padding(
