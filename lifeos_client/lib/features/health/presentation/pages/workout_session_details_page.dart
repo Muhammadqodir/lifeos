@@ -1,11 +1,17 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:lifeos_client/features/health/data/models/workout_session_dto.dart';
-import 'package:lifeos_client/utils/server.dart';
-import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:intl/intl.dart';
-import 'package:lifeos_client/core/ui/ui.dart';
+import 'package:shadcn_flutter/shadcn_flutter.dart';
 
+import '../../../../core/ui/ui.dart';
+import '../../../../core/utils/date_labels.dart';
+import '../../../../utils/server.dart';
+import '../../data/models/workout_exercise_dto.dart';
+import '../../data/models/workout_session_dto.dart';
+import '../../data/models/workout_set_dto.dart';
+
+/// Summary of a finished workout: totals, sets per exercise, post-workout
+/// photo and measurements.
 class WorkoutSessionDetailsPage extends StatelessWidget {
   final WorkoutSessionDto workout;
 
@@ -14,584 +20,293 @@ class WorkoutSessionDetailsPage extends StatelessWidget {
   String _formatDuration(Duration duration) {
     final hours = duration.inHours;
     final minutes = duration.inMinutes.remainder(60);
-
-    if (hours > 0) {
-      return '${hours}h ${minutes}m';
-    }
-    return '${minutes}m';
+    return hours > 0 ? '${hours}h ${minutes}m' : '${minutes}m';
   }
 
-  Map<String, double> _calculateTotalWeightByExercise() {
-    final Map<String, double> totals = {};
-
-    for (final exercise in workout.exercises) {
-      double totalWeight = 0;
-      for (final set in exercise.sets) {
-        if (set.weightKg != null && set.reps != null) {
-          totalWeight += set.weightKg! * set.reps!;
-        }
-      }
-      totals[exercise.exercise?.name ?? 'Unknown'] = totalWeight;
-    }
-
-    return totals;
-  }
-
-  int _getTotalSets() {
-    return workout.exercises.fold(
-      0,
-      (total, exercise) => total + exercise.sets.length,
-    );
-  }
+  /// Weight × reps per exercise, keyed by position so duplicates don't merge.
+  List<double> get _volumes => [
+    for (final exercise in workout.exercises)
+      exercise.sets.fold<double>(
+        0,
+        (sum, set) => set.weightKg != null && set.reps != null
+            ? sum + set.weightKg! * set.reps!
+            : sum,
+      ),
+  ];
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final weightTotals = _calculateTotalWeightByExercise();
-    final totalVolume = weightTotals.values.fold(0.0, (a, b) => a + b);
+    final volumes = _volumes;
+    final totalVolume = volumes.fold<double>(0, (a, b) => a + b);
+    final totalSets = workout.exercises.fold<int>(
+      0,
+      (total, e) => total + e.sets.length,
+    );
+    final completion = workout.completion;
 
     return Scaffold(
-      headers: [AppHeader(title: 'Workout Details')],
+      headers: [
+        AppHeader(
+          title: DateLabels.relativeDay(workout.startedAt),
+          subtitle: DateFormat(
+            'EEEE, d MMMM y · HH:mm',
+          ).format(workout.startedAt),
+        ),
+      ],
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.page,
+          vertical: AppSpacing.lg,
+        ),
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        child: ContentWidth(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Workout Summary Card
-            Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
+        child: ContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              StatGrid(
                 children: [
-                  Row(
-                    children: [
-                      const HugeIcon(
-                        icon: HugeIcons.strokeRoundedCalendar03,
-                        size: 20,
-                      ),
-                      const SizedBox(width: 8),
-                      Text(
-                        DateFormat('EEEE, MMMM d, y').format(workout.startedAt),
-                        style: theme.typography.normal.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
+                  _stat(
+                    'Duration',
+                    _formatDuration(workout.duration),
+                    HugeIcons.strokeRoundedClock01,
                   ),
-                  const SizedBox(height: 12),
-                  Row(
-                    children: [
-                      _buildStat(
-                        context,
-                        'Duration',
-                        _formatDuration(workout.duration),
-                        HugeIcons.strokeRoundedClock01,
-                      ),
-                      const SizedBox(width: 16),
-                      _buildStat(
-                        context,
-                        'Exercises',
-                        workout.exercises.length.toString(),
-                        HugeIcons.strokeRoundedDumbbell01,
-                      ),
-                      const SizedBox(width: 16),
-                      _buildStat(
-                        context,
-                        'Sets',
-                        _getTotalSets().toString(),
-                        HugeIcons.strokeRoundedTickDouble02,
-                      ),
-                    ],
+                  _stat(
+                    'Exercises',
+                    '${workout.exercises.length}',
+                    HugeIcons.strokeRoundedDumbbell01,
                   ),
-                  if (totalVolume > 0) ...[
-                    const SizedBox(height: 12),
-                    const Divider(),
-                    const SizedBox(height: 12),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Total Volume',
-                          style: theme.typography.normal.copyWith(
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                        Text(
-                          '${totalVolume.toStringAsFixed(1)} kg',
-                          style: theme.typography.large.copyWith(
-                            fontWeight: FontWeight.w700,
-                            color: colorScheme.primary,
-                          ),
-                        ),
-                      ],
+                  _stat('Sets', '$totalSets', HugeIcons.strokeRoundedTickDouble02),
+                  if (totalVolume > 0)
+                    _stat(
+                      'Volume',
+                      '${totalVolume.toStringAsFixed(0)} kg',
+                      HugeIcons.strokeRoundedWeightScale,
                     ),
-                  ],
-                  if (workout.note != null && workout.note!.isNotEmpty) ...[
-                    const SizedBox(height: 12),
-                    const Divider(),
-                    const SizedBox(height: 12),
-                    Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        HugeIcon(
-                          icon: HugeIcons.strokeRoundedNote,
-                          size: 18,
-                          color: colorScheme.mutedForeground,
-                        ),
-                        const SizedBox(width: 8),
-                        Expanded(
-                          child: Text(
-                            workout.note!,
-                            style: theme.typography.small.copyWith(
-                              color: colorScheme.mutedForeground,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
                 ],
               ),
-            ),
-            const SizedBox(height: 24),
-
-            // Completion Data (Photo & Measurements)
-            if (workout.completion != null) ...[
-              Text(
-                'Post-Workout Data',
-                style: theme.typography.normal.copyWith(
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Photo
-              if (workout.completion!.photoPath != null) ...[
-                Card(
-                  child: Column(
-                    children: [
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(12),
-                        child: CachedNetworkImage(
-                          imageUrl: StorageUrl.resolve(
-                            workout.completion!.photoPath!,
-                          ),
-                          height: 300,
-                          width: double.infinity,
-                          fit: BoxFit.cover,
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        'Post-Workout Photo',
-                        style: theme.typography.small.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-
-              // Body Measurements
-              if (_hasAnyMeasurement()) ...[
-                Card(
+              if (workout.note?.isNotEmpty ?? false) ...[
+                const SizedBox(height: AppSpacing.md),
+                AppCard(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        'Body Measurements',
-                        style: theme.typography.normal.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
+                      const CardHeader(
+                        title: 'Note',
+                        padding: EdgeInsets.only(bottom: AppSpacing.xs),
                       ),
-                      const SizedBox(height: 16),
-                      if (workout.completion!.bodyWeightKg != null)
-                        _buildMeasurementRow(
-                          context,
-                          'Body Weight',
-                          '${workout.completion!.bodyWeightKg!.toStringAsFixed(1)} kg',
-                          HugeIcons.strokeRoundedWeightScale,
-                        ),
-                      if (workout.completion!.heightCm != null)
-                        _buildMeasurementRow(
-                          context,
-                          'Height',
-                          '${workout.completion!.heightCm!.toStringAsFixed(1)} cm',
-                          HugeIcons.strokeRoundedRuler,
-                        ),
-                      if (workout.completion!.bicepsCm != null)
-                        _buildMeasurementRow(
-                          context,
-                          'Biceps',
-                          '${workout.completion!.bicepsCm!.toStringAsFixed(1)} cm',
-                          HugeIcons.strokeRoundedBodyPartMuscle,
-                        ),
-                      if (workout.completion!.chestCm != null)
-                        _buildMeasurementRow(
-                          context,
-                          'Chest',
-                          '${workout.completion!.chestCm!.toStringAsFixed(1)} cm',
-                          HugeIcons.strokeRoundedTapeMeasure,
-                        ),
-                      if (workout.completion!.waistCm != null)
-                        _buildMeasurementRow(
-                          context,
-                          'Waist',
-                          '${workout.completion!.waistCm!.toStringAsFixed(1)} cm',
-                          HugeIcons.strokeRoundedTapeMeasure,
-                        ),
-                      if (workout.completion!.thighsCm != null)
-                        _buildMeasurementRow(
-                          context,
-                          'Thighs',
-                          '${workout.completion!.thighsCm!.toStringAsFixed(1)} cm',
-                          HugeIcons.strokeRoundedTapeMeasure,
-                        ),
-                      if (workout.completion!.calfsCm != null)
-                        _buildMeasurementRow(
-                          context,
-                          'Calfs',
-                          '${workout.completion!.calfsCm!.toStringAsFixed(1)} cm',
-                          HugeIcons.strokeRoundedTapeMeasure,
-                        ),
+                      Text(workout.note!, style: context.text.body),
                     ],
                   ),
                 ),
-                const SizedBox(height: 12),
               ],
-
-              // Completion Notes
-              if (workout.completion!.notes != null &&
-                  workout.completion!.notes!.isNotEmpty) ...[
-                Card(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          HugeIcon(
-                            icon: HugeIcons.strokeRoundedNote,
-                            size: 18,
-                            color: colorScheme.mutedForeground,
-                          ),
-                          const SizedBox(width: 8),
-                          Text(
-                            'Completion Notes',
-                            style: theme.typography.normal.copyWith(
-                              fontWeight: FontWeight.w600,
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        workout.completion!.notes!,
-                        style: theme.typography.small.copyWith(
-                          color: colorScheme.mutedForeground,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(height: 12),
-              ],
-              const SizedBox(height: 12),
-            ],
-
-            // Exercises
-            Text(
-              'Exercises',
-              style: theme.typography.normal.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            ...workout.exercises.map((exercise) {
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 12),
-                child: Card(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      // Exercise Header
-                      Row(
-                        children: [
-                          Expanded(
-                            child: Text(
-                              exercise.exercise?.name ?? 'Unknown Exercise',
-                              style: theme.typography.normal.copyWith(
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          if (weightTotals.containsKey(exercise.exercise?.name))
-                            Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colorScheme.primary.withOpacity(0.1),
-                                borderRadius: BorderRadius.circular(6),
-                              ),
-                              child: Text(
-                                '${weightTotals[exercise.exercise?.name]!.toStringAsFixed(1)} kg',
-                                style: theme.typography.small.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                  color: colorScheme.primary,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      if (exercise.note != null &&
-                          exercise.note!.isNotEmpty) ...[
-                        const SizedBox(height: 8),
-                        Text(
-                          exercise.note!,
-                          style: theme.typography.small.copyWith(
-                            color: colorScheme.mutedForeground,
+              const SizedBox(height: AppSpacing.section),
+              for (var i = 0; i < workout.exercises.length; i++)
+                _exerciseSection(context, workout.exercises[i], volumes[i]),
+              if (completion != null) ...[
+                if (completion.photoPath != null)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.section),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        const SectionHeader(title: 'Progress photo'),
+                        ClipRRect(
+                          borderRadius: context.theme.cardRadius,
+                          child: CachedNetworkImage(
+                            imageUrl: StorageUrl.resolve(completion.photoPath!),
+                            height: 320,
+                            fit: BoxFit.cover,
                           ),
                         ),
                       ],
-                      const SizedBox(height: 12),
-                      const Divider(),
-                      const SizedBox(height: 12),
-
-                      // Sets
-                      ...exercise.sets.asMap().entries.map((entry) {
-                        final index = entry.key;
-                        final set = entry.value;
-                        final isLast = index == exercise.sets.length - 1;
-
-                        return Padding(
-                          padding: EdgeInsets.only(bottom: isLast ? 0 : 8),
-                          child: Row(
-                            children: [
-                              Container(
-                                width: 32,
-                                height: 32,
-                                decoration: BoxDecoration(
-                                  color: set.isDone
-                                      ? colorScheme.primary
-                                      : colorScheme.muted,
-                                  shape: BoxShape.circle,
-                                ),
-                                child: Center(
-                                  child: Text(
-                                    '${index + 1}',
-                                    style: theme.typography.small.copyWith(
-                                      fontWeight: FontWeight.w600,
-                                      color: set.isDone
-                                          ? colorScheme.primaryForeground
-                                          : colorScheme.mutedForeground,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 12),
-                              Expanded(
-                                child: Row(
-                                  children: [
-                                    if (set.weightKg != null) ...[
-                                      _buildSetDetail(
-                                        context,
-                                        '${set.weightKg!.toStringAsFixed(1)} kg',
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    if (set.reps != null) ...[
-                                      _buildSetDetail(
-                                        context,
-                                        '${set.reps} reps',
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    if (set.durationSeconds != null) ...[
-                                      _buildSetDetail(
-                                        context,
-                                        '${set.durationSeconds}s',
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    if (set.distanceMeters != null) ...[
-                                      _buildSetDetail(
-                                        context,
-                                        '${set.distanceMeters}m',
-                                      ),
-                                      const SizedBox(width: 8),
-                                    ],
-                                    if (set.rpe != null)
-                                      Container(
-                                        padding: const EdgeInsets.symmetric(
-                                          horizontal: 6,
-                                          vertical: 2,
-                                        ),
-                                        decoration: BoxDecoration(
-                                          color: _getRpeColor(
-                                            set.rpe!,
-                                            colorScheme,
-                                          ).withOpacity(0.1),
-                                          borderRadius: BorderRadius.circular(
-                                            4,
-                                          ),
-                                        ),
-                                        child: Row(
-                                          mainAxisSize: MainAxisSize.min,
-                                          children: [
-                                            Text(
-                                              'RPE',
-                                              style: theme.typography.xSmall
-                                                  .copyWith(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w500,
-                                                    color: _getRpeColor(
-                                                      set.rpe!,
-                                                      colorScheme,
-                                                    ),
-                                                  ),
-                                            ),
-                                            const SizedBox(width: 4),
-                                            Text(
-                                              '${set.rpe}',
-                                              style: theme.typography.xSmall
-                                                  .copyWith(
-                                                    fontSize: 10,
-                                                    fontWeight: FontWeight.w700,
-                                                    color: _getRpeColor(
-                                                      set.rpe!,
-                                                      colorScheme,
-                                                    ),
-                                                  ),
-                                            ),
-                                          ],
-                                        ),
-                                      ),
-                                  ],
-                                ),
-                              ),
-                            ],
+                    ),
+                  ),
+                if (_hasAnyMeasurement())
+                  AppListSection(
+                    title: 'Body measurements',
+                    dividerIndent: AppSpacing.md,
+                    children: [
+                      for (final (label, value, unit, icon) in [
+                        (
+                          'Body weight',
+                          completion.bodyWeightKg,
+                          'kg',
+                          HugeIcons.strokeRoundedWeightScale,
+                        ),
+                        (
+                          'Height',
+                          completion.heightCm,
+                          'cm',
+                          HugeIcons.strokeRoundedRuler,
+                        ),
+                        (
+                          'Biceps',
+                          completion.bicepsCm,
+                          'cm',
+                          HugeIcons.strokeRoundedBodyPartMuscle,
+                        ),
+                        (
+                          'Chest',
+                          completion.chestCm,
+                          'cm',
+                          HugeIcons.strokeRoundedTapeMeasure,
+                        ),
+                        (
+                          'Waist',
+                          completion.waistCm,
+                          'cm',
+                          HugeIcons.strokeRoundedTapeMeasure,
+                        ),
+                        (
+                          'Thighs',
+                          completion.thighsCm,
+                          'cm',
+                          HugeIcons.strokeRoundedTapeMeasure,
+                        ),
+                        (
+                          'Calves',
+                          completion.calfsCm,
+                          'cm',
+                          HugeIcons.strokeRoundedTapeMeasure,
+                        ),
+                      ])
+                        if (value != null)
+                          DetailRow(
+                            icon: icon,
+                            label: label,
+                            value: '${value.toStringAsFixed(1)} $unit',
                           ),
-                        );
-                      }),
                     ],
                   ),
-                ),
-              );
-            }),
-          ],
-        )),
-      ),
-    );
-  }
-
-  Widget _buildStat(
-    BuildContext context,
-    String label,
-    String value,
-    List<List<dynamic>> icon,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Expanded(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              HugeIcon(
-                icon: icon,
-                size: 14,
-                color: colorScheme.mutedForeground,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: theme.typography.xSmall.copyWith(
-                  color: colorScheme.mutedForeground,
-                ),
-              ),
+                if (completion.notes?.isNotEmpty ?? false)
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: AppSpacing.section),
+                    child: AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const CardHeader(
+                            title: 'How it went',
+                            padding: EdgeInsets.only(bottom: AppSpacing.xs),
+                          ),
+                          Text(completion.notes!, style: context.text.body),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
             ],
           ),
-          const SizedBox(height: 4),
-          Text(
-            value,
-            style: theme.typography.normal.copyWith(
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }
 
-  Widget _buildMeasurementRow(
+  Widget _stat(String label, String value, List<List<dynamic>> icon) =>
+      StatTile(label: label, value: value, icon: icon);
+
+  Widget _exerciseSection(
     BuildContext context,
-    String label,
-    String value,
-    List<List<dynamic>> icon,
+    WorkoutExerciseDto exercise,
+    double volume,
   ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Padding(
-      padding: const EdgeInsets.only(bottom: 12),
-      child: Row(
-        children: [
-          HugeIcon(icon: icon, size: 18, color: colorScheme.mutedForeground),
-          const SizedBox(width: 12),
-          Expanded(child: Text(label, style: theme.typography.small)),
-          Text(
-            value,
-            style: theme.typography.small.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
+    return AppListSection(
+      title: exercise.exercise?.name ?? 'Exercise',
+      headerTrailing: volume > 0
+          ? AppBadge(
+              label: '${volume.toStringAsFixed(0)} kg',
+              color: context.semantic.info,
+            )
+          : null,
+      footer: (exercise.note?.isNotEmpty ?? false) ? exercise.note : null,
+      dividerIndent: AppSpacing.md + 28 + AppSpacing.md,
+      children: [
+        for (var i = 0; i < exercise.sets.length; i++)
+          _SetRow(index: i, set: exercise.sets[i]),
+      ],
     );
-  }
-
-  Widget _buildSetDetail(BuildContext context, String text) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(
-        color: colorScheme.muted,
-        borderRadius: BorderRadius.circular(4),
-      ),
-      child: Text(
-        text,
-        style: theme.typography.small.copyWith(fontWeight: FontWeight.w500),
-      ),
-    );
-  }
-
-  Color _getRpeColor(int rpe, ColorScheme colorScheme) {
-    if (rpe <= 3) {
-      return const Color(0xFF10B981); // green
-    } else if (rpe <= 6) {
-      return const Color(0xFFF59E0B); // yellow/orange
-    } else {
-      return const Color(0xFFEF4444); // red
-    }
   }
 
   bool _hasAnyMeasurement() {
-    if (workout.completion == null) return false;
-    return workout.completion!.bodyWeightKg != null ||
-        workout.completion!.heightCm != null ||
-        workout.completion!.bicepsCm != null ||
-        workout.completion!.chestCm != null ||
-        workout.completion!.waistCm != null ||
-        workout.completion!.thighsCm != null ||
-        workout.completion!.calfsCm != null;
+    final c = workout.completion;
+    if (c == null) return false;
+    return [
+      c.bodyWeightKg,
+      c.heightCm,
+      c.bicepsCm,
+      c.chestCm,
+      c.waistCm,
+      c.thighsCm,
+      c.calfsCm,
+    ].any((v) => v != null);
+  }
+}
+
+/// One set: number (filled when done) followed by its metrics.
+class _SetRow extends StatelessWidget {
+  const _SetRow({required this.index, required this.set});
+
+  final int index;
+  final WorkoutSetDto set;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final semantic = context.semantic;
+    final metrics = [
+      if (set.weightKg != null) '${set.weightKg!.toStringAsFixed(1)} kg',
+      if (set.reps != null) '${set.reps} reps',
+      if (set.durationSeconds != null) '${set.durationSeconds} s',
+      if (set.distanceMeters != null) '${set.distanceMeters} m',
+    ];
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppSpacing.md,
+        vertical: AppSpacing.sm,
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 28,
+            height: 28,
+            decoration: BoxDecoration(
+              color: set.isDone ? colors.primary : colors.muted,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              '${index + 1}',
+              style: context.text.caption.copyWith(
+                fontWeight: FontWeight.w600,
+                color: set.isDone
+                    ? colors.primaryForeground
+                    : colors.mutedForeground,
+              ),
+            ),
+          ),
+          const SizedBox(width: AppSpacing.md),
+          Expanded(
+            child: Text(
+              metrics.isEmpty ? 'No data' : metrics.join(' · '),
+              style: context.text.itemTitle.copyWith(
+                fontFeatures: const [FontFeature.tabularFigures()],
+              ),
+            ),
+          ),
+          if (set.rpe != null)
+            AppBadge(
+              label: 'RPE ${set.rpe}',
+              color: set.rpe! <= 3
+                  ? semantic.success
+                  : set.rpe! <= 6
+                  ? semantic.warning
+                  : semantic.danger,
+            ),
+        ],
+      ),
+    );
   }
 }

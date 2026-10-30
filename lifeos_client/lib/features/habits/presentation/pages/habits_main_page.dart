@@ -140,6 +140,9 @@ class _HabitsMainPageState extends State<HabitsMainPage> {
             for (final habit in habits)
               HabitCard(
                 habit: habit,
+                onChanged: () => context.read<HabitsListBloc>().add(
+                  const HabitsListRefreshed(),
+                ),
                 onCheckIn: () {
                   final habitsListBloc = context.read<HabitsListBloc>();
                   BottomSheetModal.openSheet(

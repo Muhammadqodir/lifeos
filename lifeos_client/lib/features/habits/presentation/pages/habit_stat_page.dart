@@ -1,71 +1,88 @@
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:hugeicons/hugeicons.dart';
-import 'package:lifeos_client/core/widgets/activity_indicator.dart';
-import 'package:lifeos_client/features/habits/data/models/habit_dto.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/habit_stats_bloc.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/habit_stats_event.dart';
-import 'package:lifeos_client/features/habits/presentation/bloc/habit_stats_state.dart';
-import 'package:lifeos_client/injection.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import 'package:lifeos_client/core/ui/ui.dart';
 
-class HabitStatPage extends StatefulWidget {
+import '../../../../core/ui/ui.dart';
+import '../../../../core/utils/color_utils.dart';
+import '../../../../core/widgets/activity_indicator.dart';
+import '../../../../injection.dart';
+import '../../data/models/habit_dto.dart';
+import '../bloc/habit_stats_bloc.dart';
+import '../bloc/habit_stats_event.dart';
+import '../bloc/habit_stats_state.dart';
+
+/// Streaks, completion and activity history for one habit.
+class HabitStatPage extends StatelessWidget {
   final HabitDto habit;
 
   const HabitStatPage({super.key, required this.habit});
 
   @override
-  State<HabitStatPage> createState() => _HabitStatPageState();
+  Widget build(BuildContext context) {
+    return BlocProvider(
+      create: (_) =>
+          HabitStatsBloc(habitsRepository: getIt())
+            ..add(LoadHabitStats(habit.id)),
+      child: _HabitStatView(habit: habit),
+    );
+  }
 }
 
-class _HabitStatPageState extends State<HabitStatPage> {
-  Color _getColorFromHex(String hexColor) {
-    final hex = hexColor.replaceAll('#', '');
-    if (hex.length == 6) {
-      return Color(int.parse('FF$hex', radix: 16));
+class _HabitStatView extends StatelessWidget {
+  const _HabitStatView({required this.habit});
+
+  final HabitDto habit;
+
+  static const _weekdays = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+  String get _frequency {
+    if (habit.frequency == 'weekly' && habit.frequencyDays.isNotEmpty) {
+      return habit.frequencyDays.map((i) => _weekdays[i % 7]).join(', ');
     }
-    return Color(int.parse(hex, radix: 16));
+    return switch (habit.frequency) {
+      'daily' => 'Every day',
+      'weekly' => 'Weekly',
+      'monthly' => 'Monthly',
+      _ => habit.frequency,
+    };
   }
 
-  String _getFrequencyText() {
-    switch (widget.habit.frequency) {
-      case 'daily':
-        return 'Daily';
-      case 'weekly':
-        if (widget.habit.frequencyDays.isEmpty) {
-          return 'Weekly';
-        }
-        final days = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-        final selectedDays = widget.habit.frequencyDays
-            .map((index) => days[index])
-            .join(', ');
-        return selectedDays;
-      default:
-        return widget.habit.frequency;
+  Future<void> _confirmArchive(BuildContext context) async {
+    final confirmed = await AppDialogs.confirm(
+      context,
+      title: 'Archive habit?',
+      message:
+          '"${habit.title}" will be hidden from your daily list. Its history is kept.',
+      confirmLabel: 'Archive',
+    );
+    if (confirmed && context.mounted) {
+      context.read<HabitStatsBloc>().add(ArchiveHabit(habit.id));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-    final habitColor = _getColorFromHex(widget.habit.color);
+    final color = parseHexColor(habit.color);
+    final text = context.text;
 
-    return BlocProvider(
-      create: (context) =>
-          HabitStatsBloc(habitsRepository: getIt())
-            ..add(LoadHabitStats(widget.habit.id)),
+    return BlocListener<HabitStatsBloc, HabitStatsState>(
+      listener: (context, state) {
+        if (state is HabitArchived) {
+          AppToast.success(context, 'Habit archived');
+          Navigator.of(context).pop(true);
+        } else if (state is HabitStatsError) {
+          AppToast.error(context, 'Something went wrong', message: state.message);
+        }
+      },
       child: Scaffold(
         headers: [
           AppHeader(
-            title: widget.habit.title,
+            title: habit.title,
             actions: [
               HeaderAction(
                 icon: HugeIcons.strokeRoundedArchive,
-                tooltip: "Archive",
-                onTap: () {
-                  //realize archive functionality here
-                },
+                tooltip: 'Archive habit',
+                onTap: () => _confirmArchive(context),
               ),
             ],
           ),
@@ -74,322 +91,157 @@ class _HabitStatPageState extends State<HabitStatPage> {
           physics: const AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
-          padding: const EdgeInsets.all(16),
-          child: ContentWidth(child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Habit Info Card
-              Card(
-                padding: EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppSpacing.page,
+            vertical: AppSpacing.lg,
+          ),
+          child: ContentWidth(
+            child: BlocBuilder<HabitStatsBloc, HabitStatsState>(
+              builder: (context, state) {
+                final stats = state is HabitStatsLoaded ? state.stats : null;
+                final current = stats?.currentStreak ?? habit.currentStreak ?? 0;
+                final longest = stats?.longestStreak ?? habit.longestStreak ?? 0;
+                final rate =
+                    stats?.completionRate ?? habit.completionRate ?? 0.0;
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 4,
-                          height: 38,
-                          decoration: BoxDecoration(
-                            color: habitColor,
-                            borderRadius: BorderRadius.circular(12),
+                    AppCard(
+                      child: Row(
+                        children: [
+                          LeadingTile.icon(
+                            HugeIcons.strokeRoundedFire,
+                            color: color,
+                            size: 44,
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                widget.habit.title,
-                                style: theme.typography.normal.copyWith(
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              if (widget.habit.description != null) ...[
-                                Text(
-                                  widget.habit.description!,
-                                  style: theme.typography.xSmall.copyWith(
-                                    color: colorScheme.mutedForeground,
-                                  ),
-                                ),
-                              ],
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    Divider(height: 1, color: colorScheme.border),
-                    const SizedBox(height: 12),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _buildInfoItem(
-                            context,
-                            HugeIcons.strokeRoundedCalendar03,
-                            'Frequency',
-                            _getFrequencyText(),
-                          ),
-                        ),
-                        if (widget.habit.reminderTime != null)
+                          const SizedBox(width: AppSpacing.md),
                           Expanded(
-                            child: _buildInfoItem(
-                              context,
-                              HugeIcons.strokeRoundedClock01,
-                              'Reminder',
-                              widget.habit.reminderTime!,
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(habit.title, style: text.sectionTitle),
+                                if ((habit.description ?? '').isNotEmpty)
+                                  Text(
+                                    habit.description!,
+                                    style: text.itemSubtitle,
+                                  ),
+                              ],
                             ),
                           ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    StatGrid(
+                      children: [
+                        StatTile(
+                          label: 'Current streak',
+                          value: '$current',
+                          caption: current == 1 ? 'day' : 'days',
+                          icon: HugeIcons.strokeRoundedFire,
+                          color: context.semantic.warning,
+                        ),
+                        StatTile(
+                          label: 'Longest streak',
+                          value: '$longest',
+                          caption: longest == 1 ? 'day' : 'days',
+                          icon: HugeIcons.strokeRoundedAward01,
+                          color: context.semantic.info,
+                        ),
+                        StatTile(
+                          label: 'Completion',
+                          value: '${rate.toStringAsFixed(0)}%',
+                          caption: 'since start',
+                          icon: HugeIcons.strokeRoundedAnalytics01,
+                          color: context.semantic.success,
+                        ),
                       ],
                     ),
-                    if (widget.habit.goalDuration != null) ...[
-                      const SizedBox(height: 12),
-                      _buildInfoItem(
-                        context,
-                        HugeIcons.strokeRoundedFlag02,
-                        'Goal',
-                        '${widget.habit.goalDuration} days',
+                    const SizedBox(height: AppSpacing.md),
+                    AppCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const CardHeader(
+                            title: 'Activity',
+                            subtitle: 'Last 6 months',
+                          ),
+                          _activity(context, state),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: AppSpacing.section),
+                    AppListSection(
+                      title: 'Schedule',
+                      dividerIndent: AppSpacing.md,
+                      children: [
+                        DetailRow(
+                          icon: HugeIcons.strokeRoundedCalendar03,
+                          label: 'Frequency',
+                          value: _frequency,
+                        ),
+                        if (habit.reminderTime != null)
+                          DetailRow(
+                            icon: HugeIcons.strokeRoundedClock01,
+                            label: 'Reminder',
+                            value: habit.reminderTime!,
+                          ),
+                        if (habit.goalDuration != null)
+                          DetailRow(
+                            icon: HugeIcons.strokeRoundedFlag02,
+                            label: 'Goal',
+                            value: '${habit.goalDuration} days',
+                          ),
+                      ],
+                    ),
+                    if (habit.tags.isNotEmpty) ...[
+                      const SectionHeader(title: 'Tags'),
+                      Wrap(
+                        spacing: AppSpacing.xs + 2,
+                        runSpacing: AppSpacing.xs + 2,
+                        children: [
+                          for (final tag in habit.tags)
+                            AppBadge.outline(label: tag),
+                        ],
                       ),
                     ],
                   ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Stats Grid
-              Row(
-                children: [
-                  Expanded(
-                    child: _buildStatCard(
-                      context,
-                      HugeIcons.strokeRoundedFire,
-                      'Current Streak',
-                      '${widget.habit.currentStreak ?? 0}',
-                      'days',
-                      colorScheme.primary,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: _buildStatCard(
-                      context,
-                      HugeIcons.strokeRoundedAward01,
-                      'Longest Streak',
-                      '${widget.habit.longestStreak ?? 0}',
-                      'days',
-                      colorScheme.primary,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              _buildStatCard(
-                context,
-                HugeIcons.strokeRoundedAnalytics01,
-                'Completion Rate',
-                (widget.habit.completionRate ?? 0).toStringAsFixed(0),
-                '%',
-                colorScheme.primary,
-              ),
-              const SizedBox(height: 12),
-              Card(
-                padding: EdgeInsets.all(12),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Activity',
-                      style: theme.typography.small.copyWith(
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    BlocBuilder<HabitStatsBloc, HabitStatsState>(
-                      builder: (context, state) {
-                        if (state is HabitStatsLoading) {
-                          return const Center(
-                            child: Padding(
-                              padding: EdgeInsets.all(32.0),
-                              child: CircularProgressIndicator(),
-                            ),
-                          );
-                        }
-
-                        if (state is HabitStatsError) {
-                          return Center(
-                            child: Padding(
-                              padding: const EdgeInsets.all(32.0),
-                              child: Text(
-                                'Failed to load stats',
-                                style: theme.typography.small.copyWith(
-                                  color: colorScheme.destructive,
-                                ),
-                              ),
-                            ),
-                          );
-                        }
-
-                        if (state is HabitStatsLoaded) {
-                          return ActivityIndicatorChart(
-                            data: state.entries
-                                .map(
-                                  (entry) => ActivityInficatorChartData(
-                                    date: DateTime.parse(entry.date),
-                                    data: entry,
-                                  ),
-                                )
-                                .toList(),
-                            startDate: DateTime.now().subtract(
-                              Duration(days: 180),
-                            ),
-                            endDate: DateTime.now(),
-                          );
-                        }
-
-                        return const SizedBox.shrink();
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 12),
-
-              // Tags if available
-              if (widget.habit.tags.isNotEmpty) ...[
-                SizedBox(
-                  width: double.infinity,
-                  child: Card(
-                    padding: EdgeInsets.all(12),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'Tags',
-                          style: theme.typography.small.copyWith(
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        Wrap(
-                          spacing: 8,
-                          runSpacing: 8,
-                          children: widget.habit.tags.map((tag) {
-                            return Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 12,
-                                vertical: 6,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colorScheme.muted,
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(tag, style: theme.typography.xSmall),
-                            );
-                          }).toList(),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
-              ],
-            ],
-          )),
+                );
+              },
+            ),
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildInfoItem(
-    BuildContext context,
-    dynamic icon,
-    String label,
-    String value,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Row(
-      children: [
-        HugeIcon(icon: icon, size: 16, color: colorScheme.mutedForeground),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              label,
-              style: theme.typography.xSmall.copyWith(
-                color: colorScheme.mutedForeground,
-              ),
+  Widget _activity(BuildContext context, HabitStatsState state) {
+    if (state is HabitStatsLoaded) {
+      final now = DateTime.now();
+      return ActivityIndicatorChart(
+        data: [
+          for (final entry in state.entries)
+            ActivityInficatorChartData(
+              date: DateTime.parse(entry.date),
+              data: entry,
             ),
-            Text(
-              value,
-              style: theme.typography.small.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _buildStatCard(
-    BuildContext context,
-    dynamic icon,
-    String label,
-    String value,
-    String unit,
-    Color accentColor,
-  ) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
-
-    return Card(
-      padding: EdgeInsets.all(12),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            padding: const EdgeInsets.all(8),
-            decoration: BoxDecoration(
-              color: accentColor.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: HugeIcon(icon: icon, size: 20, color: accentColor),
-          ),
-          const SizedBox(width: 4),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                label,
-                style: theme.typography.xSmall.copyWith(
-                  color: colorScheme.mutedForeground,
-                ),
-              ),
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    value,
-                    style: theme.typography.small.copyWith(
-                      fontWeight: FontWeight.w700,
-                      height: 1,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    unit,
-                    style: theme.typography.xSmall.copyWith(
-                      color: colorScheme.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
         ],
-      ),
+        startDate: now.subtract(const Duration(days: 180)),
+        endDate: now,
+      );
+    }
+    if (state is HabitStatsError) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppSpacing.xl),
+        child: Center(
+          child: Text("Couldn't load activity", style: context.text.caption),
+        ),
+      );
+    }
+    return const Padding(
+      padding: EdgeInsets.symmetric(vertical: AppSpacing.xl),
+      child: Center(child: CircularProgressIndicator(size: 20)),
     );
   }
 }

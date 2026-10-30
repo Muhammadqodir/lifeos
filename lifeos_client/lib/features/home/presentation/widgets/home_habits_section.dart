@@ -55,6 +55,8 @@ class _HomeHabitsSectionState extends State<HomeHabitsSection> {
           HabitCard(
             habit: habit,
             isUpdating: _updatingHabitId == habit.id,
+            onChanged: () =>
+                context.read<HomeBloc>().add(const HomeRefreshed()),
             onCheckIn: () {
               if (_updatingHabitId == null) {
                 _toggleHabitCompletion(context, habit.id);

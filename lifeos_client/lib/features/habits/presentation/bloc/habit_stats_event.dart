@@ -24,3 +24,13 @@ class RefreshHabitStats extends HabitStatsEvent {
   @override
   List<Object?> get props => [habitId];
 }
+
+/// Archives the habit (hidden from active lists, history kept).
+class ArchiveHabit extends HabitStatsEvent {
+  final int habitId;
+
+  const ArchiveHabit(this.habitId);
+
+  @override
+  List<Object?> get props => [habitId];
+}

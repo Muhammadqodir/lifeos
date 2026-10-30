@@ -1,5 +1,6 @@
 import 'package:equatable/equatable.dart';
 import 'package:lifeos_client/features/habits/data/models/habit_entry_dto.dart';
+import 'package:lifeos_client/features/habits/data/models/habit_stats_dto.dart';
 
 abstract class HabitStatsState extends Equatable {
   const HabitStatsState();
@@ -15,11 +16,16 @@ class HabitStatsLoading extends HabitStatsState {}
 class HabitStatsLoaded extends HabitStatsState {
   final List<HabitEntryDto> entries;
 
-  const HabitStatsLoaded(this.entries);
+  /// Server-computed streaks and completion rate; null if that call failed.
+  final HabitStatsDto? stats;
+
+  const HabitStatsLoaded(this.entries, {this.stats});
 
   @override
-  List<Object?> get props => [entries];
+  List<Object?> get props => [entries, stats];
 }
+
+class HabitArchived extends HabitStatsState {}
 
 class HabitStatsError extends HabitStatsState {
   final String message;

@@ -40,13 +40,7 @@ class ProjectsStatsCard extends StatelessWidget {
         color: semantic.success,
       ),
     ];
-    return Row(
-      children: [
-        for (var i = 0; i < tiles.length; i++) ...[
-          if (i > 0) const SizedBox(width: AppSpacing.md),
-          Expanded(child: tiles[i]),
-        ],
-      ],
-    ).asSkeleton(enabled: isLoading);
+    return StatGrid(minTileWidth: 100, children: tiles)
+        .asSkeleton(enabled: isLoading);
   }
 }

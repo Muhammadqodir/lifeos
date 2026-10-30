@@ -14,11 +14,15 @@ class HabitCard extends StatelessWidget {
   final VoidCallback onCheckIn;
   final bool isUpdating;
 
+  /// Called when the habit was changed on its detail page (e.g. archived).
+  final VoidCallback? onChanged;
+
   const HabitCard({
     super.key,
     required this.habit,
     required this.onCheckIn,
     this.isUpdating = false,
+    this.onChanged,
   });
 
   @override
@@ -40,9 +44,12 @@ class HabitCard extends StatelessWidget {
         done: isCompleted,
         onTap: isCompleted ? null : onCheckIn,
       ),
-      onTap: () => Navigator.of(
-        context,
-      ).push(CupertinoPageRoute(builder: (_) => HabitStatPage(habit: habit))),
+      onTap: () async {
+        final changed = await Navigator.of(context).push<bool>(
+          CupertinoPageRoute(builder: (_) => HabitStatPage(habit: habit)),
+        );
+        if (changed == true) onChanged?.call();
+      },
     );
   }
 

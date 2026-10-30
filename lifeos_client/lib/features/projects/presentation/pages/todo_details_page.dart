@@ -1,210 +1,167 @@
+import 'package:hugeicons/hugeicons.dart';
 import 'package:intl/intl.dart';
-import 'package:lifeos_client/core/widgets/badge.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
-import '../../data/models/todo_dto.dart';
-import 'package:lifeos_client/core/ui/ui.dart';
 
+import '../../../../core/ui/ui.dart';
+import '../../../../core/utils/color_utils.dart';
+import '../../../../core/utils/date_labels.dart';
+import '../../data/models/todo_dto.dart';
+import '../widgets/todo_labels.dart';
+
+/// Read-only overview of a todo.
 class TodoDetailsPage extends StatelessWidget {
   final TodoDto todo;
 
   const TodoDetailsPage({super.key, required this.todo});
 
-  String _titleCase(String value) {
-    return value
-        .split('_')
-        .map((word) {
-          if (word.isEmpty) {
-            return word;
-          }
-          return '${word[0].toUpperCase()}${word.substring(1)}';
-        })
-        .join(' ');
-  }
-
-  String _formatDate(DateTime date) {
-    return DateFormat('MMM d, y').format(date);
-  }
-
-  String _formatDateTime(DateTime date) {
-    return DateFormat('MMM d, y • HH:mm').format(date);
-  }
-
-  String _formatPlannedTime(String? time) {
-    if (time == null || time.isEmpty) {
-      return '-';
-    }
-    final parts = time.split(':');
-    if (parts.length >= 2) {
-      final hour = parts[0].padLeft(2, '0');
-      final minute = parts[1].padLeft(2, '0');
-      return '$hour:$minute';
-    }
-    return time;
-  }
+  String _dateTime(DateTime date) => DateFormat('d MMM y, HH:mm').format(date);
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final colorScheme = theme.colorScheme;
+    final text = context.text;
+    final hasComment = (todo.comment ?? '').isNotEmpty;
+    final plannedTime = DateLabels.apiTime(todo.plannedTime);
 
     return Scaffold(
-      headers: [AppHeader(title: 'Todo Details')],
+      headers: [AppHeader(title: 'Todo', subtitle: todo.project?.title)],
       child: SingleChildScrollView(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppSpacing.page,
+          vertical: AppSpacing.lg,
+        ),
         physics: const AlwaysScrollableScrollPhysics(
           parent: BouncingScrollPhysics(),
         ),
-        child: ContentWidth(child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    todo.title,
-                    style: theme.typography.large.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    (todo.comment ?? '').isEmpty
-                        ? 'No description'
-                        : todo.comment!,
-                    style: theme.typography.normal.copyWith(
-                      color: colorScheme.mutedForeground,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDetailRow(context, 'Status', _titleCase(todo.status)),
-                  _buildDetailRow(
-                    context,
-                    'Priority',
-                    _titleCase(todo.priority),
-                  ),
-                  _buildDetailRow(context, 'Urgency', _titleCase(todo.urgency)),
-                  _buildDetailRow(context, 'Energy', _titleCase(todo.energy)),
-                  _buildDetailRow(
-                    context,
-                    'Planned Date',
-                    todo.plannedDate == null
-                        ? '-'
-                        : _formatDate(todo.plannedDate!),
-                  ),
-                  _buildDetailRow(
-                    context,
-                    'Planned Time',
-                    _formatPlannedTime(todo.plannedTime),
-                  ),
-                  _buildDetailRow(
-                    context,
-                    'Time Spent',
-                    todo.timeSpentMinutes == null
-                        ? '-'
-                        : '${todo.timeSpentMinutes} min',
-                  ),
-                  _buildDetailRow(
-                    context,
-                    'Completed At',
-                    todo.completedAt == null
-                        ? '-'
-                        : _formatDateTime(todo.completedAt!),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Tags',
-                    style: theme.typography.normal.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (todo.tags.isEmpty)
-                    Text(
-                      'No tags',
-                      style: theme.typography.small.copyWith(
-                        color: colorScheme.mutedForeground,
-                      ),
-                    )
-                  else
-                    Wrap(
-                      spacing: 6,
-                      runSpacing: 6,
-                      children: todo.tags
-                          .map(
-                            (tag) => CustomBadge(
-                              label: tag,
-                              color: colorScheme.primary,
+        child: ContentWidth(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              AppCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        AppBadge(
+                          label: TodoLabels.status(todo.status),
+                          color: TodoLabels.statusColor(context, todo.status),
+                        ),
+                        if (todo.project != null) ...[
+                          const SizedBox(width: AppSpacing.sm),
+                          Container(
+                            width: 8,
+                            height: 8,
+                            decoration: BoxDecoration(
+                              color: parseHexColor(todo.project!.color),
+                              borderRadius: BorderRadius.circular(2),
                             ),
-                          )
-                          .toList(),
+                          ),
+                          const SizedBox(width: AppSpacing.xs),
+                          Flexible(
+                            child: Text(
+                              todo.project!.title,
+                              style: text.caption,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(todo.title, style: text.sectionTitle),
+                    const SizedBox(height: AppSpacing.xs),
+                    Text(
+                      hasComment ? todo.comment! : 'No description',
+                      style: hasComment ? text.body : text.itemSubtitle,
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.section),
+              AppListSection(
+                title: 'Details',
+                dividerIndent: AppSpacing.md,
+                children: [
+                  DetailRow(
+                    icon: HugeIcons.strokeRoundedFlag02,
+                    label: 'Priority',
+                    valueWidget: AppBadge(
+                      label: TodoLabels.level(todo.priority),
+                      color: TodoLabels.levelColor(context, todo.priority),
+                    ),
+                  ),
+                  DetailRow(
+                    icon: HugeIcons.strokeRoundedAlarmClock,
+                    label: 'Urgency',
+                    valueWidget: AppBadge(
+                      label: TodoLabels.level(todo.urgency),
+                      color: TodoLabels.levelColor(context, todo.urgency),
+                    ),
+                  ),
+                  DetailRow(
+                    icon: HugeIcons.strokeRoundedFlash,
+                    label: 'Energy',
+                    value: TodoLabels.energy(todo.energy),
+                  ),
+                  DetailRow(
+                    icon: HugeIcons.strokeRoundedCalendar03,
+                    label: 'Planned',
+                    value: todo.plannedDate == null
+                        ? 'Not planned'
+                        : [
+                            DateLabels.relativeDay(todo.plannedDate!),
+                            ?plannedTime,
+                          ].join(', '),
+                  ),
+                  if (todo.timeSpentMinutes != null)
+                    DetailRow(
+                      icon: HugeIcons.strokeRoundedTimer02,
+                      label: 'Time spent',
+                      value: '${todo.timeSpentMinutes} min',
+                    ),
+                  if (todo.completedAt != null)
+                    DetailRow(
+                      icon: HugeIcons.strokeRoundedCheckmarkCircle02,
+                      label: 'Completed',
+                      value: _dateTime(todo.completedAt!),
                     ),
                 ],
               ),
-            ),
-            const SizedBox(height: 12),
-            Card(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDetailRow(
-                    context,
-                    'Created',
-                    _formatDateTime(todo.createdAt),
+              if (todo.tags.isNotEmpty)
+                Padding(
+                  padding: const EdgeInsets.only(bottom: AppSpacing.section),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      const SectionHeader(title: 'Tags'),
+                      Wrap(
+                        spacing: AppSpacing.xs + 2,
+                        runSpacing: AppSpacing.xs + 2,
+                        children: [
+                          for (final tag in todo.tags)
+                            AppBadge.outline(label: tag),
+                        ],
+                      ),
+                    ],
                   ),
-                  _buildDetailRow(
-                    context,
-                    'Updated',
-                    _formatDateTime(todo.updatedAt),
+                ),
+              AppListSection(
+                title: 'Activity',
+                dividerIndent: AppSpacing.md,
+                children: [
+                  DetailRow(
+                    label: 'Created',
+                    value: _dateTime(todo.createdAt),
+                  ),
+                  DetailRow(
+                    label: 'Updated',
+                    value: _dateTime(todo.updatedAt),
                   ),
                 ],
               ),
-            ),
-          ],
-        )),
-      ),
-    );
-  }
-
-  Widget _buildDetailRow(BuildContext context, String label, String value) {
-    final theme = Theme.of(context);
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 6),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 120,
-            child: Text(
-              label,
-              style: theme.typography.small.copyWith(
-                color: theme.colorScheme.mutedForeground,
-              ),
-            ),
+            ],
           ),
-          Expanded(
-            child: Text(
-              value,
-              style: theme.typography.small.copyWith(
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
+        ),
       ),
     );
   }

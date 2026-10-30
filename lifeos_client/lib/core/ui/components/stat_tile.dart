@@ -77,3 +77,54 @@ class StatTile extends StatelessWidget {
     );
   }
 }
+
+/// Lays out [StatTile]s in equal-width columns: all in one row when there
+/// is room, otherwise two per row (phones).
+class StatGrid extends StatelessWidget {
+  const StatGrid({super.key, required this.children, this.minTileWidth = 140});
+
+  final List<Widget> children;
+  final double minTileWidth;
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        const gap = AppSpacing.md;
+        final fitsInRow =
+            children.length * minTileWidth + (children.length - 1) * gap <=
+            constraints.maxWidth;
+        final perRow = fitsInRow ? children.length : 2;
+        final rows = <Widget>[];
+        for (var i = 0; i < children.length; i += perRow) {
+          final slice = children.sublist(
+            i,
+            (i + perRow).clamp(0, children.length),
+          );
+          rows.add(
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var j = 0; j < perRow; j++) ...[
+                  if (j > 0) const SizedBox(width: gap),
+                  Expanded(
+                    child: j < slice.length ? slice[j] : const SizedBox(),
+                  ),
+                ],
+              ],
+            ),
+          );
+        }
+        return Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var r = 0; r < rows.length; r++) ...[
+              if (r > 0) const SizedBox(height: gap),
+              rows[r],
+            ],
+          ],
+        );
+      },
+    );
+  }
+}

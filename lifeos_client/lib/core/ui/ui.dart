@@ -16,6 +16,7 @@ export 'components/app_list_section.dart';
 export 'components/app_list_tile.dart';
 export 'components/app_pressable.dart';
 export 'components/card_header.dart';
+export 'components/detail_row.dart';
 export 'components/leading_tile.dart';
 export 'components/section_header.dart';
 export 'components/stat_tile.dart';
