@@ -55,7 +55,7 @@ composer run test  # Clears config cache, runs PHPUnit
 - **Authentication**: When implementing API auth, use Laravel Sanctum token-based auth
 - **Validation**: Always use Form Request classes, never validate in controllers
 - **Business logic**: Controllers should be thin—delegate to service classes (`HabitStatsService`, `WorkoutService`, `TransactionService`)
-- **Sync**: Projects, todos, habits and habit entries are also served by `/v1/sync/*` (`app/Sync`). New models the app keeps offline need the `Syncable` trait and a `SyncEntity`; see `docs/local-first.md`.
+- **Sync**: Projects, todos, habits, habit entries, wallets, categories, transactions, sleep/wellbeing entries, exercises and workouts are also served by `/v1/sync/*` (`app/Sync`). New models the app keeps offline need the `Syncable` trait and a `SyncEntity`; see `docs/local-first.md`.
 - **Database**: Use migrations for schema, factories for testing, seeders for initial data
 
 ### Configuration Notes
@@ -110,7 +110,7 @@ lib/
 
 ### Key Conventions
 
-- **Local-first**: Projects, todos, habits and Home read from `LocalStore` streams and write through `SyncEngine` (`lib/core/sync`); see `docs/local-first.md`. In those features never await the network in a BLoC and never refresh one screen from another — the store notifies every watcher. Ids are uuid strings.
+- **Local-first**: Projects, todos, habits, Home, Finance and Health read from `LocalStore` and write through `SyncEngine` (`lib/core/sync`); see `docs/local-first.md`. In those features never await the network in a BLoC and never refresh one screen from another — the store notifies every watcher. Ids are uuid strings.
 - **State management**: BLoC; local-first BLoCs subscribe to a repository stream and re-emit on change
 - **HTTP client**: `dio`; parse `response.data['data']` and turn failures into `ApiException.from(e)`
 - **API models**: Keep DTOs in `data/` layer, map to domain entities

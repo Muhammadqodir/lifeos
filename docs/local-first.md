@@ -4,9 +4,10 @@ LifeOS reads and writes data on the device and syncs with the server in the
 background. Nothing on screen waits for the network: an action is saved
 locally and shown at once, and it works the same offline.
 
-**Covered so far:** projects, todos, habits, habit entries, and Home, which is
-built from them. Finance and Health still call the API directly; see
-[Adding an entity](#adding-an-entity) and [Next steps](#next-steps).
+**Covered:** projects, todos, habits and habit entries (and Home, built from
+them), plus wallets, transaction categories, transactions, sleep and wellbeing
+entries, exercises and workouts. What stays online is listed under
+[What stays online](#what-stays-online).
 
 ```
  Screen ── BLoC ── Repository ──┬── LocalStore (sembast) ── watch() streams ──► every screen
@@ -36,6 +37,7 @@ built from them. Finance and Health still call the API directly; see
 | `SyncApi` | `lib/core/sync/sync_api.dart` | The two HTTP calls. |
 | ids | `lib/core/sync/ids.dart` | `newId()` (uuid v4). `habitEntryId(habit, day)` (uuid v5) gives the same id on every device. |
 | `HabitStats` | `lib/features/habits/domain/habit_stats.dart` | Streaks and completion rate from local entries. Mirrors the backend's `HabitStatsService`. |
+| `PendingUploads` | `lib/core/sync/pending_uploads.dart` | Persisted queue of files (workout photos, exercise images, project icons). Each one uploads once its record has a `server_id`, and the queue retries after every successful sync. |
 | `SyncIndicator` | `lib/core/ui/components/sync_indicator.dart` | Header icon shown only when offline or failing. Tap it to retry. |
 
 **Records** are stored in the sync API's JSON format: snake_case, `id` is the
@@ -68,6 +70,22 @@ changes survive signing in again. Signing out pushes for up to 5 seconds and
 then clears the device. If the user is offline, those unsent changes are
 lost. The signed-in profile is cached so the app opens offline.
 
+**Aggregates.** A transaction is synced with its entries, and a workout with
+its exercises, sets and measurements, each as one record. An update that
+carries `entries` or `exercises` replaces them all.
+
+**Derived numbers are computed on the device:**
+- wallet balances, summed from entries;
+- sleep, wellbeing and workout summaries and the workout streak;
+- each exercise's last sets;
+- habit streaks.
+
+The finance total converts with the last FX rate seen online.
+
+**New entities on an existing device.** The engine stores which entities its
+cursor covers. When an app update adds some, it resets the cursor and does a
+full pull, so the device downloads records it never had.
+
 **First launch.** Lists wait for `whenReady()`, which completes after the
 first sync attempt, even a failed one. A fresh sign-in therefore shows
 "loading" instead of an empty screen.
@@ -78,7 +96,7 @@ first sync attempt, even a failed one. A fresh sign-in therefore shows
 |---|---|
 | Endpoints | `app/Http/Controllers/Api/V1/SyncController.php` (`GET /v1/sync/pull`, `POST /v1/sync/push`) |
 | Protocol | `app/Sync/SyncService.php` |
-| Entity mapping and validation | `app/Sync/Entities/*Sync.php`, listed in `app/Sync/SyncRegistry.php` (parents first) |
+| Entity mapping and validation | `app/Sync/Entities/*Sync.php`, listed in `app/Sync/SyncRegistry.php` (parents first). `query()` decides what a user pulls: shared categories and built-in exercises are included and read-only. `persist()` writes children of aggregates, and `remove()` can archive instead of delete (wallets). |
 | uuid and tombstones on every write path | `app/Models/Concerns/Syncable.php`, `sync_tombstones` |
 | Idempotent retries | `sync_operations` (pruned after 30 days in `routes/console.php`) |
 
@@ -115,7 +133,9 @@ per operation, in order:
 |---|---|
 | `create` with a new uuid | Created. Missing fields get the same defaults as the REST API: a todo is `inbox` or `planned`, a habit is `active`. |
 | `create` with a uuid that already exists | Treated as an update, so a retry is safe. |
-| `create` of a habit entry for a day that already has one | Merged into the existing entry. `record.id` is that entry's uuid, and the client swaps its copy. |
+| `create` of a habit entry, sleep entry or wellbeing entry for a day that already has one | Merged into the existing entry. `record.id` is that entry's uuid, and the client swaps its copy. |
+| `delete` of a wallet | Archived (`is_active: false`); its transactions stay. |
+| Change to a shared category or built-in exercise | Rejected with `forbidden`. |
 | `update` | Only the fields sent change. Validation uses `sometimes` rules. |
 | `update` of a deleted or unknown record | Rejected with `gone`, `record: null`. The client deletes its copy. |
 | `delete` | Deletes the record, idempotently. Deleting a project also deletes its todos. |
@@ -153,25 +173,29 @@ collaborative data (shared lists, counters) would need a different rule.
 
 ## What stays online
 
-- **Files.** The project icon is uploaded with `POST /v1/projects/{id}/icon`
-  after the project has synced. The next pull brings the new path. Offline,
-  the project is created without its icon.
-- **Sign-in, registration and FX rates.**
-- **Finance and Health** for now.
+- **Files:**
+  - project icons: `POST /v1/projects/{id}/icon`;
+  - workout photos: `POST /gym/workouts/{id}/photo`;
+  - exercise images: `POST /gym/exercises/{id}/image`.
+
+  All three go through `PendingUploads`, so they wait for a connection instead
+  of failing.
+- **Analytics.** It is computed on the server. The client syncs first so the
+  report includes local changes. Offline, the report shows an error.
+- **Currencies, the base-currency setting and FX rates.** These are fetched
+  when online and cached, so wallets and the total still work offline.
+  Changing the base currency needs a connection.
+- **Sign-in and registration.**
 
 ## Next steps
 
-- **Finance.** Wallets, categories and transactions already carry a client
-  uuid (`client_id`) for idempotent creates. Balances and analytics would move
-  to the device. Multi-currency conversion needs FX rates cached locally.
-- **Health.** Sleep and wellbeing entries are simple to move. Workouts are
-  nested (session → exercises → sets → completion photo) and would sync as
-  separate entities, with the photo uploaded like the project icon.
 - **Instant updates.** Pull is periodic. A WebSocket or push notification that
   says "something changed" could trigger `syncNow()` across devices.
 - **Large accounts.** Pull returns everything changed since the cursor in one
   response, which is fine at personal scale. Add per-entity paging if an
   account grows to tens of thousands of rows.
+- **Analytics on the device.** It needs historical FX rates per transaction
+  date. Until then, it stays on the server.
 
 ## Deploying
 
